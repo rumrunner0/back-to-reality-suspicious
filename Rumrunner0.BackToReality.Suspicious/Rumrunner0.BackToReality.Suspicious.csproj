@@ -15,9 +15,11 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageId>Rumrunner0.BackToReality.Suspicious</PackageId>
 		<Title>Rumrunner0.BackToReality.Suspicious</Title>
+		<Description>Result monad with rich error semantics and traceable context.</Description>
 		<Version>0.1.0</Version>
 		<Authors>Roman Malyi</Authors>
 		<Copyright>Copyright (C) 2025 Roman Malyi</Copyright>
+		<PackageProjectUrl>https://github.com/rumrunner0/back-to-reality-suspicious</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/rumrunner0/back-to-reality-suspicious</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
@@ -62,6 +64,10 @@
 	<ItemGroup>
 		<None Include="..\README.md" Pack="true" PackagePath="\" />
 		<None Include="..\LICENSE" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Rumrunner0.BackToReality.SharedExtensions" Version="0.1.1" />
 	</ItemGroup>
 
 </Project>
