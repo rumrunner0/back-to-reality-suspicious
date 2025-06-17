@@ -34,7 +34,7 @@
 		<FileVersion>0.1.0.0</FileVersion>
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<SignAssembly>true</SignAssembly>
-		<AssemblyOriginatorKeyFile>../../../documents/rumrunner0_backtoreality_suspicious.snk</AssemblyOriginatorKeyFile>
+		<AssemblyOriginatorKeyFile>../../documents/rumrunner0_backtoreality_suspicious.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
