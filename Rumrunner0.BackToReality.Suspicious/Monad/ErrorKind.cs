@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Rumrunner0.BackToReality.Suspicious.Extensions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
@@ -11,16 +12,16 @@ public sealed record class ErrorKind
 {
 	#region Instance State
 
-	/// <summary>Value.</summary>
-	private readonly string _value;
+	/// <summary>Name.</summary>
+	private readonly string _name;
 
 	/// <summary>Priority.</summary>
 	private readonly int _priority;
 
 	/// <inheritdoc cref="ErrorKind" />
-	private ErrorKind(string value, int priority)
+	private ErrorKind(string name, int priority)
 	{
-		this._value = value;
+		this._name = name;
 		this._priority = priority;
 	}
 
@@ -65,32 +66,14 @@ public sealed record class ErrorKind
 	/// <returns><c>true</c>, if members should be printed, <c>false</c>, otherwise.</returns>
 	private bool PrintMembers(StringBuilder builder)
 	{
-		builder.Append($"Value = {this._value}");
+		builder.Append($"Name = {this._name}");
 		builder.Append($", Priority = {this._priority}");
-		return true;
-	}
-
-	/// <summary>Prints members in redacted mode.</summary>
-	/// <param name="builder">The <see cref="StringBuilder" />.</param>
-	/// <returns><c>true</c>, if members should be printed, <c>false</c>, otherwise.</returns>
-	private bool PrintMembersRedacted(StringBuilder builder)
-	{
-		builder.Append($"Value = {this._value}");
 		return true;
 	}
 
 	/// <summary>Creates a string that represents this instance in redacted mode.</summary>
 	/// <returns>A string that represents this instance in redacted mode.</returns>
-	public string ToStringRedacted()
-	{
-		var builder = new StringBuilder();
-
-		builder.Append("{ ");
-		if (this.PrintMembersRedacted(builder)) builder.Append(' ');
-		builder.Append('}');
-
-		return builder.ToString();
-	}
+	public string ToStringRedacted() => this._name;
 
 	#endregion
 
@@ -114,13 +97,13 @@ public sealed record class ErrorKind
 	#region Static API
 
 	/// <summary>Failure <see cref="ErrorKind" />.</summary>
-	public static ErrorKind Failure { get; } = new (value: "failure", priority: 0);
+	public static ErrorKind Failure { get; } = new (name: "failure", priority: 0);
 
 	/// <summary>Unexpected <see cref="ErrorKind" />.</summary>
-	public static ErrorKind Unexpected { get; } = new (value: "unexpected", priority: int.MaxValue - 1);
+	public static ErrorKind Unexpected { get; } = new (name: "unexpected", priority: int.MaxValue - 1);
 
 	/// <summary>Unspecified <see cref="ErrorKind" />.</summary>
-	public static ErrorKind Unspecified { get; } = new (value: "unspecified", priority: int.MaxValue);
+	public static ErrorKind Unspecified { get; } = new (name: "unspecified", priority: int.MaxValue);
 
 	/// <inheritdoc cref="PriorityComparer" />
 	public static ErrorKind WithHighestPriority(IEnumerable<ErrorKind> kinds) => kinds.MaxBy(k => k, ErrorKind._priorityComparer)!;
