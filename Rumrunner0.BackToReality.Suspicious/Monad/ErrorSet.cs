@@ -30,16 +30,16 @@ public sealed record class ErrorSet
 	#region Instance API
 
 	/// <inheritdoc cref="ErrorSet" />
-	public ErrorSet(string category, string header) : this(ErrorSetCategory.Custom(category), header) { }
+	public ErrorSet(string category, string header, ErrorSet? innerSet = null) : this(ErrorSetCategory.Custom(category), header, innerSet) { }
 
 	/// <inheritdoc cref="ErrorSet" />
-	public ErrorSet(ErrorSetCategory category, string header) : this(category, header, []) { }
+	public ErrorSet(ErrorSetCategory category, string header, ErrorSet? innerSet = null) : this(category, header, [], innerSet) { }
 
 	/// <inheritdoc cref="ErrorSet" />
-	public ErrorSet(string category, string header, IEnumerable<Error> errors) : this(ErrorSetCategory.Custom(category), header, errors) { }
+	public ErrorSet(string category, string header, IEnumerable<Error> errors, ErrorSet? innerSet = null) : this(ErrorSetCategory.Custom(category), header, errors, innerSet) { }
 
 	/// <inheritdoc cref="ErrorSet" />
-	public ErrorSet(ErrorSetCategory category, string header, IEnumerable<Error> errors)
+	public ErrorSet(ErrorSetCategory category, string header, IEnumerable<Error> errors, ErrorSet? innerSet = null)
 	{
 		ArgumentNullExceptionHelper.ThrowIfNull(category);
 		ArgumentExceptionHelper.ThrowIfNullOrEmptyOrWhiteSpace(header);
@@ -48,6 +48,7 @@ public sealed record class ErrorSet
 		this._category = category;
 		this._header = header;
 		this._errors = [..errors];
+		this._innerSet = innerSet;
 	}
 
 	/// <inheritdoc cref="_category" />
@@ -151,7 +152,10 @@ public sealed record class ErrorSet
 	#region Static API
 
 	/// <summary>Empty <see cref="ErrorSet" />.</summary>
-	public static ErrorSet Empty { get; } = new (ErrorSetCategory.Unspecified, header: string.Empty);
+	public static ErrorSet Empty(string category, string header) => new (category, header);
+
+	/// <summary>Empty <see cref="ErrorSet" />.</summary>
+	public static ErrorSet Empty(ErrorSetCategory category, string header) => new (category, header);
 
 	#endregion
 }
