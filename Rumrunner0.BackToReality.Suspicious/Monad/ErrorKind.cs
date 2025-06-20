@@ -83,7 +83,10 @@ public sealed record class ErrorKind
 	private static readonly PriorityComparer _priorityComparer;
 
 	/// <inheritdoc cref="ErrorKind" />
-	static ErrorKind() => ErrorKind._priorityComparer = new ();
+	static ErrorKind()
+	{
+		ErrorKind._priorityComparer = new ();
+	}
 
 	/// <inheritdoc />
 	private sealed class PriorityComparer : IComparer<ErrorKind>
@@ -95,6 +98,13 @@ public sealed record class ErrorKind
 	#endregion
 
 	#region Static API
+
+	/// <summary>Factory for a custom <see cref="ErrorKind" />.</summary>
+	public static ErrorKind Custom(string name, int priority)
+	{
+		ArgumentExceptionHelper.ThrowIfNullOrEmptyOrWhiteSpace(name);
+		return new (name: name, priority);
+	}
 
 	/// <summary>Failure <see cref="ErrorKind" />.</summary>
 	public static ErrorKind Failure { get; } = new (name: "failure", priority: 0);
