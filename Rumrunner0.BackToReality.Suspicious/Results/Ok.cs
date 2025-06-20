@@ -7,4 +7,4 @@ namespace Rumrunner0.BackToReality.Suspicious.Results;
 /// Used to indicate that something is ok, up, has no errors or has required value. <br />
 /// To indicate successful completion of an action, use <see cref="Suspicious{TResult}" />.
 /// </summary>
-public sealed record class Ok { internal Ok() { } }
+public sealed record class Ok;
