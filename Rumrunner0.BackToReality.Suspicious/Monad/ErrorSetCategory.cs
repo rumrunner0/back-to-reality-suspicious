@@ -1,17 +1,19 @@
+using Rumrunner0.BackToReality.Suspicious.Extensions;
+
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>
-/// A category of an <see cref="ErrorSet" />.
+/// Category of an <see cref="ErrorSet" />.
 /// </summary>
 public sealed record class ErrorSetCategory
 {
 	#region Instance State
 
-	/// <summary>Value.</summary>
-	private readonly string _value;
+	/// <summary>Name.</summary>
+	private readonly string _name;
 
 	/// <inheritdoc cref="ErrorSetCategory" />
-	private ErrorSetCategory(string value) => this._value = value;
+	private ErrorSetCategory(string name) => this._name = name;
 
 	#endregion
 
@@ -19,17 +21,21 @@ public sealed record class ErrorSetCategory
 
 	/// <summary>Creates a string that represents this instance.</summary>
 	/// <returns>A string that represents this instance.</returns>
-	public override string ToString() => this._value;
+	public override string ToString() => this._name;
 
 	#endregion
 
 	#region Static API
 
-	/// <summary>Factory for custom <see cref="ErrorSetCategory" />.</summary>
-	public static ErrorSetCategory Custom(string value) => new (value);
+	/// <summary>Factory for a custom <see cref="ErrorSetCategory" />.</summary>
+	public static ErrorSetCategory Custom(string name)
+	{
+		ArgumentExceptionHelper.ThrowIfNullOrEmptyOrWhiteSpace(name);
+		return new (name);
+	}
 
 	/// <summary>Unspecified <see cref="ErrorSetCategory" />.</summary>
-	public static ErrorSetCategory Unspecified { get; } = new (value: "unspecified");
+	public static ErrorSetCategory Unspecified { get; } = new (name: "unspecified");
 
 	#endregion
 }
