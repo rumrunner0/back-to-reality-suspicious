@@ -44,10 +44,10 @@ public sealed record class Error
 	public string Description => this._description;
 
 	/// <inheritdoc cref="_details" />
-	public string? Details { get => this._details; internal init => this._details = value; }
+	public string? Details { get => this._details; private init => this._details = value; }
 
 	/// <inheritdoc cref="_innerError" />
-	public Error? InnerError { get => this._innerError; internal init => this._innerError = value; }
+	public Error? InnerError { get => this._innerError; private init => this._innerError = value; }
 
 	#endregion
 
