@@ -1,7 +1,7 @@
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>
-/// State of <see cref="Suspicious{TResult}" />.
+/// State of a <see cref="Suspicious{TResult}" />.
 /// </summary>
 public sealed record class SuspiciousState
 {
@@ -30,16 +30,16 @@ public sealed record class SuspiciousState
 
 	/// <summary>Error <see cref="SuspiciousState" />.</summary>
 	/// <remarks>
-	/// This state indicates that the <see cref="Suspicious{TResult}" /> was created
+	/// This state indicates that a <see cref="Suspicious{TResult}" /> was created
 	/// from an <see cref="ErrorSet" /> and it contains actual <see cref="Error" />s.
 	/// </remarks>
 	public static SuspiciousState Error { get; } = new (value: "error");
 
 	/// <summary>Empty error set <see cref="SuspiciousState" />.</summary>
 	/// <remarks>
-	/// This state indicates that the <see cref="Suspicious{TResult}" /> was created
+	/// This state indicates that a <see cref="Suspicious{TResult}" /> was created
 	/// from an <see cref="ErrorSet" /> but it DOESN'T contain any <see cref="Error" />s.
-	/// While this is technically possible, it usually means that errors were not just added to the set.
+	/// While this is technically possible, it usually indicates that errors were not added to the set.
 	/// </remarks>
 	public static SuspiciousState EmptyErrorSet { get; } = new (value: "empty-error-set");
 

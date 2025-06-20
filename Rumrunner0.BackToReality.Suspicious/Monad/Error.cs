@@ -5,7 +5,7 @@ using Rumrunner0.BackToReality.Suspicious.Extensions;
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>
-/// An error that is part of an <see cref="ErrorSet" />.
+/// Error related to <see cref="ErrorSet" />.
 /// </summary>
 public sealed record class Error
 {
@@ -98,9 +98,9 @@ public sealed record class Error
 
 	#region Static API
 
-	/// <summary>Creates <see cref="ErrorKind.Failure" /> error.</summary>
-	/// <param name="description">Description.</param>
-	/// <param name="innerError">The inner error.</param>
+	/// <summary>Creates a <see cref="ErrorKind.Failure" /> error.</summary>
+	/// <param name="description">The description.</param>
+	/// <param name="innerError">The inner <see cref="Error" />.</param>
 	/// <returns>A new <see cref="ErrorKind.Failure" /> error.</returns>
 	public static Error Failure(string description, Error? innerError = null)
 	{
@@ -110,9 +110,9 @@ public sealed record class Error
 		};
 	}
 
-	/// <summary>Creates <see cref="ErrorKind.Unexpected" /> error.</summary>
-	/// <param name="description">Description.</param>
-	/// <param name="e">Exception that caused this error.</param>
+	/// <summary>Creates an <see cref="ErrorKind.Unexpected" /> error.</summary>
+	/// <param name="description">The description.</param>
+	/// <param name="e">The exception that caused this error.</param>
 	/// <returns>A new <see cref="ErrorKind.Unexpected" /> error.</returns>
 	public static Error Unexpected(Exception e, string? description = null)
 	{

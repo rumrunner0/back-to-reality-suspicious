@@ -7,7 +7,7 @@ using Rumrunner0.BackToReality.Suspicious.Extensions;
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>
-/// A set of <see cref="Error"/>s that is used in <see cref="Suspicious{TResult}" />.
+/// Set of <see cref="Error"/>s related to <see cref="Suspicious{TResult}" />.
 /// </summary>
 public sealed record class ErrorSet
 {
@@ -69,7 +69,7 @@ public sealed record class ErrorSet
 	/// <summary>Flag that indicates whether any errors exist.</summary>
 	public bool HasErrors => this._errors.Any() || this._innerSet is { HasErrors: true };
 
-	/// <summary>Adds an error to this set.</summary>
+	/// <summary>Adds an error.</summary>
 	/// <param name="error">The <see cref="Error" />.</param>
 	/// <returns>This <see cref="ErrorSet" />.</returns>
 	public ErrorSet WithError(Error error)
@@ -78,8 +78,7 @@ public sealed record class ErrorSet
 		return this;
 	}
 
-	/// <summary>Adds errors to this set.</summary>
-	/// <remarks>Uses <see cref="HashSet{T}" />.<see cref="HashSet{T}.UnionWith"/> under the hood.</remarks>
+	/// <summary>Adds errors.</summary>
 	/// <param name="errors">The <see cref="Error" />s.</param>
 	/// <returns>This <see cref="ErrorSet" />.</returns>
 	public ErrorSet WithErrors(IEnumerable<Error> errors)
@@ -88,7 +87,7 @@ public sealed record class ErrorSet
 		return this;
 	}
 
-	/// <summary>Adds an inner error set to this set.</summary>
+	/// <summary>Sets an inner error set.</summary>
 	/// <param name="inner">The inner <see cref="ErrorSet" />.</param>
 	/// <returns>This <see cref="ErrorSet" />.</returns>
 	public ErrorSet WithInnerSet(ErrorSet inner)

@@ -8,9 +8,9 @@ using Rumrunner0.BackToReality.Suspicious.Extensions;
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>
-/// Result monad that wraps the operation result or errors.
+/// Result monad that wraps either an actual result or a set of errors.
 /// </summary>
-/// <typeparam name="TResult">Type of the result.</typeparam>
+/// <typeparam name="TResult">The result type.</typeparam>
 public sealed record class Suspicious<TResult>
 {
 	#region Instance State
@@ -58,44 +58,44 @@ public sealed record class Suspicious<TResult>
 	public bool FromError => SuspiciousState.ErrorStates.Contains(this.State);
 
 	/// <inheritdoc cref="_result" />
-	public TResult Result => this._result ?? throw new InvalidOperationException($"Result doesn't exist. Use '.{nameof(HasResult)}' to ensure the result exists");
+	public TResult Result => this._result ?? throw new InvalidOperationException($"The result doesn't exist. Use '.{nameof(HasResult)}' to ensure the result exists");
 
 	/// <inheritdoc cref="_errorSet" />
-	public ErrorSet ErrorSet => this._errorSet ?? throw new InvalidOperationException($"Error set doesn't exist. Use '.{nameof(FromError)}' to ensure the error set exists or '.{nameof(HasErrors)}' to ensure that actual errors exist");
+	public ErrorSet ErrorSet => this._errorSet ?? throw new InvalidOperationException($"The error set doesn't exist. Use '.{nameof(FromError)}' to ensure the error set exists, or '.{nameof(HasErrors)}' to ensure actual errors exist");
 
 	/// <summary>Adds an error to the error set.</summary>
-	/// <remarks>To use this method, this <see cref="Suspicious{TResult}" /> must have been created from an error.</remarks>
 	/// <param name="error">The error.</param>
 	/// <returns>This <see cref="Suspicious{TResult}" />.</returns>
-	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from error.</exception>
+	/// <remarks>To use this method, this <see cref="Suspicious{TResult}" /> must have been created from an error.</remarks>
+	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
 	public Suspicious<TResult> WithError(Error error)
 	{
-		if (!this.FromError) throw new InvalidOperationException($"{nameof(Suspicious<TResult>)} wasn't created from error");
-		if (this._errorSet is null) throw new UnreachableException($"Error set is null but '.{nameof(this.FromError)}' is {this.FromError}");
+		if (!this.FromError) throw new InvalidOperationException($"The {nameof(Suspicious<TResult>)} wasn't created from an error");
+		if (this._errorSet is null) throw new UnreachableException($"The error set is null but '.{nameof(this.FromError)}' is {this.FromError}");
 		this._errorSet.WithError(error);
 		return this;
 	}
 
 	/// <summary>Adds multiple errors to the error set.</summary>
-	/// <remarks>To use this method, this <see cref="Suspicious{TResult}" /> must have been created from an error.</remarks>
 	/// <param name="errors">The errors.</param>
 	/// <returns>This <see cref="Suspicious{TResult}" />.</returns>
-	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from error.</exception>
+	/// <remarks>To use this method, this <see cref="Suspicious{TResult}" /> must have been created from an error.</remarks>
+	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
 	public Suspicious<TResult> WithErrors(IEnumerable<Error> errors)
 	{
-		if (!this.FromError) throw new InvalidOperationException($"{nameof(Suspicious<TResult>)} wasn't created from error");
-		if (this._errorSet is null) throw new UnreachableException($"Error set is null but '.{nameof(this.FromError)}' is {this.FromError}");
+		if (!this.FromError) throw new InvalidOperationException($"The {nameof(Suspicious<TResult>)} wasn't created from an error");
+		if (this._errorSet is null) throw new UnreachableException($"The error set is null but '.{nameof(this.FromError)}' is {this.FromError}");
 		this._errorSet.WithErrors(errors);
 		return this;
 	}
 
-	/// <summary>Searches for the most serious error kind (with the highest priority).</summary>
+	/// <summary>Finds the most critical error kind based on priority.</summary>
 	/// <returns>An <see cref="ErrorKind" /> with the highest priority.</returns>
 	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> doesn't contain any errors.</exception>
 	public ErrorKind FindTheMostCriticalErrorKind()
 	{
-		if (!this.HasErrors) throw new InvalidOperationException("Error set doesn't contain any errors");
-		if (this._errorSet is null) throw new UnreachableException($"Error set is null but '.{nameof(this.HasErrors)}' is {this.HasErrors}");
+		if (!this.HasErrors) throw new InvalidOperationException("The error set doesn't contain any errors");
+		if (this._errorSet is null) throw new UnreachableException($"The error set is null but '.{nameof(this.HasErrors)}' is {this.HasErrors}");
 		return ErrorKind.WithHighestPriority(this._errorSet.AllErrors.Select(e => e.Kind));
 	}
 
@@ -135,7 +135,6 @@ public sealed record class Suspicious<TResult>
 		return true;
 	}
 
-
 	/// <summary>Creates a string that represents this instance in redacted mode.</summary>
 	/// <returns>A string that represents this instance in redacted mode.</returns>
 	public string ToStringRedacted()
@@ -156,13 +155,13 @@ public sealed record class Suspicious<TResult>
 	/// <inheritdoc cref="From(TResult)" />
 	public static implicit operator Suspicious<TResult>(TResult result) => Suspicious<TResult>.From(result);
 
-	/// <summary>Creates a new <see cref="Suspicious{TResult}" /> from a <paramref name="result" />.</summary>
+	/// <summary>Creates a <see cref="Suspicious{TResult}" /> from a <paramref name="result" />.</summary>
 	/// <param name="result">The <paramref name="result" />.</param>
 	/// <returns>A new <see cref="Suspicious{TResult}" />.</returns>
 	internal static Suspicious<TResult> From(TResult result) => new (result);
 
-	/// <summary>Creates a new <see cref="Suspicious{TResult}" /> from an <paramref name="errorSet" />.</summary>
-	/// <param name="errorSet">The <paramref name="errorSet" />.</param>
+	/// <summary>Creates a <see cref="Suspicious{TResult}" /> from an <paramref name="errorSet" />.</summary>
+	/// <param name="errorSet">The <see cref="Monad.ErrorSet"/>.</param>
 	/// <returns>A new <see cref="Suspicious{TResult}" />.</returns>
 	internal static Suspicious<TResult> From(ErrorSet errorSet) => new (errorSet);
 

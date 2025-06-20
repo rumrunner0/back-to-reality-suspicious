@@ -6,7 +6,7 @@ using Rumrunner0.BackToReality.Suspicious.Extensions;
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>
-/// A kind of <see cref="Error" />.
+/// Kind of an <see cref="Error" />.
 /// </summary>
 public sealed record class ErrorKind
 {
@@ -30,31 +30,31 @@ public sealed record class ErrorKind
 	#region Instance API
 
 	/// <summary>
-	/// Determines if the source is greater than the other.
+	/// Determines if this instance is greater than the <paramref name="other" />.
 	/// </summary>
 	/// <param name="other">The other.</param>
-	/// <returns><c>true</c>, if the source satisfies the condition, <c>false</c>, otherwise.</returns>
+	/// <returns><c>true</c>, if the condition is satisfied, <c>false</c>, otherwise.</returns>
 	public bool IsGreaterThan(ErrorKind other) => this._priority > other._priority;
 
 	/// <summary>
-	/// Determines if the source is greater than or equals to the other.
+	/// Determines if this instance is greater than or equals to the <paramref name="other" />.
 	/// </summary>
 	/// <param name="other">The other.</param>
-	/// <returns><c>true</c>, if the source satisfies the condition, <c>false</c>, otherwise.</returns>
+	/// <returns><c>true</c>, if the condition is satisfied, <c>false</c>, otherwise.</returns>
 	public bool IsGreaterThanOrEqualsTo(ErrorKind other) => this._priority >= other._priority;
 
 	/// <summary>
-	/// Determines if the source is less than the other.
+	/// Determines if this instance is less than the <paramref name="other" />.
 	/// </summary>
 	/// <param name="other">The other.</param>
-	/// <returns><c>true</c>, if the source satisfies the condition, <c>false</c>, otherwise.</returns>
+	/// <returns><c>true</c>, if the condition is satisfied, <c>false</c>, otherwise.</returns>
 	public bool IsLessThan(ErrorKind other) => this._priority < other._priority;
 
 	/// <summary>
-	/// Determines if the source is less than or equals to the other.
+	/// Determines if this instance is less than or equals to the <paramref name="other" />.
 	/// </summary>
 	/// <param name="other">The other.</param>
-	/// <returns><c>true</c>, if the source satisfies the condition, <c>false</c>, otherwise.</returns>
+	/// <returns><c>true</c>, if the condition is satisfied, <c>false</c>, otherwise.</returns>
 	public bool IsLessThanOrEqualsTo(ErrorKind other) => this._priority <= other._priority;
 
 	#endregion
@@ -115,7 +115,11 @@ public sealed record class ErrorKind
 	/// <summary>Unspecified <see cref="ErrorKind" />.</summary>
 	public static ErrorKind Unspecified { get; } = new (name: "unspecified", priority: int.MaxValue);
 
-	/// <inheritdoc cref="PriorityComparer" />
+	/// <summary>
+	/// Finds the <see cref="ErrorKind" /> with the highest priority.
+	/// </summary>
+	/// <param name="kinds">The <see cref="ErrorKind" />s.</param>
+	/// <returns>The <see cref="ErrorKind" /> with the highest priority.</returns>
 	public static ErrorKind WithHighestPriority(IEnumerable<ErrorKind> kinds) => kinds.MaxBy(k => k, ErrorKind._priorityComparer)!;
 
 	#endregion
