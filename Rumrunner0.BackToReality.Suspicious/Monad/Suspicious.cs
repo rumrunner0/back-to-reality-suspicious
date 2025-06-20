@@ -92,7 +92,7 @@ public sealed record class Suspicious<TResult>
 	/// <summary>Searches for the most serious error kind (with the highest priority).</summary>
 	/// <returns>An <see cref="ErrorKind" /> with the highest priority.</returns>
 	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> doesn't contain any errors.</exception>
-	public ErrorKind FindTheMostSeriousErrorKind()
+	public ErrorKind FindTheMostCriticalErrorKind()
 	{
 		if (!this.HasErrors) throw new InvalidOperationException("Error set doesn't contain any errors");
 		if (this._errorSet is null) throw new UnreachableException($"Error set is null but '.{nameof(this.HasErrors)}' is {this.HasErrors}");
