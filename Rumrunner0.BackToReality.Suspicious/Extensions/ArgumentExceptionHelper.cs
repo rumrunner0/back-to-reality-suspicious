@@ -56,6 +56,6 @@ internal static class ArgumentExceptionHelper
 	/// <exception cref="ArgumentException">If the <paramref name="source" /> is empty.</exception>
 	internal static void ThrowIfEmptyOrWhiteSpace(string source, [CallerArgumentExpression("source")] string? argumentName = null)
 	{
-		if (source.IsEmptyOrWhiteSpace()) throw new ArgumentException($"{argumentName} is empty or whitespace");
+		if (source.IsEmptyOrWhitespace()) throw new ArgumentException($"{argumentName} is empty or whitespace");
 	}
 }
