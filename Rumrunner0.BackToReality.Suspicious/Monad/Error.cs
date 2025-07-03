@@ -60,8 +60,17 @@ public sealed record class Error
 	{
 		builder.Append($"Kind = {this._kind}");
 		builder.Append($", Description = {this._description}");
-		builder.Append($", Details = {this._details ?? "null"}");
-		builder.Append($", InnerError = {this._innerError?.ToString() ?? "null"}");
+
+		if (this._details is not null)
+		{
+			builder.Append($", Details = {this._details}");
+		}
+
+		if (this._innerError is not null)
+		{
+			builder.Append($", InnerError = {this._innerError}");
+		}
+
 		return true;
 	}
 
@@ -79,6 +88,20 @@ public sealed record class Error
 		}
 
 		return true;
+	}
+
+	/// <summary>Creates a string that represents this instance in redacted mode.</summary>
+	/// <returns>A string that represents this instance in redacted mode.</returns>
+	public override string ToString()
+	{
+		// TODO: ADD MULTILINE FORMATTING??? just formatted JSON I think, please!
+		var builder = new StringBuilder();
+
+		builder.Append("{ ");
+		if (this.PrintMembers(builder)) builder.Append(' ');
+		builder.Append('}');
+
+		return builder.ToString();
 	}
 
 	/// <summary>Creates a string that represents this instance in redacted mode.</summary>

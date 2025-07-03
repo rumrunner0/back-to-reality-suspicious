@@ -107,8 +107,17 @@ public sealed record class ErrorSet
 	{
 		builder.Append($"Category = {this._category}");
 		builder.Append($", Header = {this._header}");
-		builder.Append($", Errors = [ {this._errors.StringJoin(", ")} ]");
-		builder.Append($", InnerSet = {this._innerSet?.ToString() ?? "null"}");
+
+		if (this._errors.Any())
+		{
+			builder.Append($", Errors = [ {this._errors.StringJoin(", ")} ]");
+		}
+
+		if (this._innerSet is not null)
+		{
+			builder.Append($", InnerSet = {this._innerSet}");
+		}
+
 		return true;
 	}
 
@@ -117,17 +126,11 @@ public sealed record class ErrorSet
 	/// <returns><c>true</c>, if members should be printed, <c>false</c>, otherwise.</returns>
 	private bool PrintMembersRedacted(StringBuilder builder)
 	{
-		builder.Append($"Category = {this._category}");
-		builder.Append($", Header = {this._header}");
-
-		if (this._errors.Any())
-		{
-			builder.Append($", Errors = [ {this._errors.Select(e => e.ToStringRedacted()).StringJoin(", ")} ]");
-		}
+		builder.Append(this._header);
 
 		if (this._innerSet is not null)
 		{
-			builder.Append($", InnerSet = {this._innerSet.ToStringRedacted()}");
+			builder.Append($" <-- {this._innerSet.ToStringRedacted()}");
 		}
 
 		return true;
@@ -139,9 +142,7 @@ public sealed record class ErrorSet
 	{
 		var builder = new StringBuilder();
 
-		builder.Append("{ ");
-		if (this.PrintMembersRedacted(builder)) builder.Append(' ');
-		builder.Append('}');
+		this.PrintMembersRedacted(builder);
 
 		return builder.ToString();
 	}

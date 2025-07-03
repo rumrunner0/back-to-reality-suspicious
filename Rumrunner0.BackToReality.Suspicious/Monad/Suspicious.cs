@@ -108,8 +108,20 @@ public sealed record class Suspicious<TResult>
 	/// <returns><c>true</c>, if members should be printed, <c>false</c>, otherwise.</returns>
 	private bool PrintMembers(StringBuilder builder)
 	{
-		builder.Append($"Result = {this._result?.ToString() ?? "null"}");
-		builder.Append($", ErrorSet = {this._errorSet?.ToString() ?? "null"}");
+		var previousMemberExists = false;
+
+		if (this._result is not null)
+		{
+			builder.Append($"Result = {this._result}");
+			previousMemberExists = true;
+		}
+
+		if (this._errorSet is not null)
+		{
+			if (previousMemberExists) builder.Append(", ");
+			builder.Append(this._errorSet);
+		}
+
 		return true;
 	}
 
@@ -129,7 +141,7 @@ public sealed record class Suspicious<TResult>
 		if (this._errorSet is not null)
 		{
 			if (previousMemberExists) builder.Append(", ");
-			builder.Append($"ErrorSet = {this._errorSet.ToStringRedacted()}");
+			builder.Append(this._errorSet.ToStringRedacted());
 		}
 
 		return true;

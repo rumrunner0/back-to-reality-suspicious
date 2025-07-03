@@ -66,10 +66,14 @@ public sealed record class ErrorKind
 	/// <returns><c>true</c>, if members should be printed, <c>false</c>, otherwise.</returns>
 	private bool PrintMembers(StringBuilder builder)
 	{
-		builder.Append($"Name = {this._name}");
+		builder.Append(this._name);
 		builder.Append($", Priority = {this._priority}");
 		return true;
 	}
+
+	/// <summary>Creates a string that represents this instance in redacted mode.</summary>
+	/// <returns>A string that represents this instance in redacted mode.</returns>
+	public override string ToString() => $"{this._name} ({this._priority})";
 
 	/// <summary>Creates a string that represents this instance in redacted mode.</summary>
 	/// <returns>A string that represents this instance in redacted mode.</returns>
