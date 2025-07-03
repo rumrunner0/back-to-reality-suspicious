@@ -30,7 +30,7 @@ public static class Suspicious
 		/// <param name="header">The header.</param>
 		/// <param name="errors">The <see cref="Error" />s.</param>
 		/// <returns>A new <see cref="Suspicious{TResult}" /> created from an <see cref="ErrorSet" />.</returns>
-		public static Suspicious<TResult> But(string category, string header, IEnumerable<Error> errors) => But(new (ErrorSetCategory.Custom(category), header, errors));
+		public static Suspicious<TResult> But(string category, string header, params IEnumerable<Error> errors) => But(new (ErrorSetCategory.Custom(category), header, errors));
 
 		/// <summary>Creates a <see cref="Suspicious{TResult}" /> from an <see cref="ErrorSet" />.</summary>
 		/// <param name="errorSet">The <see cref="ErrorSet" />.</param>
