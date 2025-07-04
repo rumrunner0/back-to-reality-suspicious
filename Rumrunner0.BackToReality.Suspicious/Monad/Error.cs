@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using Rumrunner0.BackToReality.SharedExtensions.Extensions;
 using Rumrunner0.BackToReality.Suspicious.Extensions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
@@ -21,7 +22,7 @@ public sealed record class Error
 	private readonly string? _details;
 
 	/// <summary>Inner error.</summary>
-	private readonly Error? _innerError;
+	private Error? _innerError;
 
 	/// <inheritdoc cref="Error" />
 	private Error(ErrorKind kind, string description)
@@ -47,7 +48,17 @@ public sealed record class Error
 	public string? Details { get => this._details; private init => this._details = value; }
 
 	/// <inheritdoc cref="_innerError" />
-	public Error? InnerError { get => this._innerError; private init => this._innerError = value; }
+	public Error? InnerError { get => this._innerError; set => this._innerError = value; }
+
+	/// <summary>Sets an inner <see cref="Error" /> for this <see cref="Error" />.</summary>
+	/// <remarks><c>null</c> is a valid value that can be used to clear the inner <see cref="Error" />.</remarks>
+	/// <param name="error">The inner <see cref="Error" />.</param>
+	/// <returns>This <see cref="Error" />.</returns>
+	public Error SetInnerError(Error? error)
+	{
+		this._innerError = error;
+		return this;
+	}
 
 	#endregion
 
@@ -134,15 +145,17 @@ public sealed record class Error
 	}
 
 	/// <summary>Creates an <see cref="ErrorKind.Unexpected" /> error.</summary>
-	/// <param name="description">The description.</param>
 	/// <param name="e">The exception that caused this error.</param>
+	/// <param name="description">The description.</param>
+	/// <param name="innerError">The inner <see cref="Error" />.</param>
 	/// <returns>A new <see cref="ErrorKind.Unexpected" /> error.</returns>
-	public static Error Unexpected(Exception e, string? description = null)
+	public static Error Unexpected(Exception e, string? description = null, Error? innerError = null)
 	{
 		ArgumentNullExceptionHelper.ThrowIfNull(e);
 		return new (ErrorKind.Unexpected, description: $"Unexpected error has occured: {description ?? e.Message}")
 		{
-			Details = e.ToString()
+			Details = e.ToString(),
+			InnerError = innerError
 		};
 	}
 
