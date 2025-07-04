@@ -47,6 +47,7 @@ public sealed record class Error
 	/// <inheritdoc cref="_details" />
 	public string? Details { get => this._details; private init => this._details = value; }
 
+	// TODO: Revert summary inheritance on all private-public entities or use separate.
 	/// <inheritdoc cref="_innerError" />
 	public Error? InnerError { get => this._innerError; set => this._innerError = value; }
 
