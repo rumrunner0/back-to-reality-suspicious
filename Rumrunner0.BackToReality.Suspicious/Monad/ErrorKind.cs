@@ -103,13 +103,6 @@ public sealed record class ErrorKind
 
 	#region Static API
 
-	/// <summary>Factory for a custom <see cref="ErrorKind" />.</summary>
-	public static ErrorKind Custom(string name, int priority)
-	{
-		ArgumentExceptionHelper.ThrowIfNullOrEmptyOrWhiteSpace(name);
-		return new (name: name, priority);
-	}
-
 	/// <summary>Failure <see cref="ErrorKind" />.</summary>
 	public static ErrorKind Failure { get; } = new (name: "failure", priority: 0);
 
@@ -119,12 +112,25 @@ public sealed record class ErrorKind
 	/// <summary>Unspecified <see cref="ErrorKind" />.</summary>
 	public static ErrorKind Unspecified { get; } = new (name: "unspecified", priority: int.MaxValue);
 
+	/// <summary>Factory for a custom <see cref="ErrorKind" />.</summary>
+	public static ErrorKind Custom(string name, int priority)
+	{
+		// TODO: Add check for reserved priorities like int.MaxValue and int.MaxValue - 1.
+		// I think, 0 should remain available.
+
+		ArgumentExceptionHelper.ThrowIfNullOrEmptyOrWhiteSpace(name);
+		return new (name, priority);
+	}
+
 	/// <summary>
 	/// Finds the <see cref="ErrorKind" /> with the highest priority.
 	/// </summary>
 	/// <param name="kinds">The <see cref="ErrorKind" />s.</param>
 	/// <returns>The <see cref="ErrorKind" /> with the highest priority.</returns>
-	public static ErrorKind WithHighestPriority(IEnumerable<ErrorKind> kinds) => kinds.MaxBy(k => k, ErrorKind._priorityComparer)!;
+	public static ErrorKind FindWithHighestPriority(IEnumerable<ErrorKind> kinds)
+	{
+		return kinds.MaxBy(k => k, ErrorKind._priorityComparer)!;
+	}
 
 	#endregion
 }
