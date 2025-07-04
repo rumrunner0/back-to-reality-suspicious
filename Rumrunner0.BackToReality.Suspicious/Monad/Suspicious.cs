@@ -8,7 +8,7 @@ using Rumrunner0.BackToReality.Suspicious.Extensions;
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>
-/// Result monad that wraps either an actual result or a set of errors.
+/// Result monad that wraps either an actual result or a collection of errors.
 /// </summary>
 /// <typeparam name="TResult">The result type.</typeparam>
 public sealed record class Suspicious<TResult>
@@ -18,8 +18,8 @@ public sealed record class Suspicious<TResult>
 	/// <summary>Result.</summary>
 	private readonly TResult? _result;
 
-	/// <summary>Error set.</summary>
-	private readonly ErrorSet? _errorSet;
+	/// <summary>Error collection.</summary>
+	private readonly ErrorCollection? _errorCollection;
 
 	/// <inheritdoc cref="Suspicious{TResult}" />
 	private Suspicious(TResult result)
@@ -29,10 +29,10 @@ public sealed record class Suspicious<TResult>
 	}
 
 	/// <inheritdoc cref="Suspicious{TResult}" />
-	private Suspicious(ErrorSet errorSet)
+	private Suspicious(ErrorCollection errorCollection)
 	{
-		ArgumentNullExceptionHelper.ThrowIfNull(errorSet);
-		this._errorSet = errorSet;
+		ArgumentNullExceptionHelper.ThrowIfNull(errorCollection);
+		this._errorCollection = errorCollection;
 	}
 
 	#endregion
@@ -40,11 +40,11 @@ public sealed record class Suspicious<TResult>
 	#region Instance API
 
 	/// <summary>State.</summary>
-	public SuspiciousState State => (Result: this._result, ErrorSet: this._errorSet) switch
+	public SuspiciousState State => (Result: this._result, ErrorCollection: this._errorCollection) switch
 	{
 		{ Result: { } } => SuspiciousState.Result,
-		{ ErrorSet.HasErrors: true } => SuspiciousState.Error,
-		{ ErrorSet: { } } => SuspiciousState.EmptyErrorSet,
+		{ ErrorCollection.HasErrors: true } => SuspiciousState.Error,
+		{ ErrorCollection: { } } => SuspiciousState.EmptyErrorCollection,
 		_ => SuspiciousState.Unexpected
 	};
 
@@ -60,43 +60,43 @@ public sealed record class Suspicious<TResult>
 	/// <inheritdoc cref="_result" />
 	public TResult Result => this._result ?? throw new InvalidOperationException($"The result doesn't exist. Use '.{nameof(HasResult)}' to ensure the result exists");
 
-	/// <inheritdoc cref="_errorSet" />
-	public ErrorSet ErrorSet => this._errorSet ?? throw new InvalidOperationException($"The error set doesn't exist. Use '.{nameof(FromError)}' to ensure the error set exists, or '.{nameof(HasErrors)}' to ensure actual errors exist");
+	/// <inheritdoc cref="_errorCollection" />
+	public ErrorCollection ErrorCollection => this._errorCollection ?? throw new InvalidOperationException($"The error collection doesn't exist. Use '.{nameof(FromError)}' to ensure the error collection exists, or '.{nameof(HasErrors)}' to ensure actual errors exist");
 
-	/// <summary>Adds an error to the error set.</summary>
+	/// <summary>Adds an <see cref="Error" /> to the <see cref="ErrorCollection" />.</summary>
 	/// <param name="error">The error.</param>
 	/// <returns>This <see cref="Suspicious{TResult}" />.</returns>
 	/// <remarks>To use this method, this <see cref="Suspicious{TResult}" /> must have been created from an error.</remarks>
 	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
-	public Suspicious<TResult> WithError(Error error)
+	public Suspicious<TResult> AddError(Error error)
 	{
 		if (!this.FromError) throw new InvalidOperationException($"The {nameof(Suspicious<TResult>)} wasn't created from an error");
-		if (this._errorSet is null) throw new UnreachableException($"The error set is null but '.{nameof(this.FromError)}' is {this.FromError}");
-		this._errorSet.WithError(error);
+		if (this._errorCollection is null) throw new UnreachableException($"The error collection is null but '.{nameof(this.FromError)}' is {this.FromError}");
+		this._errorCollection.AddError(error);
 		return this;
 	}
 
-	/// <summary>Adds multiple errors to the error set.</summary>
+	/// <summary>Adds multiple <see cref="Error" />s to the <see cref="ErrorCollection" />.</summary>
 	/// <param name="errors">The errors.</param>
 	/// <returns>This <see cref="Suspicious{TResult}" />.</returns>
 	/// <remarks>To use this method, this <see cref="Suspicious{TResult}" /> must have been created from an error.</remarks>
 	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
-	public Suspicious<TResult> WithErrors(IEnumerable<Error> errors)
+	public Suspicious<TResult> AddErrors(IEnumerable<Error> errors)
 	{
 		if (!this.FromError) throw new InvalidOperationException($"The {nameof(Suspicious<TResult>)} wasn't created from an error");
-		if (this._errorSet is null) throw new UnreachableException($"The error set is null but '.{nameof(this.FromError)}' is {this.FromError}");
-		this._errorSet.WithErrors(errors);
+		if (this._errorCollection is null) throw new UnreachableException($"The error collection is null but '.{nameof(this.FromError)}' is {this.FromError}");
+		this._errorCollection.AddErrors(errors);
 		return this;
 	}
 
-	/// <summary>Finds the most critical error kind based on priority.</summary>
+	/// <summary>Finds the most critical <see cref="ErrorKind" /> based on priority.</summary>
 	/// <returns>An <see cref="ErrorKind" /> with the highest priority.</returns>
 	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> doesn't contain any errors.</exception>
 	public ErrorKind FindTheMostCriticalErrorKind()
 	{
-		if (!this.HasErrors) throw new InvalidOperationException("The error set doesn't contain any errors");
-		if (this._errorSet is null) throw new UnreachableException($"The error set is null but '.{nameof(this.HasErrors)}' is {this.HasErrors}");
-		return ErrorKind.WithHighestPriority(this._errorSet.AllErrors.Select(e => e.Kind));
+		if (!this.HasErrors) throw new InvalidOperationException("The error collection doesn't contain any errors");
+		if (this._errorCollection is null) throw new UnreachableException($"The error collection is null but '.{nameof(this.HasErrors)}' is {this.HasErrors}");
+		return ErrorKind.FindWithHighestPriority(this._errorCollection.AllErrors.Select(e => e.Kind));
 	}
 
 	#endregion
@@ -116,10 +116,10 @@ public sealed record class Suspicious<TResult>
 			previousMemberExists = true;
 		}
 
-		if (this._errorSet is not null)
+		if (this._errorCollection is not null)
 		{
 			if (previousMemberExists) builder.Append(", ");
-			builder.Append(this._errorSet);
+			builder.Append(this._errorCollection);
 		}
 
 		return true;
@@ -138,10 +138,10 @@ public sealed record class Suspicious<TResult>
 			previousMemberExists = true;
 		}
 
-		if (this._errorSet is not null)
+		if (this._errorCollection is not null)
 		{
 			if (previousMemberExists) builder.Append(", ");
-			builder.Append(this._errorSet.ToStringRedacted());
+			builder.Append(this._errorCollection.ToStringRedacted());
 		}
 
 		return true;
@@ -172,10 +172,10 @@ public sealed record class Suspicious<TResult>
 	/// <returns>A new <see cref="Suspicious{TResult}" />.</returns>
 	internal static Suspicious<TResult> From(TResult result) => new (result);
 
-	/// <summary>Creates a <see cref="Suspicious{TResult}" /> from an <paramref name="errorSet" />.</summary>
-	/// <param name="errorSet">The <see cref="Monad.ErrorSet"/>.</param>
+	/// <summary>Creates a <see cref="Suspicious{TResult}" /> from an <paramref name="errorCollection" />.</summary>
+	/// <param name="errorCollection">The <see cref="ErrorCollection"/>.</param>
 	/// <returns>A new <see cref="Suspicious{TResult}" />.</returns>
-	internal static Suspicious<TResult> From(ErrorSet errorSet) => new (errorSet);
+	internal static Suspicious<TResult> From(ErrorCollection errorCollection) => new (errorCollection);
 
 	#endregion
 }

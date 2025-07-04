@@ -25,16 +25,16 @@ public static class Suspicious
 	/// </summary>
 	public static class Not<TResult>
 	{
-		/// <summary>Creates a <see cref="Suspicious{TResult}" /> from <see cref="ErrorSet" /> parameters.</summary>
+		/// <summary>Creates a <see cref="Suspicious{TResult}" /> from <see cref="ErrorCollection" /> parameters.</summary>
 		/// <param name="category">The category name.</param>
 		/// <param name="header">The header.</param>
 		/// <param name="errors">The <see cref="Error" />s.</param>
-		/// <returns>A new <see cref="Suspicious{TResult}" /> created from an <see cref="ErrorSet" />.</returns>
-		public static Suspicious<TResult> But(string category, string header, params IEnumerable<Error> errors) => But(new (ErrorSetCategory.Custom(category), header, errors));
+		/// <returns>A new <see cref="Suspicious{TResult}" /> created from an <see cref="ErrorCollection" />.</returns>
+		public static Suspicious<TResult> But(string category, string header, params IEnumerable<Error> errors) => But(ErrorCollection.New(category, header, errors));
 
-		/// <summary>Creates a <see cref="Suspicious{TResult}" /> from an <see cref="ErrorSet" />.</summary>
-		/// <param name="errorSet">The <see cref="ErrorSet" />.</param>
-		/// <returns>A new <see cref="Suspicious{TResult}" /> created from the <see cref="ErrorSet" />.</returns>
-		public static Suspicious<TResult> But(ErrorSet errorSet) => Suspicious<TResult>.From(errorSet);
+		/// <summary>Creates a <see cref="Suspicious{TResult}" /> from an <see cref="ErrorCollection" />.</summary>
+		/// <param name="errorCollection">The <see cref="ErrorCollection" />.</param>
+		/// <returns>A new <see cref="Suspicious{TResult}" /> created from the <see cref="ErrorCollection" />.</returns>
+		public static Suspicious<TResult> But(ErrorCollection errorCollection) => Suspicious<TResult>.From(errorCollection);
 	}
 }

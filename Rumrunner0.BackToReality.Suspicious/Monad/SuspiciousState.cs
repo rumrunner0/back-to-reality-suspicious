@@ -31,17 +31,17 @@ public sealed record class SuspiciousState
 	/// <summary>Error <see cref="SuspiciousState" />.</summary>
 	/// <remarks>
 	/// This state indicates that a <see cref="Suspicious{TResult}" /> was created
-	/// from an <see cref="ErrorSet" /> and it contains actual <see cref="Error" />s.
+	/// from an <see cref="ErrorCollection" /> and it contains actual <see cref="Error" />s.
 	/// </remarks>
 	public static SuspiciousState Error { get; } = new (value: "error");
 
-	/// <summary>Empty error set <see cref="SuspiciousState" />.</summary>
+	/// <summary>Empty error collection <see cref="SuspiciousState" />.</summary>
 	/// <remarks>
 	/// This state indicates that a <see cref="Suspicious{TResult}" /> was created
-	/// from an <see cref="ErrorSet" /> but it DOESN'T contain any <see cref="Error" />s.
-	/// While this is technically possible, it usually indicates that errors were not added to the set.
+	/// from an <see cref="ErrorCollection" /> but it DOESN'T contain any <see cref="Error" />s.
+	/// While this is technically possible, it usually indicates that errors were not added to the collection.
 	/// </remarks>
-	public static SuspiciousState EmptyErrorSet { get; } = new (value: "empty-error-set");
+	public static SuspiciousState EmptyErrorCollection { get; } = new (value: "empty-error-collection");
 
 	/// <summary>Unexpected <see cref="SuspiciousState" />.</summary>
 	public static SuspiciousState Unexpected { get; } = new (value: "unexpected");
@@ -50,7 +50,7 @@ public sealed record class SuspiciousState
 	public static SuspiciousState[] ErrorStates { get; } =
 	[
 		SuspiciousState.Error,
-		SuspiciousState.EmptyErrorSet
+		SuspiciousState.EmptyErrorCollection
 	];
 
 	#endregion

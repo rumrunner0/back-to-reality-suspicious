@@ -6,7 +6,7 @@ using Rumrunner0.BackToReality.Suspicious.Extensions;
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>
-/// Error related to <see cref="ErrorSet" />.
+/// Error related to <see cref="ErrorCollection" />.
 /// </summary>
 public sealed record class Error
 {
@@ -90,12 +90,11 @@ public sealed record class Error
 	/// <returns><c>true</c>, if members should be printed, <c>false</c>, otherwise.</returns>
 	private bool PrintMembersRedacted(StringBuilder builder)
 	{
-		builder.Append($"Kind = {this._kind.ToStringRedacted()}");
-		builder.Append($", Description = {this._description}");
+		builder.Append(this._description);
 
 		if (this._innerError is not null)
 		{
-			builder.Append($", InnerError = {this._innerError.ToStringRedacted()}");
+			builder.Append($" <-- {this._innerError.ToStringRedacted()}");
 		}
 
 		return true;
@@ -106,6 +105,7 @@ public sealed record class Error
 	public override string ToString()
 	{
 		// TODO: ADD MULTILINE FORMATTING??? just formatted JSON I think, please!
+
 		var builder = new StringBuilder();
 
 		builder.Append("{ ");

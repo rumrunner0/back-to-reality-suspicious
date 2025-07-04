@@ -3,17 +3,17 @@ using Rumrunner0.BackToReality.Suspicious.Extensions;
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>
-/// Category of an <see cref="ErrorSet" />.
+/// Category of an <see cref="ErrorCollection" />.
 /// </summary>
-public sealed record class ErrorSetCategory
+public sealed record class ErrorCollectionCategory
 {
 	#region Instance State
 
 	/// <summary>Name.</summary>
 	private readonly string _name;
 
-	/// <inheritdoc cref="ErrorSetCategory" />
-	private ErrorSetCategory(string name) => this._name = name;
+	/// <inheritdoc cref="ErrorCollectionCategory" />
+	private ErrorCollectionCategory(string name) => this._name = name;
 
 	#endregion
 
@@ -27,15 +27,15 @@ public sealed record class ErrorSetCategory
 
 	#region Static API
 
-	/// <summary>Factory for a custom <see cref="ErrorSetCategory" />.</summary>
-	public static ErrorSetCategory Custom(string name)
+	/// <summary>Unspecified <see cref="ErrorCollectionCategory" />.</summary>
+	public static ErrorCollectionCategory Unspecified { get; } = new (name: "unspecified");
+
+	/// <summary>Factory for a custom <see cref="ErrorCollectionCategory" />.</summary>
+	public static ErrorCollectionCategory Custom(string name)
 	{
 		ArgumentExceptionHelper.ThrowIfNullOrEmptyOrWhiteSpace(name);
 		return new (name);
 	}
-
-	/// <summary>Unspecified <see cref="ErrorSetCategory" />.</summary>
-	public static ErrorSetCategory Unspecified { get; } = new (name: "unspecified");
 
 	#endregion
 }
