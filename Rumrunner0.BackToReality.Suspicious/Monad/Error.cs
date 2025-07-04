@@ -138,7 +138,11 @@ public sealed record class Error
 	/// <returns>A new <see cref="ErrorKind.Failure" /> error.</returns>
 	public static Error Failure(string description, Error? innerError = null)
 	{
-		return new (ErrorKind.Failure, description)
+		return new
+		(
+			ErrorKind.Failure,
+			description
+		)
 		{
 			InnerError = innerError
 		};
@@ -152,7 +156,12 @@ public sealed record class Error
 	public static Error Unexpected(Exception e, string? description = null, Error? innerError = null)
 	{
 		ArgumentNullExceptionHelper.ThrowIfNull(e);
-		return new (ErrorKind.Unexpected, description: $"Unexpected error has occured: {description ?? e.Message}")
+
+		return new
+		(
+			ErrorKind.Unexpected,
+			description: $"Unexpected error has occured: {description ?? e.JoinMessages(" <-- ")}"
+		)
 		{
 			Details = e.ToString(),
 			InnerError = innerError
