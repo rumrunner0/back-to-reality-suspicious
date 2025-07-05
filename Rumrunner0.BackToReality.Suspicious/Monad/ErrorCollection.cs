@@ -6,9 +6,7 @@ using Rumrunner0.BackToReality.Suspicious.Extensions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>
-/// Collection of <see cref="Error"/>s related to <see cref="Suspicious{TResult}" />.
-/// </summary>
+/// <summary>Collection of <see cref="Error"/>s related to <see cref="Suspicious{TResult}" />.</summary>
 public sealed record class ErrorCollection
 {
 	#region Instance State
@@ -42,16 +40,16 @@ public sealed record class ErrorCollection
 
 	#region Instance API
 
-	/// <inheritdoc cref="_category" />
+	/// <summary>Category.</summary>
 	public ErrorCollectionCategory Category => this._category;
 
-	/// <inheritdoc cref="_header" />
+	/// <summary>Header.</summary>
 	public string Header => this._header;
 
-	/// <inheritdoc cref="_errors" />
+	/// <summary>Errors.</summary>
 	public IReadOnlyList<Error> Errors => this._errors;
 
-	/// <inheritdoc cref="_innerCollection" />
+	/// <summary>Inner collection of errors.</summary>
 	public ErrorCollection? InnerCollection => this._innerCollection;
 
 	/// <summary>All errors, including those contained in <see cref="InnerCollection" />.</summary>

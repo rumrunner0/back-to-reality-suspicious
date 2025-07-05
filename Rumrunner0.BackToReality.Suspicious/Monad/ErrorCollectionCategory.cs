@@ -2,9 +2,7 @@ using Rumrunner0.BackToReality.Suspicious.Extensions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>
-/// Category of an <see cref="ErrorCollection" />.
-/// </summary>
+/// <summary>Category of an <see cref="ErrorCollection" />.</summary>
 public sealed record class ErrorCollectionCategory
 {
 	#region Instance State

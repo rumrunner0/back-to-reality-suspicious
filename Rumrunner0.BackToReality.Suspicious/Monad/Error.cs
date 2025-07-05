@@ -5,9 +5,7 @@ using Rumrunner0.BackToReality.Suspicious.Extensions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>
-/// Error related to <see cref="ErrorCollection" />.
-/// </summary>
+/// <summary>Error related to <see cref="ErrorCollection" />.</summary>
 public sealed record class Error
 {
 	#region Insance State

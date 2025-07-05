@@ -7,9 +7,7 @@ using Rumrunner0.BackToReality.Suspicious.Extensions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>
-/// Result monad that wraps either an actual result or a collection of errors.
-/// </summary>
+/// <summary>Result monad that wraps either an actual result or a collection of errors.</summary>
 /// <typeparam name="TResult">The result type.</typeparam>
 public sealed record class Suspicious<TResult>
 {
@@ -57,10 +55,10 @@ public sealed record class Suspicious<TResult>
 	/// <summary>Flag that indicates whether this <see cref="Suspicious{TResult}" /> was created from an error.</summary>
 	public bool FromError => SuspiciousState.ErrorStates.Contains(this.State);
 
-	/// <inheritdoc cref="_result" />
+	/// <summary>Result.</summary>
 	public TResult Result => this._result ?? throw new InvalidOperationException($"The result doesn't exist. Use '.{nameof(HasResult)}' to ensure the result exists");
 
-	/// <inheritdoc cref="_errorCollection" />
+	/// <summary>Error collection.</summary>
 	public ErrorCollection ErrorCollection => this._errorCollection ?? throw new InvalidOperationException($"The error collection doesn't exist. Use '.{nameof(FromError)}' to ensure the error collection exists, or '.{nameof(HasErrors)}' to ensure actual errors exist");
 
 	/// <summary>Adds an <see cref="Error" /> to the <see cref="ErrorCollection" />.</summary>

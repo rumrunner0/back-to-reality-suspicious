@@ -3,9 +3,7 @@ using Rumrunner0.BackToReality.Suspicious.Results;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>
-/// Factory for a <see cref="Suspicious{TResult}" />.
-/// </summary>
+/// <summary>Factory for a <see cref="Suspicious{TResult}" />.</summary>
 public static class Suspicious
 {
 	/// <summary>A <see cref="Success" /> wrapped in a <see cref="Suspicious{TResult}" />.</summary>

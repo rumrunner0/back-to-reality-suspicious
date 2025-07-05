@@ -1,8 +1,6 @@
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>
-/// State of a <see cref="Suspicious{TResult}" />.
-/// </summary>
+/// <summary>State of a <see cref="Suspicious{TResult}" />.</summary>
 public sealed record class SuspiciousState
 {
 	#region Instance State

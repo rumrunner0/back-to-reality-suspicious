@@ -5,9 +5,7 @@ using Rumrunner0.BackToReality.Suspicious.Extensions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>
-/// Kind of an <see cref="Error" />.
-/// </summary>
+/// <summary>Kind of an <see cref="Error" />.</summary>
 public sealed record class ErrorKind
 {
 	#region Instance State
