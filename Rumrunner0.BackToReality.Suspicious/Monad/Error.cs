@@ -25,35 +25,39 @@ public sealed record class Error
 	private Error? _innerError;
 
 	/// <inheritdoc cref="Error" />
-	private Error(ErrorKind kind, string description)
+	private Error(ErrorKind kind, string description, string? details = null)
 	{
 		ArgumentNullExceptionHelper.ThrowIfNull(kind);
 		ArgumentExceptionHelper.ThrowIfNullOrEmptyOrWhiteSpace(description);
 
 		this._kind = kind;
 		this._description = description;
+		this._details = details;
 	}
 
 	#endregion
 
 	#region Instance API
 
-	/// <inheritdoc cref="_kind" />
+	/// <summary>Kind.</summary>
 	public ErrorKind Kind => this._kind;
 
-	/// <inheritdoc cref="_description" />
+	/// <summary>Description.</summary>
 	public string Description => this._description;
 
-	/// <inheritdoc cref="_details" />
-	public string? Details { get => this._details; private init => this._details = value; }
+	/// <summary>Details.</summary>
+	public string? Details => this._details;
 
-	// TODO: Revert summary inheritance on all private-public entities or use separate.
-	/// <inheritdoc cref="_innerError" />
-	public Error? InnerError { get => this._innerError; set => this._innerError = value; }
+	/// <summary>Inner error.</summary>
+	public Error? InnerError
+	{
+		get => this._innerError;
+		set => this._innerError = value;
+	}
 
 	/// <summary>Sets an inner <see cref="Error" /> for this <see cref="Error" />.</summary>
-	/// <remarks><c>null</c> is a valid value that can be used to clear the inner <see cref="Error" />.</remarks>
-	/// <param name="error">The inner <see cref="Error" />.</param>
+	/// <remarks><c>null</c> can be used to remove the existing inner <see cref="Error" />.</remarks>
+	/// <param name="error">The inner <see cref="Error" /> to set, or <c>null</c> to remove it.</param>
 	/// <returns>This <see cref="Error" />.</returns>
 	public Error SetInnerError(Error? error)
 	{
@@ -161,10 +165,10 @@ public sealed record class Error
 		return new
 		(
 			ErrorKind.Unexpected,
-			description: $"Unexpected error has occured: {description ?? e.JoinMessages(" <-- ")}"
+			description: $"Unexpected error has occured: {description ?? e.JoinMessages(" <-- ")}",
+			details: e.ToString()
 		)
 		{
-			Details = e.ToString(),
 			InnerError = innerError
 		};
 	}
