@@ -129,7 +129,7 @@ public sealed record class ErrorKind
 	/// <returns>The <see cref="ErrorKind" /> with the highest priority.</returns>
 	public static ErrorKind FindWithHighestPriority(IEnumerable<ErrorKind> kinds)
 	{
-		return kinds.MaxBy(k => k, ErrorKind._priorityComparer)!;
+		return kinds.Max(ErrorKind._priorityComparer)!;
 	}
 
 	#endregion
