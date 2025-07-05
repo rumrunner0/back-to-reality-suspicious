@@ -37,6 +37,8 @@ public sealed record class Suspicious<TResult>
 
 	#region Instance API
 
+	// TODO: This is not good for performance.
+	// I'll need to maintain the state is a static way.
 	/// <summary>State.</summary>
 	public SuspiciousState State => (Result: this._result, ErrorCollection: this._errorCollection) switch
 	{
