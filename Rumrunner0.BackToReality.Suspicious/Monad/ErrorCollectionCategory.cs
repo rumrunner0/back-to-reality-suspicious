@@ -19,6 +19,9 @@ public sealed record class ErrorCollectionCategory
 
 	#region Instance API
 
+	/// <summary>Name.</summary>
+	public string Name => this._name;
+
 	/// <summary>Creates a string that represents this instance.</summary>
 	/// <returns>A string that represents this instance.</returns>
 	public override string ToString() => this._name;
