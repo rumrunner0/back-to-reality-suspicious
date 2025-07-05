@@ -29,32 +29,30 @@ public sealed record class ErrorKind
 
 	#region Instance API
 
-	/// <summary>
-	/// Determines if this instance is greater than the <paramref name="other" />.
-	/// </summary>
+	/// <summary>Name.</summary>
+	public string Name => this._name;
+
+	/// <summary>Priority.</summary>
+	public int Priority => this._priority;
+
+	/// <summary>Determines whether this instance is greater than the <paramref name="other" />.</summary>
 	/// <param name="other">The other.</param>
-	/// <returns><c>true</c>, if the condition is satisfied, <c>false</c>, otherwise.</returns>
+	/// <returns><c>true</c> if the condition is satisfied; <c>false</c> otherwise.</returns>
 	public bool IsGreaterThan(ErrorKind other) => this._priority > other._priority;
 
-	/// <summary>
-	/// Determines if this instance is greater than or equals to the <paramref name="other" />.
-	/// </summary>
+	/// <summary>Determines whether this instance is greater than or equals to the <paramref name="other" />.</summary>
 	/// <param name="other">The other.</param>
-	/// <returns><c>true</c>, if the condition is satisfied, <c>false</c>, otherwise.</returns>
+	/// <returns><c>true</c> if the condition is satisfied; <c>false</c> otherwise.</returns>
 	public bool IsGreaterThanOrEqualsTo(ErrorKind other) => this._priority >= other._priority;
 
-	/// <summary>
-	/// Determines if this instance is less than the <paramref name="other" />.
-	/// </summary>
+	/// <summary>Determines whether this instance is less than the <paramref name="other" />.</summary>
 	/// <param name="other">The other.</param>
-	/// <returns><c>true</c>, if the condition is satisfied, <c>false</c>, otherwise.</returns>
+	/// <returns><c>true</c> if the condition is satisfied; <c>false</c> otherwise.</returns>
 	public bool IsLessThan(ErrorKind other) => this._priority < other._priority;
 
-	/// <summary>
-	/// Determines if this instance is less than or equals to the <paramref name="other" />.
-	/// </summary>
+	/// <summary>Determines whether this instance is less than or equals to the <paramref name="other" />.</summary>
 	/// <param name="other">The other.</param>
-	/// <returns><c>true</c>, if the condition is satisfied, <c>false</c>, otherwise.</returns>
+	/// <returns><c>true</c> if the condition is satisfied; <c>false</c> otherwise.</returns>
 	public bool IsLessThanOrEqualsTo(ErrorKind other) => this._priority <= other._priority;
 
 	#endregion
@@ -63,7 +61,7 @@ public sealed record class ErrorKind
 
 	/// <summary>Prints members.</summary>
 	/// <param name="builder">The <see cref="StringBuilder" />.</param>
-	/// <returns><c>true</c>, if members should be printed, <c>false</c>, otherwise.</returns>
+	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
 	private bool PrintMembers(StringBuilder builder)
 	{
 		builder.Append(this._name);
@@ -131,6 +129,30 @@ public sealed record class ErrorKind
 	{
 		return kinds.Max(ErrorKind._priorityComparer)!;
 	}
+
+	/// <summary>Determines whether <paramref name="left" /> has higher priority than <paramref name="right" />.</summary>
+	/// <param name="left">The first <see cref="ErrorKind" /> to compare.</param>
+	/// <param name="right">The second <see cref="ErrorKind" /> to compare.</param>
+	/// <returns><c>true</c> if <paramref name="left" /> has higher priority; <c>false</c> otherwise.</returns>
+	public static bool operator >(ErrorKind left, ErrorKind right) => left.IsGreaterThan(right);
+
+	/// <summary>Determines whether <paramref name="left" /> has higher or equal priority than <paramref name="right" />.</summary>
+	/// <param name="left">The first <see cref="ErrorKind" /> to compare.</param>
+	/// <param name="right">The second <see cref="ErrorKind" /> to compare.</param>
+	/// <returns><c>true</c> if <paramref name="left" /> has higher or equal priority; <c>false</c> otherwise.</returns>
+	public static bool operator >=(ErrorKind left, ErrorKind right) => left.IsGreaterThanOrEqualsTo(right);
+
+	/// <summary>Determines whether <paramref name="left" /> has lower priority than <paramref name="right"/>.</summary>
+	/// <param name="left">The first <see cref="ErrorKind" /> to compare.</param>
+	/// <param name="right">The second <see cref="ErrorKind" /> to compare.</param>
+	/// <returns><c>true</c> if <paramref name="left" /> has lower priority; <c>false</c> otherwise.</returns>
+	public static bool operator <(ErrorKind left, ErrorKind right) => left.IsLessThan(right);
+
+	/// <summary>Determines whether <paramref name="left" /> has lower or equal priority than <paramref name="right" />.</summary>
+	/// <param name="left">The first <see cref="ErrorKind" /> to compare.</param>
+	/// <param name="right">The second <see cref="ErrorKind" /> to compare.</param>
+	/// <returns><c>true</c> if <paramref name="left" /> has lower or equal priority; <c>false</c> otherwise.</returns>
+	public static bool operator <=(ErrorKind left, ErrorKind right) => left.IsLessThanOrEqualsTo(right);
 
 	#endregion
 }
