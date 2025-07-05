@@ -109,6 +109,7 @@ public sealed record class Suspicious<TResult>
 		return this;
 	}
 
+	// TODO: Maybe we'll need a Try version of this method.
 	/// <summary>Finds the most critical <see cref="ErrorKind" /> based on priority.</summary>
 	/// <returns>An <see cref="ErrorKind" /> with the highest priority.</returns>
 	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> doesn't contain any errors.</exception>

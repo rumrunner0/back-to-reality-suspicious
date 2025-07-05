@@ -81,6 +81,8 @@ public sealed record class ErrorCollection
 	/// <returns>This <see cref="ErrorCollection" />.</returns>
 	public ErrorCollection SetInnerCollection(ErrorCollection inner)
 	{
+		// TODO: Add check to prevent inner be the same and current.
+		// I need to find a way to prevent all kinds of circular dependency.
 		this._innerCollection = inner;
 		return this;
 	}
