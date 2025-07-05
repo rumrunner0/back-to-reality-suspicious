@@ -105,7 +105,7 @@ public sealed record class Suspicious<TResult>
 
 	/// <summary>Prints members.</summary>
 	/// <param name="builder">The <see cref="StringBuilder" />.</param>
-	/// <returns><c>true</c>, if members should be printed, <c>false</c>, otherwise.</returns>
+	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
 	private bool PrintMembers(StringBuilder builder)
 	{
 		var previousMemberExists = false;
@@ -127,7 +127,7 @@ public sealed record class Suspicious<TResult>
 
 	/// <summary>Prints members in redacted mode.</summary>
 	/// <param name="builder">The <see cref="StringBuilder" />.</param>
-	/// <returns><c>true</c>, if members should be printed, <c>false</c>, otherwise.</returns>
+	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
 	private bool PrintMembersRedacted(StringBuilder builder)
 	{
 		var previousMemberExists = false;

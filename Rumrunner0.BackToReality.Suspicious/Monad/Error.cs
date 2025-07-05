@@ -67,7 +67,7 @@ public sealed record class Error
 
 	/// <summary>Prints members.</summary>
 	/// <param name="builder">The <see cref="StringBuilder" />.</param>
-	/// <returns><c>true</c>, if members should be printed, <c>false</c>, otherwise.</returns>
+	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
 	private bool PrintMembers(StringBuilder builder)
 	{
 		builder.Append($"Kind = {this._kind}");
@@ -88,7 +88,7 @@ public sealed record class Error
 
 	/// <summary>Prints members in redacted mode.</summary>
 	/// <param name="builder">The <see cref="StringBuilder" />.</param>
-	/// <returns><c>true</c>, if members should be printed, <c>false</c>, otherwise.</returns>
+	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
 	private bool PrintMembersRedacted(StringBuilder builder)
 	{
 		builder.Append(this._description);

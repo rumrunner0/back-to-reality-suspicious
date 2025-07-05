@@ -93,7 +93,7 @@ public sealed record class ErrorCollection
 
 	/// <summary>Prints members.</summary>
 	/// <param name="builder">The <see cref="StringBuilder" />.</param>
-	/// <returns><c>true</c>, if members should be printed, <c>false</c>, otherwise.</returns>
+	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
 	private bool PrintMembers(StringBuilder builder)
 	{
 		builder.Append($"Category = {this._category}");
@@ -114,7 +114,7 @@ public sealed record class ErrorCollection
 
 	/// <summary>Prints members in redacted mode.</summary>
 	/// <param name="builder">The <see cref="StringBuilder" />.</param>
-	/// <returns><c>true</c>, if members should be printed, <c>false</c>, otherwise.</returns>
+	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
 	private bool PrintMembersRedacted(StringBuilder builder)
 	{
 		builder.Append(this._header);
