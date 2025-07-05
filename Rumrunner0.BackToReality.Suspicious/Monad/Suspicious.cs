@@ -68,9 +68,8 @@ public sealed record class Suspicious<TResult>
 	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
 	public Suspicious<TResult> AddError(Error error)
 	{
-		if (!this.FromError) throw new InvalidOperationException($"The {nameof(Suspicious<TResult>)} wasn't created from an error");
-		if (this._errorCollection is null) throw new UnreachableException($"The error collection is null but '.{nameof(this.FromError)}' is {this.FromError}");
-		this._errorCollection.AddError(error);
+		EnsureCreatedFromError();
+		this._errorCollection!.AddError(error);
 		return this;
 	}
 
@@ -81,9 +80,32 @@ public sealed record class Suspicious<TResult>
 	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
 	public Suspicious<TResult> AddErrors(IEnumerable<Error> errors)
 	{
-		if (!this.FromError) throw new InvalidOperationException($"The {nameof(Suspicious<TResult>)} wasn't created from an error");
-		if (this._errorCollection is null) throw new UnreachableException($"The error collection is null but '.{nameof(this.FromError)}' is {this.FromError}");
-		this._errorCollection.AddErrors(errors);
+		EnsureCreatedFromError();
+		this._errorCollection!.AddErrors(errors);
+		return this;
+	}
+
+	/// <summary>Sets an inner <see cref="ErrorCollection" />s to this <see cref="ErrorCollection" />.</summary>
+	/// <param name="collection">The inner <see cref="ErrorCollection" />.</param>
+	/// <returns>This <see cref="Suspicious{TResult}" />.</returns>
+	/// <remarks>To use this method, this <see cref="Suspicious{TResult}" /> must have been created from an error.</remarks>
+	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
+	public Suspicious<TResult> SetInnerErrorCollection(ErrorCollection collection)
+	{
+		EnsureCreatedFromError();
+		this._errorCollection!.SetInnerCollection(collection);
+		return this;
+	}
+
+	/// <summary>Sets the <see cref="ErrorCollection" /> of <paramref name="other" /> as the inner <see cref="ErrorCollection" /> of this <see cref="Suspicious{TResult}" />.</summary>
+	/// <param name="other">The <see cref="Suspicious{TResult}" /> whose <see cref="ErrorCollection" /> will be used as the inner collection.</param>
+	/// <returns>This <see cref="Suspicious{TResult}" />.</returns>
+	/// <exception cref="InvalidOperationException">Thrown if either this instance or <paramref name="other" /> was not created from an error.</exception>
+	public Suspicious<TResult> SetInnerErrorCollectionFrom(Suspicious<TResult> other)
+	{
+		EnsureCreatedFromError();
+		other.EnsureCreatedFromError();
+		this._errorCollection!.SetInnerCollection(other._errorCollection!);
 		return this;
 	}
 
@@ -92,14 +114,32 @@ public sealed record class Suspicious<TResult>
 	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> doesn't contain any errors.</exception>
 	public ErrorKind FindTheMostCriticalErrorKind()
 	{
-		if (!this.HasErrors) throw new InvalidOperationException("The error collection doesn't contain any errors");
-		if (this._errorCollection is null) throw new UnreachableException($"The error collection is null but '.{nameof(this.HasErrors)}' is {this.HasErrors}");
-		return ErrorKind.FindWithHighestPriority(this._errorCollection.AllErrors.Select(e => e.Kind));
+		EnsureHasErrors();
+		return ErrorKind.FindWithHighestPriority(this._errorCollection!.AllErrors.Select(e => e.Kind));
 	}
 
 	#endregion
 
 	#region Instance Utilities
+
+	/// <summary>Ensures that this <see cref="Suspicious{TResult}" /> instance was created from an error and has a valid <see cref="ErrorCollection" />.</summary>
+	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TResult}" /> was not created from an error.</exception>
+	/// <exception cref="UnreachableException">Thrown if the internal <see cref="ErrorCollection" /> is <c>null</c> despite <see cref="FromError" /> being <c>true</c>.</exception>
+	private void EnsureCreatedFromError()
+	{
+		if (!this.FromError) throw new InvalidOperationException($"The {nameof(Suspicious<TResult>)} wasn't created from an error");
+		if (this._errorCollection is null) throw new UnreachableException($"The error collection is null but '.{nameof(this.FromError)}' is {this.FromError}");
+	}
+
+	/// <summary>Ensures that this <see cref="Suspicious{TResult}" /> instance was created from an error and has actual <see cref="Error" />s in its <see cref="ErrorCollection" />.</summary>
+	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TResult}" /> was not created from an error, or if its <see cref="ErrorCollection" /> doesn't contain any errors.</exception>
+	/// <exception cref="UnreachableException">Thrown if the internal <see cref="ErrorCollection" /> is <c>null</c> despite <see cref="HasErrors" /> being <c>true</c>.</exception>
+	private void EnsureHasErrors()
+	{
+		if (!this.FromError) throw new InvalidOperationException($"The {nameof(Suspicious<TResult>)} wasn't created from an error");
+		if (!this.HasErrors) throw new InvalidOperationException("The error collection doesn't contain any errors");
+		if (this._errorCollection is null) throw new UnreachableException($"The error collection is null but '.{nameof(this.HasErrors)}' is {this.HasErrors}");
+	}
 
 	/// <summary>Prints members.</summary>
 	/// <param name="builder">The <see cref="StringBuilder" />.</param>
