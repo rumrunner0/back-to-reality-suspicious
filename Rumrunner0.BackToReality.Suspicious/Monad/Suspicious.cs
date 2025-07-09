@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using Rumrunner0.BackToReality.Suspicious.Extensions;
+using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
@@ -22,14 +22,14 @@ public sealed record class Suspicious<TResult>
 	/// <inheritdoc cref="Suspicious{TResult}" />
 	private Suspicious(TResult result)
 	{
-		ArgumentNullExceptionHelper.ThrowIfNull(result);
+		ArgumentNullExceptionExtensions.ThrowIfNull(result);
 		this._result = result;
 	}
 
 	/// <inheritdoc cref="Suspicious{TResult}" />
 	private Suspicious(ErrorCollection errorCollection)
 	{
-		ArgumentNullExceptionHelper.ThrowIfNull(errorCollection);
+		ArgumentNullExceptionExtensions.ThrowIfNull(errorCollection);
 		this._errorCollection = errorCollection;
 	}
 

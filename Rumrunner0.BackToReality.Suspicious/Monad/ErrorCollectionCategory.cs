@@ -1,4 +1,4 @@
-using Rumrunner0.BackToReality.Suspicious.Extensions;
+using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
@@ -34,7 +34,7 @@ public sealed record class ErrorCollectionCategory
 	/// <summary>Factory for a custom <see cref="ErrorCollectionCategory" />.</summary>
 	public static ErrorCollectionCategory Custom(string name)
 	{
-		ArgumentExceptionHelper.ThrowIfNullOrEmptyOrWhiteSpace(name);
+		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(name);
 		return new (name);
 	}
 

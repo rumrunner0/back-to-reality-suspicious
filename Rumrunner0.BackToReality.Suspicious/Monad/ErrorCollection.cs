@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
 using Rumrunner0.BackToReality.SharedExtensions.Extensions;
-using Rumrunner0.BackToReality.Suspicious.Extensions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
@@ -26,9 +26,9 @@ public sealed record class ErrorCollection
 	/// <inheritdoc cref="ErrorCollection" />
 	private ErrorCollection(ErrorCollectionCategory category, string header, IEnumerable<Error> errors, ErrorCollection? cause = null)
 	{
-		ArgumentNullExceptionHelper.ThrowIfNull(category);
-		ArgumentExceptionHelper.ThrowIfNullOrEmptyOrWhiteSpace(header);
-		ArgumentNullExceptionHelper.ThrowIfNull(errors);
+		ArgumentNullExceptionExtensions.ThrowIfNull(category);
+		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(header);
+		ArgumentNullExceptionExtensions.ThrowIfNull(errors);
 
 		this._category = category;
 		this._header = header;
@@ -83,6 +83,7 @@ public sealed record class ErrorCollection
 	{
 		// TODO: Add check to prevent inner be the same and current.
 		// I need to find a way to prevent all kinds of circular dependency.
+
 		this._cause = errorCollection;
 		return this;
 	}

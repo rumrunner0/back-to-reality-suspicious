@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Rumrunner0.BackToReality.Suspicious.Extensions;
+using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
@@ -114,7 +114,7 @@ public sealed record class ErrorKind
 		// TODO: Add check for reserved priorities like int.MaxValue and int.MaxValue - 1.
 		// I think, 0 should remain available.
 
-		ArgumentExceptionHelper.ThrowIfNullOrEmptyOrWhiteSpace(name);
+		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(name);
 		return new (name, priority);
 	}
 

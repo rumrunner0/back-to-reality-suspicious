@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
+using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
 using Rumrunner0.BackToReality.SharedExtensions.Extensions;
-using Rumrunner0.BackToReality.Suspicious.Extensions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
@@ -25,8 +25,8 @@ public sealed record class Error
 	/// <inheritdoc cref="Error" />
 	private Error(ErrorKind kind, string description, string? details = null)
 	{
-		ArgumentNullExceptionHelper.ThrowIfNull(kind);
-		ArgumentExceptionHelper.ThrowIfNullOrEmptyOrWhiteSpace(description);
+		ArgumentNullExceptionExtensions.ThrowIfNull(kind);
+		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(description);
 
 		this._kind = kind;
 		this._description = description;
@@ -158,7 +158,7 @@ public sealed record class Error
 	/// <returns>A new <see cref="ErrorKind.Unexpected" /> error.</returns>
 	public static Error Unexpected(Exception e, string? description = null, Error? cause = null)
 	{
-		ArgumentNullExceptionHelper.ThrowIfNull(e);
+		ArgumentNullExceptionExtensions.ThrowIfNull(e);
 
 		return new
 		(
