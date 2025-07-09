@@ -2,7 +2,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rumrunner0.BackToReality.Suspicious", "Rumrunner0.BackToReality.Suspicious\Rumrunner0.BackToReality.Suspicious.csproj", "{61BB9900-6343-443B-9E95-A5D4AEAC502F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8A2504F8-8C09-4078-8E4A-135F6F04309F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
