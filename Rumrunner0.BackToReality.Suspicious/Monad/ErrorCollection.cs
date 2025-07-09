@@ -26,9 +26,9 @@ public sealed record class ErrorCollection
 	/// <inheritdoc cref="ErrorCollection" />
 	private ErrorCollection(ErrorCollectionCategory category, string header, IEnumerable<Error> errors, ErrorCollection? cause = null)
 	{
-		ArgumentNullExceptionExtensions.ThrowIfNull(category);
+		ArgumentExceptionExtensions.ThrowIfNull(category);
 		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(header);
-		ArgumentNullExceptionExtensions.ThrowIfNull(errors);
+		ArgumentExceptionExtensions.ThrowIfNull(errors);
 
 		this._category = category;
 		this._header = header;

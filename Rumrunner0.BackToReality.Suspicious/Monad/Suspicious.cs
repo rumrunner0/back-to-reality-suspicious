@@ -22,14 +22,14 @@ public sealed record class Suspicious<TResult>
 	/// <inheritdoc cref="Suspicious{TResult}" />
 	private Suspicious(TResult result)
 	{
-		ArgumentNullExceptionExtensions.ThrowIfNull(result);
+		ArgumentExceptionExtensions.ThrowIfNull(result);
 		this._result = result;
 	}
 
 	/// <inheritdoc cref="Suspicious{TResult}" />
 	private Suspicious(ErrorCollection errorCollection)
 	{
-		ArgumentNullExceptionExtensions.ThrowIfNull(errorCollection);
+		ArgumentExceptionExtensions.ThrowIfNull(errorCollection);
 		this._errorCollection = errorCollection;
 	}
 

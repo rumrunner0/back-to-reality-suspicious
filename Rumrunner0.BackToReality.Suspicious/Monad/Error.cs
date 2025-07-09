@@ -25,7 +25,7 @@ public sealed record class Error
 	/// <inheritdoc cref="Error" />
 	private Error(ErrorKind kind, string description, string? details = null)
 	{
-		ArgumentNullExceptionExtensions.ThrowIfNull(kind);
+		ArgumentExceptionExtensions.ThrowIfNull(kind);
 		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(description);
 
 		this._kind = kind;
@@ -158,7 +158,7 @@ public sealed record class Error
 	/// <returns>A new <see cref="ErrorKind.Unexpected" /> error.</returns>
 	public static Error Unexpected(Exception e, string? description = null, Error? cause = null)
 	{
-		ArgumentNullExceptionExtensions.ThrowIfNull(e);
+		ArgumentExceptionExtensions.ThrowIfNull(e);
 
 		return new
 		(
