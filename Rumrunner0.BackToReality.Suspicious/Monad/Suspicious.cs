@@ -87,27 +87,30 @@ public sealed record class Suspicious<TResult>
 		return this;
 	}
 
-	/// <summary>Sets an inner <see cref="ErrorCollection" />s to this <see cref="ErrorCollection" />.</summary>
+	/// <summary>Sets an inner <see cref="ErrorCollection" /> that caused this one.</summary>
 	/// <param name="collection">The inner <see cref="ErrorCollection" />.</param>
 	/// <returns>This <see cref="Suspicious{TResult}" />.</returns>
 	/// <remarks>To use this method, this <see cref="Suspicious{TResult}" /> must have been created from an error.</remarks>
 	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
-	public Suspicious<TResult> SetInnerErrorCollection(ErrorCollection collection)
+	public Suspicious<TResult> SetErrorCause(ErrorCollection collection)
 	{
 		EnsureCreatedFromError();
-		this._errorCollection!.SetInnerCollection(collection);
+		this._errorCollection!.SetCause(collection);
 		return this;
 	}
 
-	/// <summary>Sets the <see cref="ErrorCollection" /> of <paramref name="other" /> as the inner <see cref="ErrorCollection" /> of this <see cref="Suspicious{TResult}" />.</summary>
-	/// <param name="other">The <see cref="Suspicious{TResult}" /> whose <see cref="ErrorCollection" /> will be used as the inner collection.</param>
+	/// <summary>
+	/// Sets the <see cref="ErrorCollection" /> of an <paramref name="other" /> <see cref="Suspicious{TResult}" />
+	/// as the inner <see cref="ErrorCollection" /> of this, indicating that this result was caused by <paramref name="other" />.
+	/// </summary>
+	/// <param name="other">The <see cref="Suspicious{TResult}" /> whose <see cref="ErrorCollection" /> will be used as the inner.</param>
 	/// <returns>This <see cref="Suspicious{TResult}" />.</returns>
 	/// <exception cref="InvalidOperationException">Thrown if either this instance or <paramref name="other" /> was not created from an error.</exception>
-	public Suspicious<TResult> SetInnerErrorCollectionFrom(Suspicious<TResult> other)
+	public Suspicious<TResult> SetErrorCauseFrom(Suspicious<TResult> other)
 	{
 		EnsureCreatedFromError();
 		other.EnsureCreatedFromError();
-		this._errorCollection!.SetInnerCollection(other._errorCollection!);
+		this._errorCollection!.SetCause(other._errorCollection!);
 		return this;
 	}
 

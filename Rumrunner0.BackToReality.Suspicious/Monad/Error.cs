@@ -19,8 +19,8 @@ public sealed record class Error
 	/// <summary>Details.</summary>
 	private readonly string? _details;
 
-	/// <summary>Inner error.</summary>
-	private Error? _innerError;
+	/// <summary>Inner error that caused this one.</summary>
+	private Error? _cause;
 
 	/// <inheritdoc cref="Error" />
 	private Error(ErrorKind kind, string description, string? details = null)
@@ -46,20 +46,20 @@ public sealed record class Error
 	/// <summary>Details.</summary>
 	public string? Details => this._details;
 
-	/// <summary>Inner error.</summary>
-	public Error? InnerError
+	/// <summary>Inner error that caused this one.</summary>
+	public Error? Cause
 	{
-		get => this._innerError;
-		set => this._innerError = value;
+		get => this._cause;
+		set => this._cause = value;
 	}
 
-	/// <summary>Sets an inner <see cref="Error" /> for this <see cref="Error" />.</summary>
+	/// <summary>Sets an inner <see cref="Error" /> that caused this one.</summary>
 	/// <remarks><c>null</c> can be used to remove the existing inner <see cref="Error" />.</remarks>
 	/// <param name="error">The inner <see cref="Error" /> to set, or <c>null</c> to remove it.</param>
 	/// <returns>This <see cref="Error" />.</returns>
-	public Error SetInnerError(Error? error)
+	public Error SetCause(Error? error)
 	{
-		this._innerError = error;
+		this._cause = error;
 		return this;
 	}
 
@@ -80,9 +80,9 @@ public sealed record class Error
 			builder.Append($", Details = {this._details}");
 		}
 
-		if (this._innerError is not null)
+		if (this._cause is not null)
 		{
-			builder.Append($", InnerError = {this._innerError}");
+			builder.Append($", Cause = {this._cause}");
 		}
 
 		return true;
@@ -95,9 +95,9 @@ public sealed record class Error
 	{
 		builder.Append(this._description);
 
-		if (this._innerError is not null)
+		if (this._cause is not null)
 		{
-			builder.Append($" <-- {this._innerError.ToStringRedacted()}");
+			builder.Append($" <-- {this._cause.ToStringRedacted()}");
 		}
 
 		return true;
@@ -135,11 +135,11 @@ public sealed record class Error
 
 	#region Static API
 
-	/// <summary>Creates a <see cref="ErrorKind.Failure" /> error.</summary>
+	/// <summary>Creates a <see cref="ErrorKind.Failure" /> <see cref="Error" />.</summary>
 	/// <param name="description">The description.</param>
-	/// <param name="innerError">The inner <see cref="Error" />.</param>
+	/// <param name="cause">The inner <see cref="Error" />.</param>
 	/// <returns>A new <see cref="ErrorKind.Failure" /> error.</returns>
-	public static Error Failure(string description, Error? innerError = null)
+	public static Error Failure(string description, Error? cause = null)
 	{
 		return new
 		(
@@ -147,16 +147,16 @@ public sealed record class Error
 			description
 		)
 		{
-			InnerError = innerError
+			Cause = cause
 		};
 	}
 
-	/// <summary>Creates an <see cref="ErrorKind.Unexpected" /> error.</summary>
-	/// <param name="e">The exception that caused this error.</param>
+	/// <summary>Creates an <see cref="ErrorKind.Unexpected" /> <see cref="Error" />.</summary>
+	/// <param name="e">The exception that caused this <see cref="Error" />.</param>
 	/// <param name="description">The description.</param>
-	/// <param name="innerError">The inner <see cref="Error" />.</param>
+	/// <param name="cause">The inner <see cref="Error" />.</param>
 	/// <returns>A new <see cref="ErrorKind.Unexpected" /> error.</returns>
-	public static Error Unexpected(Exception e, string? description = null, Error? innerError = null)
+	public static Error Unexpected(Exception e, string? description = null, Error? cause = null)
 	{
 		ArgumentNullExceptionHelper.ThrowIfNull(e);
 
@@ -167,7 +167,7 @@ public sealed record class Error
 			details: e.ToString()
 		)
 		{
-			InnerError = innerError
+			Cause = cause
 		};
 	}
 

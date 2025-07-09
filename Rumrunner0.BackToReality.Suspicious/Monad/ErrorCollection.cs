@@ -20,11 +20,11 @@ public sealed record class ErrorCollection
 	/// <summary>Errors.</summary>
 	private readonly List<Error> _errors;
 
-	/// <summary>Inner collection of errors.</summary>
-	private ErrorCollection? _innerCollection;
+	/// <summary>Inner error collection that caused this one.</summary>
+	private ErrorCollection? _cause;
 
 	/// <inheritdoc cref="ErrorCollection" />
-	private ErrorCollection(ErrorCollectionCategory category, string header, IEnumerable<Error> errors, ErrorCollection? innerCollection = null)
+	private ErrorCollection(ErrorCollectionCategory category, string header, IEnumerable<Error> errors, ErrorCollection? cause = null)
 	{
 		ArgumentNullExceptionHelper.ThrowIfNull(category);
 		ArgumentExceptionHelper.ThrowIfNullOrEmptyOrWhiteSpace(header);
@@ -33,7 +33,7 @@ public sealed record class ErrorCollection
 		this._category = category;
 		this._header = header;
 		this._errors = [..errors];
-		this._innerCollection = innerCollection;
+		this._cause = cause;
 	}
 
 	#endregion
@@ -49,14 +49,14 @@ public sealed record class ErrorCollection
 	/// <summary>Errors.</summary>
 	public IReadOnlyList<Error> Errors => this._errors;
 
-	/// <summary>Inner collection of errors.</summary>
-	public ErrorCollection? InnerCollection => this._innerCollection;
+	/// <summary>Inner error collection that caused this one.</summary>
+	public ErrorCollection? Cause => this._cause;
 
-	/// <summary>All errors, including those contained in <see cref="InnerCollection" />.</summary>
-	public IEnumerable<Error> AllErrors => this._innerCollection is { } ? this._errors.Concat(this._innerCollection.AllErrors) : this._errors;
+	/// <summary>All errors, including those contained in <see cref="Cause" />.</summary>
+	public IEnumerable<Error> AllErrors => this._cause is { } ? this._errors.Concat(this._cause.AllErrors) : this._errors;
 
 	/// <summary>Flag that indicates whether any errors exist.</summary>
-	public bool HasErrors => this._errors.Any() || this._innerCollection is { HasErrors: true };
+	public bool HasErrors => this._errors.Any() || this._cause is { HasErrors: true };
 
 	/// <summary>Adds an error.</summary>
 	/// <param name="error">The <see cref="Error" />.</param>
@@ -76,14 +76,14 @@ public sealed record class ErrorCollection
 		return this;
 	}
 
-	/// <summary>Sets an inner <see cref="ErrorCollection" />.</summary>
-	/// <param name="inner">The inner <see cref="ErrorCollection" />.</param>
+	/// <summary>Sets an inner <see cref="ErrorCollection" /> that caused this one.</summary>
+	/// <param name="errorCollection">The inner <see cref="ErrorCollection" />.</param>
 	/// <returns>This <see cref="ErrorCollection" />.</returns>
-	public ErrorCollection SetInnerCollection(ErrorCollection inner)
+	public ErrorCollection SetCause(ErrorCollection errorCollection)
 	{
 		// TODO: Add check to prevent inner be the same and current.
 		// I need to find a way to prevent all kinds of circular dependency.
-		this._innerCollection = inner;
+		this._cause = errorCollection;
 		return this;
 	}
 
@@ -104,9 +104,9 @@ public sealed record class ErrorCollection
 			builder.Append($", Errors = [ {this._errors.StringJoin(", ")} ]");
 		}
 
-		if (this._innerCollection is not null)
+		if (this._cause is not null)
 		{
-			builder.Append($", InnerCollection = {this._innerCollection}");
+			builder.Append($", Cause = {this._cause}");
 		}
 
 		return true;
@@ -124,9 +124,9 @@ public sealed record class ErrorCollection
 			builder.Append($" [ {this._errors.Select(e => e.ToStringRedacted()).StringJoin(", ")} ]");
 		}
 
-		if (this._innerCollection is not null)
+		if (this._cause is not null)
 		{
-			builder.Append($" <== {this._innerCollection.ToStringRedacted()}");
+			builder.Append($" <== {this._cause.ToStringRedacted()}");
 		}
 
 		return true;
