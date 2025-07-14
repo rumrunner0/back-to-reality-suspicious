@@ -160,10 +160,15 @@ public sealed record class Error
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(e);
 
+		var richDescription = new StringBuilder();
+		richDescription.Append("Unexpected error has occured.");
+		if (!description.IsNullOrEmptyOrWhitespace()) richDescription.Append($" {description}.");
+		richDescription.Append($" {e.JoinMessages(" <-- ")}");
+
 		return new
 		(
 			ErrorKind.Unexpected,
-			description: $"Unexpected error has occured: {description ?? e.JoinMessages(" <-- ")}",
+			description: richDescription.ToString(),
 			details: e.ToString()
 		)
 		{
