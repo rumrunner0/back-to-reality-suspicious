@@ -38,7 +38,7 @@ public sealed record class Suspicious<TResult>
 	#region Instance API
 
 	// TODO: This is not good for performance.
-	// I'll need to maintain the state is a static way.
+	// I'll need to maintain the state in a static way.
 	/// <summary>State.</summary>
 	public SuspiciousState State => (Result: this._result, ErrorCollection: this._errorCollection) switch
 	{
@@ -104,9 +104,10 @@ public sealed record class Suspicious<TResult>
 	/// as the inner <see cref="ErrorCollection" /> of this, indicating that this result was caused by <paramref name="other" />.
 	/// </summary>
 	/// <param name="other">The <see cref="Suspicious{TResult}" /> whose <see cref="ErrorCollection" /> will be used as the inner.</param>
+	/// <typeparam name="TOtherResult">The type of the <paramref name="other" /> <see cref="Suspicious{TResult}" />.</typeparam>
 	/// <returns>This <see cref="Suspicious{TResult}" />.</returns>
 	/// <exception cref="InvalidOperationException">Thrown if either this instance or <paramref name="other" /> was not created from an error.</exception>
-	public Suspicious<TResult> SetErrorCauseFrom(Suspicious<TResult> other)
+	public Suspicious<TResult> SetErrorCauseFrom<TOtherResult>(Suspicious<TOtherResult> other)
 	{
 		EnsureCreatedFromError();
 		other.EnsureCreatedFromError();
@@ -210,6 +211,9 @@ public sealed record class Suspicious<TResult>
 
 	/// <inheritdoc cref="From(TResult)" />
 	public static implicit operator Suspicious<TResult>(TResult result) => Suspicious<TResult>.From(result);
+
+	/// <inheritdoc cref="Result" />
+	public static implicit operator TResult(Suspicious<TResult> suspicious) => suspicious.Result;
 
 	/// <summary>Creates a <see cref="Suspicious{TResult}" /> from a <paramref name="result" />.</summary>
 	/// <param name="result">The <paramref name="result" />.</param>
