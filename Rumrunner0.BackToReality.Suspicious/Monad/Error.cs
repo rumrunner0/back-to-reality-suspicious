@@ -50,7 +50,7 @@ public sealed record class Error
 	public Error? Cause
 	{
 		get => this._cause;
-		set => this._cause = value;
+		private set => this._cause = value;
 	}
 
 	/// <summary>Sets an inner <see cref="Error" /> that caused this one.</summary>
@@ -124,9 +124,7 @@ public sealed record class Error
 	{
 		var builder = new StringBuilder();
 
-		builder.Append("{ ");
-		if (this.PrintMembersRedacted(builder)) builder.Append(' ');
-		builder.Append('}');
+		this.PrintMembersRedacted(builder);
 
 		return builder.ToString();
 	}

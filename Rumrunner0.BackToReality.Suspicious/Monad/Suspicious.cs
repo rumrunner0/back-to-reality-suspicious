@@ -116,6 +116,7 @@ public sealed record class Suspicious<TResult>
 	}
 
 	// TODO: Maybe we'll need a Try version of this method.
+	// TODO: Add options to configure throw on error or not (if created from result or anything else).
 	/// <summary>Finds the most critical <see cref="ErrorKind" /> based on priority.</summary>
 	/// <returns>An <see cref="ErrorKind" /> with the highest priority.</returns>
 	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> doesn't contain any errors.</exception>
@@ -153,18 +154,13 @@ public sealed record class Suspicious<TResult>
 	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
 	private bool PrintMembers(StringBuilder builder)
 	{
-		var previousMemberExists = false;
-
 		if (this._result is not null)
 		{
-			builder.Append($"Result = {this._result}");
-			previousMemberExists = true;
+			builder.Append(this._result.ToString());
 		}
-
-		if (this._errorCollection is not null)
+		else if (this._errorCollection is not null)
 		{
-			if (previousMemberExists) builder.Append(", ");
-			builder.Append(this._errorCollection);
+			builder.Append(this._errorCollection.ToString());
 		}
 
 		return true;
@@ -175,21 +171,29 @@ public sealed record class Suspicious<TResult>
 	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
 	private bool PrintMembersRedacted(StringBuilder builder)
 	{
-		var previousMemberExists = false;
-
 		if (this._result is not null)
 		{
-			builder.Append($"Result = {this._result.ToString()}");
-			previousMemberExists = true;
+			builder.Append(this._result.ToString());
 		}
-
-		if (this._errorCollection is not null)
+		else if (this._errorCollection is not null)
 		{
-			if (previousMemberExists) builder.Append(", ");
 			builder.Append(this._errorCollection.ToStringRedacted());
 		}
 
 		return true;
+	}
+
+	/// <summary>Creates a string that represents this instance.</summary>
+	/// <returns>A string that represents this instance.</returns>
+	public override string ToString()
+	{
+		var builder = new StringBuilder();
+
+		builder.Append($"{nameof(Suspicious<TResult>)} {{ ");
+		if (this.PrintMembers(builder)) builder.Append(' ');
+		builder.Append('}');
+
+		return builder.ToString();
 	}
 
 	/// <summary>Creates a string that represents this instance in redacted mode.</summary>
@@ -198,9 +202,7 @@ public sealed record class Suspicious<TResult>
 	{
 		var builder = new StringBuilder();
 
-		builder.Append("{ ");
-		if (this.PrintMembersRedacted(builder)) builder.Append(' ');
-		builder.Append('}');
+		this.PrintMembersRedacted(builder);
 
 		return builder.ToString();
 	}

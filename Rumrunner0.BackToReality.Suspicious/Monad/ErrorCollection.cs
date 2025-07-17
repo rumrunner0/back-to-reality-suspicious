@@ -133,15 +133,26 @@ public sealed record class ErrorCollection
 		return true;
 	}
 
+	/// <summary>Creates a string that represents this instance.</summary>
+	/// <returns>A string that represents this instance.</returns>
+	public override string ToString()
+	{
+		var builder = new StringBuilder();
+
+		builder.Append($"{nameof(ErrorCollection)} {{ ");
+		if (this.PrintMembers(builder)) builder.Append(' ');
+		builder.Append('}');
+
+		return builder.ToString();
+	}
+
 	/// <summary>Creates a string that represents this instance in redacted mode.</summary>
 	/// <returns>A string that represents this instance in redacted mode.</returns>
 	public string ToStringRedacted()
 	{
 		var builder = new StringBuilder();
 
-		builder.Append("{ ");
-		if (this.PrintMembersRedacted(builder)) builder.Append(' ');
-		builder.Append('}');
+		this.PrintMembersRedacted(builder);
 
 		return builder.ToString();
 	}
@@ -151,13 +162,7 @@ public sealed record class ErrorCollection
 	#region Static API
 
 	/// <summary>Empty <see cref="ErrorCollection" />.</summary>
-	public static ErrorCollection Empty(string category, string header) => new (ErrorCollectionCategory.Custom(category), header, []);
-
-	/// <summary>Empty <see cref="ErrorCollection" />.</summary>
 	public static ErrorCollection Empty(ErrorCollectionCategory category, string header) => new (category, header, []);
-
-	/// <summary>Empty <see cref="ErrorCollection" />.</summary>
-	public static ErrorCollection New(string category, string header, IEnumerable<Error> errors) => new (ErrorCollectionCategory.Custom(category), header, errors);
 
 	/// <summary>Empty <see cref="ErrorCollection" />.</summary>
 	public static ErrorCollection New(ErrorCollectionCategory category, string header, IEnumerable<Error> errors) => new (category, header, errors);

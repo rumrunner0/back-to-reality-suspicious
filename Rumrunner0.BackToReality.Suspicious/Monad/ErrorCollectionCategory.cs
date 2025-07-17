@@ -2,7 +2,7 @@ using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>Category of an <see cref="ErrorCollection" />.</summary>
+/// <summary>Category of <see cref="ErrorCollection" />.</summary>
 public sealed record class ErrorCollectionCategory
 {
 	#region Instance State
@@ -36,6 +36,12 @@ public sealed record class ErrorCollectionCategory
 	{
 		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(name);
 		return new (name);
+	}
+
+	/// <inheritdoc cref="Custom" />
+	public static implicit operator ErrorCollectionCategory(string name)
+	{
+		return Custom(name);
 	}
 
 	#endregion
