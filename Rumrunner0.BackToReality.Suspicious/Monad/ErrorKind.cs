@@ -80,13 +80,7 @@ public sealed record class ErrorKind
 	#region Static State
 
 	/// <inheritdoc cref="PriorityComparer" />
-	private static readonly PriorityComparer _priorityComparer;
-
-	/// <inheritdoc cref="ErrorKind" />
-	static ErrorKind()
-	{
-		ErrorKind._priorityComparer = new ();
-	}
+	private static readonly PriorityComparer _priorityComparer = new ();
 
 	/// <inheritdoc />
 	private sealed class PriorityComparer : IComparer<ErrorKind>
@@ -100,7 +94,10 @@ public sealed record class ErrorKind
 	#region Static API
 
 	/// <summary>Failure <see cref="ErrorKind" />.</summary>
-	public static ErrorKind Failure { get; } = new (name: "failure", priority: 0);
+	public static ErrorKind NoResult { get; } = new (name: "no-result", priority: 10_000);
+
+	/// <summary>Failure <see cref="ErrorKind" />.</summary>
+	public static ErrorKind Failure { get; } = new (name: "failure", priority: 100_000);
 
 	/// <summary>Unexpected <see cref="ErrorKind" />.</summary>
 	public static ErrorKind Unexpected { get; } = new (name: "unexpected", priority: int.MaxValue - 1);

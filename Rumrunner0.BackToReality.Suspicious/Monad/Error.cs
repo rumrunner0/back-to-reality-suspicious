@@ -103,8 +103,8 @@ public sealed record class Error
 		return true;
 	}
 
-	/// <summary>Creates a string that represents this instance in redacted mode.</summary>
-	/// <returns>A string that represents this instance in redacted mode.</returns>
+	/// <summary>Creates a string that represents this instance.</summary>
+	/// <returns>A string that represents this instance.</returns>
 	public override string ToString()
 	{
 		// TODO: ADD MULTILINE FORMATTING??? just formatted JSON I think, please!
@@ -132,6 +132,39 @@ public sealed record class Error
 	#endregion
 
 	#region Static API
+
+	/// <summary>Creates a custom <see cref="Error" />.</summary>
+	/// <param name="kind">The kind.</param>
+	/// <param name="description">The description.</param>
+	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <returns>A new custom error.</returns>
+	public static Error Custom(ErrorKind kind, string description, Error? cause = null)
+	{
+		return new
+		(
+			kind,
+			description
+		)
+		{
+			Cause = cause
+		};
+	}
+
+	/// <summary>Creates a <see cref="ErrorKind.NoResult" /> <see cref="Error" />.</summary>
+	/// <param name="description">The description.</param>
+	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <returns>A new <see cref="ErrorKind.Failure" /> error.</returns>
+	public static Error NoResult(string description, Error? cause = null)
+	{
+		return new
+		(
+			ErrorKind.NoResult,
+			description
+		)
+		{
+			Cause = cause
+		};
+	}
 
 	/// <summary>Creates a <see cref="ErrorKind.Failure" /> <see cref="Error" />.</summary>
 	/// <param name="description">The description.</param>
@@ -168,6 +201,26 @@ public sealed record class Error
 			ErrorKind.Unexpected,
 			description: richDescription.ToString(),
 			details: e.ToString()
+		)
+		{
+			Cause = cause
+		};
+	}
+
+	/// <summary>Creates an <see cref="ErrorKind.Unexpected" /> <see cref="Error" />.</summary>
+	/// <param name="description">The description.</param>
+	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <returns>A new <see cref="ErrorKind.Unexpected" /> error.</returns>
+	public static Error Unexpected(string description, Error? cause = null)
+	{
+		var richDescription = new StringBuilder();
+		richDescription.Append("Unexpected error has occured.");
+		if (!description.IsNullOrEmptyOrWhitespace()) richDescription.Append($" {description}.");
+
+		return new
+		(
+			ErrorKind.Unexpected,
+			description: richDescription.ToString()
 		)
 		{
 			Cause = cause
