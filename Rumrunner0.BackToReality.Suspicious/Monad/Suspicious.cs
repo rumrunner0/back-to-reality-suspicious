@@ -58,10 +58,10 @@ public sealed record class Suspicious<TResult>
 	public bool FromError => SuspiciousState.ErrorStates.Contains(this.State);
 
 	/// <summary>Result.</summary>
-	public TResult Result => this._result ?? throw new InvalidOperationException($"The result doesn't exist. Use '.{nameof(HasResult)}' to ensure the result exists");
+	public TResult Result => this._result!;
 
 	/// <summary>Error collection.</summary>
-	public ErrorCollection ErrorCollection => this._errorCollection ?? throw new InvalidOperationException($"The error collection doesn't exist. Use '.{nameof(FromError)}' to ensure the error collection exists, or '.{nameof(HasErrors)}' to ensure actual errors exist");
+	public ErrorCollection ErrorCollection => this._errorCollection!;
 
 	/// <summary>Adds an <see cref="Error" /> to the <see cref="ErrorCollection" />.</summary>
 	/// <param name="error">The error.</param>
