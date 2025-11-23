@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
-using Rumrunner0.BackToReality.SharedExtensions.Extensions;
+using Rumrunner0.BackToReality.SharedExtensions.Collections;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
