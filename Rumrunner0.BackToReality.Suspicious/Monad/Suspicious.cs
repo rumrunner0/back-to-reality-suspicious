@@ -70,7 +70,7 @@ public sealed record class Suspicious<TResult>
 	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
 	public Suspicious<TResult> AddError(Error error)
 	{
-		EnsureCreatedFromError();
+		this.EnsureCreatedFromError();
 		this._errorCollection!.AddError(error);
 		return this;
 	}
@@ -82,7 +82,7 @@ public sealed record class Suspicious<TResult>
 	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
 	public Suspicious<TResult> AddErrors(IEnumerable<Error> errors)
 	{
-		EnsureCreatedFromError();
+		this.EnsureCreatedFromError();
 		this._errorCollection!.AddErrors(errors);
 		return this;
 	}
@@ -94,7 +94,7 @@ public sealed record class Suspicious<TResult>
 	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
 	public Suspicious<TResult> SetErrorCause(ErrorCollection collection)
 	{
-		EnsureCreatedFromError();
+		this.EnsureCreatedFromError();
 		this._errorCollection!.SetCause(collection);
 		return this;
 	}
@@ -109,7 +109,7 @@ public sealed record class Suspicious<TResult>
 	/// <exception cref="InvalidOperationException">Thrown if either this instance or <paramref name="other" /> was not created from an error.</exception>
 	public Suspicious<TResult> SetErrorCauseFrom<TOtherResult>(Suspicious<TOtherResult> other)
 	{
-		EnsureCreatedFromError();
+		this.EnsureCreatedFromError();
 		other.EnsureCreatedFromError();
 		this._errorCollection!.SetCause(other._errorCollection!);
 		return this;
@@ -122,7 +122,7 @@ public sealed record class Suspicious<TResult>
 	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> doesn't contain any errors.</exception>
 	public ErrorKind FindTheMostCriticalErrorKind()
 	{
-		EnsureHasErrors();
+		this.EnsureHasErrors();
 		return ErrorKind.FindWithHighestPriority(this._errorCollection!.AllErrors.Select(e => e.Kind));
 	}
 

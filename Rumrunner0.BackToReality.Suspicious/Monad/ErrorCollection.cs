@@ -46,8 +46,8 @@ public sealed record class ErrorCollection
 	/// <summary>Header.</summary>
 	public string Header => this._header;
 
-	/// <summary>Errors.</summary>
-	public IReadOnlyList<Error> Errors => this._errors;
+	/// <summary>Items.</summary>
+	public IReadOnlyList<Error> Items => this._errors;
 
 	/// <summary>Inner error collection that caused this one.</summary>
 	public ErrorCollection? Cause => this._cause;

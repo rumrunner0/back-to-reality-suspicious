@@ -182,6 +182,27 @@ public sealed record class Error
 		};
 	}
 
+	/// <summary>Creates a <see cref="ErrorKind.Failure" /> <see cref="Error" />.</summary>
+	/// <param name="e">The exception that caused this <see cref="Error" />.</param>
+	/// <param name="description">The description.</param>
+	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <returns>A new <see cref="ErrorKind.Failure" /> error.</returns>
+	public static Error Failure(Exception e, string description, Error? cause = null)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(e);
+		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(description);
+
+		return new
+		(
+			ErrorKind.Failure,
+			description: $"{description}. {e.JoinMessages(" <-- ")}",
+			details: e.ToString()
+		)
+		{
+			Cause = cause
+		};
+	}
+
 	/// <summary>Creates an <see cref="ErrorKind.Unexpected" /> <see cref="Error" />.</summary>
 	/// <param name="e">The exception that caused this <see cref="Error" />.</param>
 	/// <param name="description">The description.</param>
