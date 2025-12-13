@@ -53,11 +53,13 @@ public sealed record class Error
 	public Error? Cause => this._cause;
 
 	/// <summary>Sets an inner <see cref="Error" /> that caused this one.</summary>
-	/// <remarks><c>null</c> can be used to remove the existing inner <see cref="Error" />.</remarks>
 	/// <param name="error">The inner <see cref="Error" /> to set, or <c>null</c> to remove it.</param>
 	/// <returns>This <see cref="Error" />.</returns>
+	/// <remarks><c>null</c> can be used to remove the existing inner <see cref="Error" />.</remarks>
 	public Error SetCause(Error? error)
 	{
+		if (error == this) ArgumentExceptionExtensions.Throw("Cause error can't be the same as the error for which the cause is being set");
+
 		this._cause = error;
 		return this;
 	}

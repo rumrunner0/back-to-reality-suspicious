@@ -79,11 +79,12 @@ public sealed class ErrorCollection
 	}
 
 	/// <summary>Sets an inner <see cref="ErrorCollection" /> that caused this one.</summary>
-	/// <param name="errorCollection">The inner <see cref="ErrorCollection" />.</param>
+	/// <param name="errorCollection">The inner <see cref="ErrorCollection" />to set, or <c>null</c> to remove it.</param>
 	/// <returns>This <see cref="ErrorCollection" />.</returns>
-	public ErrorCollection SetCause(ErrorCollection errorCollection)
+	/// <remarks><c>null</c> can be used to remove the existing inner <see cref="ErrorCollection" />.</remarks>
+	public ErrorCollection SetCause(ErrorCollection? errorCollection)
 	{
-		if (errorCollection == this) ArgumentExceptionExtensions.Throw("Cause collection can't be the same as th collection for which the cause is being set");
+		if (errorCollection == this) ArgumentExceptionExtensions.Throw("Cause collection can't be the same as the collection for which the cause is being set");
 
 		this._cause = errorCollection;
 		return this;
