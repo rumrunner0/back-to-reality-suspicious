@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -46,8 +47,8 @@ public sealed record class ErrorCollection
 	/// <summary>Header.</summary>
 	public string Header => this._header;
 
-	/// <summary>Items.</summary>
-	public IReadOnlyList<Error> Items => this._errors;
+	/// <summary>Errors.</summary>
+	public IReadOnlyList<Error> Errors => this._errors;
 
 	/// <summary>Inner error collection that caused this one.</summary>
 	public ErrorCollection? Cause => this._cause;
@@ -83,6 +84,7 @@ public sealed record class ErrorCollection
 	{
 		// TODO: Add check to prevent inner be the same and current.
 		// I need to find a way to prevent all kinds of circular dependency.
+		// if (errorCollection == this) throw new ArgumentException();
 
 		this._cause = errorCollection;
 		return this;
