@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
@@ -8,7 +9,7 @@ using Rumrunner0.BackToReality.SharedExtensions.Collections;
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>Collection of <see cref="Error"/>s related to <see cref="Suspicious{TResult}" />.</summary>
-public sealed record class ErrorCollection
+public sealed class ErrorCollection
 {
 	#region Instance State
 
@@ -19,7 +20,7 @@ public sealed record class ErrorCollection
 	private readonly string _header;
 
 	/// <summary>Errors.</summary>
-	private readonly List<Error> _errors;
+	private readonly HashSet<Error> _errors;
 
 	/// <summary>Inner error collection that caused this one.</summary>
 	private ErrorCollection? _cause;
@@ -48,7 +49,7 @@ public sealed record class ErrorCollection
 	public string Header => this._header;
 
 	/// <summary>Errors.</summary>
-	public IReadOnlyList<Error> Errors => this._errors;
+	public IReadOnlySet<Error> Errors => this._errors;
 
 	/// <summary>Inner error collection that caused this one.</summary>
 	public ErrorCollection? Cause => this._cause;
@@ -59,21 +60,21 @@ public sealed record class ErrorCollection
 	/// <summary>Flag that indicates whether any errors exist.</summary>
 	public bool HasErrors => this._errors.Any() || this._cause is { HasErrors: true };
 
-	/// <summary>Adds an error.</summary>
+	/// <summary>Tries to add an <paramref name="error" />.</summary>
 	/// <param name="error">The <see cref="Error" />.</param>
-	/// <returns>This <see cref="ErrorCollection" />.</returns>
-	public ErrorCollection AddError(Error error)
+	/// <returns><c>true</c>, if the <paramref name="error" /> has been added; <c>false</c>, otherwise.</returns>
+	public bool TryAddError(Error error)
 	{
-		this._errors.Add(error);
-		return this;
+		return this._errors.Add(error);
 	}
 
-	/// <summary>Adds errors.</summary>
-	/// <param name="errors">The <see cref="Error" />s.</param>
+	/// <summary>Adds an <paramref name="error" />.</summary>
+	/// <param name="error">The <see cref="Error" />.</param>
 	/// <returns>This <see cref="ErrorCollection" />.</returns>
-	public ErrorCollection AddErrors(IEnumerable<Error> errors)
+	/// <exception cref="InvalidOperationException">Thrown if identical <paramref name="error" /> has already been added.</exception>
+	public ErrorCollection AddError(Error error)
 	{
-		this._errors.AddRange(errors);
+		if (!this._errors.Add(error)) throw new InvalidOperationException($"Identical error {error} has already been added");
 		return this;
 	}
 
@@ -82,9 +83,7 @@ public sealed record class ErrorCollection
 	/// <returns>This <see cref="ErrorCollection" />.</returns>
 	public ErrorCollection SetCause(ErrorCollection errorCollection)
 	{
-		// TODO: Add check to prevent inner be the same and current.
-		// I need to find a way to prevent all kinds of circular dependency.
-		// if (errorCollection == this) throw new ArgumentException();
+		if (errorCollection == this) ArgumentExceptionExtensions.Throw("Cause collection can't be the same as th collection for which the cause is being set");
 
 		this._cause = errorCollection;
 		return this;

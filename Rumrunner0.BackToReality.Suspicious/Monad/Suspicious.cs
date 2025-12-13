@@ -9,7 +9,7 @@ namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>Result monad that wraps either an actual result or a collection of errors.</summary>
 /// <typeparam name="TResult">The result type.</typeparam>
-public sealed record class Suspicious<TResult>
+public sealed class Suspicious<TResult>
 {
 	#region Instance State
 
@@ -37,16 +37,16 @@ public sealed record class Suspicious<TResult>
 
 	#region Instance API
 
-	// TODO: This is not good for performance.
-	// I'll need to maintain the state in a static way.
 	/// <summary>State.</summary>
-	public SuspiciousState State => (Result: this._result, ErrorCollection: this._errorCollection) switch
+	public SuspiciousState State
 	{
-		{ Result: { } } => SuspiciousState.Result,
-		{ ErrorCollection.HasErrors: true } => SuspiciousState.Error,
-		{ ErrorCollection: { } } => SuspiciousState.EmptyErrorCollection,
-		_ => SuspiciousState.Unexpected
-	};
+		get
+		{
+			if (this._result is not null) return SuspiciousState.Result;
+			if (this._errorCollection is not null) return this._errorCollection.HasErrors ? SuspiciousState.Error : SuspiciousState.EmptyErrorCollection;
+			return SuspiciousState.Unexpected;
+		}
+	}
 
 	/// <summary>Flag that indicates whether the result exists.</summary>
 	public bool HasResult => this.State == SuspiciousState.Result;
@@ -54,36 +54,26 @@ public sealed record class Suspicious<TResult>
 	/// <summary>Flag that indicates whether any errors exist.</summary>
 	public bool HasErrors => this.State == SuspiciousState.Error;
 
-	/// <summary>Flag that indicates whether this <see cref="Suspicious{TResult}" /> was created from an error.</summary>
+	/// <summary>Flag that indicates whether this <see cref="Suspicious{TResult}" /> is "error-based" meaning it was created from an error.</summary>
 	public bool FromError => SuspiciousState.ErrorStates.Contains(this.State);
 
 	/// <summary>Result.</summary>
+	/// <remarks>Will be <c>null</c> or <c>default</c>, if this <see cref="Suspicious{TResult}" /> wasn't created from a result.</remarks>
 	public TResult Result => this._result!;
 
 	/// <summary>Error collection.</summary>
+	/// <remarks>Will be <c>null</c>, if this <see cref="Suspicious{TResult}" /> wasn't created from an error.</remarks>
 	public ErrorCollection ErrorCollection => this._errorCollection!;
 
 	/// <summary>Adds an <see cref="Error" /> to the <see cref="ErrorCollection" />.</summary>
 	/// <param name="error">The error.</param>
 	/// <returns>This <see cref="Suspicious{TResult}" />.</returns>
 	/// <remarks>To use this method, this <see cref="Suspicious{TResult}" /> must have been created from an error.</remarks>
-	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
 	public Suspicious<TResult> AddError(Error error)
 	{
 		this.EnsureCreatedFromError();
-		this._errorCollection!.AddError(error);
-		return this;
-	}
-
-	/// <summary>Adds multiple <see cref="Error" />s to the <see cref="ErrorCollection" />.</summary>
-	/// <param name="errors">The errors.</param>
-	/// <returns>This <see cref="Suspicious{TResult}" />.</returns>
-	/// <remarks>To use this method, this <see cref="Suspicious{TResult}" /> must have been created from an error.</remarks>
-	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
-	public Suspicious<TResult> AddErrors(IEnumerable<Error> errors)
-	{
-		this.EnsureCreatedFromError();
-		this._errorCollection!.AddErrors(errors);
+		this._errorCollection!.TryAddError(error);
 		return this;
 	}
 
@@ -91,7 +81,7 @@ public sealed record class Suspicious<TResult>
 	/// <param name="collection">The inner <see cref="ErrorCollection" />.</param>
 	/// <returns>This <see cref="Suspicious{TResult}" />.</returns>
 	/// <remarks>To use this method, this <see cref="Suspicious{TResult}" /> must have been created from an error.</remarks>
-	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TResult}" /> wasn't created from an error.</exception>
 	public Suspicious<TResult> SetErrorCause(ErrorCollection collection)
 	{
 		this.EnsureCreatedFromError();
@@ -212,7 +202,7 @@ public sealed record class Suspicious<TResult>
 	#region Static API
 
 	/// <inheritdoc cref="From(TResult)" />
-	public static implicit operator Suspicious<TResult>(TResult result) => Suspicious<TResult>.From(result);
+	public static implicit operator Suspicious<TResult>(TResult result) => From(result);
 
 	/// <inheritdoc cref="Result" />
 	public static implicit operator TResult(Suspicious<TResult> suspicious) => suspicious.Result;

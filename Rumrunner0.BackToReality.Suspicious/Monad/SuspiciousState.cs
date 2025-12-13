@@ -1,55 +1,42 @@
+using Rumrunner0.BackToReality.SharedExtensions.ValueObjects;
+
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>State of <see cref="Suspicious{TResult}" />.</summary>
-public sealed record class SuspiciousState
+public sealed record class SuspiciousState : StringValueObject
 {
 	#region Instance State
 
-	/// <summary>Value.</summary>
-	private readonly string _value;
-
 	/// <inheritdoc cref="SuspiciousState" />
-	private SuspiciousState(string value) => this._value = value;
-
-	#endregion
-
-	#region Instance Utilities
-
-	/// <summary>Creates a string that represents this instance.</summary>
-	/// <returns>A string that represents this instance.</returns>
-	public override string ToString() => this._value;
+	private SuspiciousState(string value) : base(value) { }
 
 	#endregion
 
 	#region Static API
 
-	/// <summary>Result <see cref="SuspiciousState" />.</summary>
-	public static SuspiciousState Result { get; } = new (value: "result");
+	/// <summary>Result.</summary>
+	public static SuspiciousState Result { get; } = new ("result");
 
-	/// <summary>Error <see cref="SuspiciousState" />.</summary>
+	/// <summary>Error.</summary>
 	/// <remarks>
 	/// This state indicates that a <see cref="Suspicious{TResult}" /> was created
 	/// from an <see cref="ErrorCollection" /> and it contains actual <see cref="Error" />s.
 	/// </remarks>
-	public static SuspiciousState Error { get; } = new (value: "error");
+	public static SuspiciousState Error { get; } = new ("error");
 
-	/// <summary>Empty error collection <see cref="SuspiciousState" />.</summary>
+	/// <summary>Empty error collection.</summary>
 	/// <remarks>
 	/// This state indicates that a <see cref="Suspicious{TResult}" /> was created
 	/// from an <see cref="ErrorCollection" /> but it DOESN'T contain any <see cref="Error" />s.
 	/// While this is technically possible, it usually indicates that errors were not added to the collection.
 	/// </remarks>
-	public static SuspiciousState EmptyErrorCollection { get; } = new (value: "empty-error-collection");
+	public static SuspiciousState EmptyErrorCollection { get; } = new ("empty_error_collection");
 
-	/// <summary>Unexpected <see cref="SuspiciousState" />.</summary>
-	public static SuspiciousState Unexpected { get; } = new (value: "unexpected");
+	/// <summary>Unexpected.</summary>
+	public static SuspiciousState Unexpected { get; } = new ("unexpected");
 
-	/// <summary>Collection of error states.</summary>
-	public static SuspiciousState[] ErrorStates { get; } =
-	[
-		SuspiciousState.Error,
-		SuspiciousState.EmptyErrorCollection
-	];
+	/// <summary>All error states.</summary>
+	public static SuspiciousState[] ErrorStates { get; } = [Error, EmptyErrorCollection];
 
 	#endregion
 }

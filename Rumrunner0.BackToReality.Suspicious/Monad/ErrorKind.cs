@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -57,16 +58,6 @@ public sealed record class ErrorKind
 
 	#region Instance Utilities
 
-	/// <summary>Prints members.</summary>
-	/// <param name="builder">The <see cref="StringBuilder" />.</param>
-	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
-	private bool PrintMembers(StringBuilder builder)
-	{
-		builder.Append(this._name);
-		builder.Append($", Priority = {this._priority}");
-		return true;
-	}
-
 	/// <summary>Creates a string that represents this instance in redacted mode.</summary>
 	/// <returns>A string that represents this instance in redacted mode.</returns>
 	public override string ToString() => $"{this._name} ({this._priority})";
@@ -105,11 +96,16 @@ public sealed record class ErrorKind
 	/// <summary>Unspecified <see cref="ErrorKind" />.</summary>
 	public static ErrorKind Unspecified { get; } = new (name: "unspecified", priority: int.MaxValue);
 
+	/// <summary>All predefined <see cref="ErrorKind" />s.</summary>
+	private static readonly ErrorKind[] _allPredefined = [NoResult, Failure, Unexpected, Unspecified];
+
 	/// <summary>Factory for a custom <see cref="ErrorKind" />.</summary>
 	public static ErrorKind Custom(string name, int priority)
 	{
-		// TODO: Add check for reserved priorities like int.MaxValue and int.MaxValue - 1.
-		// I think, 0 should remain available.
+		if (_allPredefined.FirstOrDefault(k => k._name == name || k._priority == priority) is { } conflict)
+		{
+			ArgumentExceptionExtensions.Throw($"Custom properties ({name}, {priority}) conflict with: {conflict}");
+		}
 
 		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(name);
 		return new (name, priority);

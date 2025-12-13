@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
 using Rumrunner0.BackToReality.SharedExtensions.Extensions;
@@ -23,7 +25,7 @@ public sealed record class Error
 	private Error? _cause;
 
 	/// <inheritdoc cref="Error" />
-	private Error(ErrorKind kind, string description, string? details = null)
+	private Error(ErrorKind kind, string description, string? details = null, Error? cause = null)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(kind);
 		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(description);
@@ -31,6 +33,7 @@ public sealed record class Error
 		this._kind = kind;
 		this._description = description;
 		this._details = details;
+		this._cause = cause;
 	}
 
 	#endregion
@@ -47,11 +50,7 @@ public sealed record class Error
 	public string? Details => this._details;
 
 	/// <summary>Inner error that caused this one.</summary>
-	public Error? Cause
-	{
-		get => this._cause;
-		private set => this._cause = value;
-	}
+	public Error? Cause => this._cause;
 
 	/// <summary>Sets an inner <see cref="Error" /> that caused this one.</summary>
 	/// <remarks><c>null</c> can be used to remove the existing inner <see cref="Error" />.</remarks>
@@ -107,8 +106,6 @@ public sealed record class Error
 	/// <returns>A string that represents this instance.</returns>
 	public override string ToString()
 	{
-		// TODO: ADD MULTILINE FORMATTING??? just formatted JSON I think, please!
-
 		var builder = new StringBuilder();
 
 		builder.Append("{ ");
@@ -140,14 +137,14 @@ public sealed record class Error
 	/// <returns>A new custom error.</returns>
 	public static Error Custom(ErrorKind kind, string description, Error? cause = null)
 	{
+		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(description);
+
 		return new
 		(
-			kind,
-			description
-		)
-		{
-			Cause = cause
-		};
+			kind: kind,
+			description: description,
+			details: null,
+			cause: cause
 	}
 
 	/// <summary>Creates a <see cref="ErrorKind.NoResult" /> <see cref="Error" />.</summary>
@@ -156,14 +153,15 @@ public sealed record class Error
 	/// <returns>A new <see cref="ErrorKind.Failure" /> error.</returns>
 	public static Error NoResult(string description, Error? cause = null)
 	{
+		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(description);
+
 		return new
 		(
-			ErrorKind.NoResult,
-			description
-		)
-		{
-			Cause = cause
-		};
+			kind: ErrorKind.NoResult,
+			description: description,
+			details: null,
+			cause: cause
+		);
 	}
 
 	/// <summary>Creates a <see cref="ErrorKind.Failure" /> <see cref="Error" />.</summary>
@@ -172,14 +170,15 @@ public sealed record class Error
 	/// <returns>A new <see cref="ErrorKind.Failure" /> error.</returns>
 	public static Error Failure(string description, Error? cause = null)
 	{
+		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(description);
+
 		return new
 		(
-			ErrorKind.Failure,
-			description
-		)
-		{
-			Cause = cause
-		};
+			kind: ErrorKind.Failure,
+			description: description,
+			details: null,
+			cause: cause
+		);
 	}
 
 	/// <summary>Creates a <see cref="ErrorKind.Failure" /> <see cref="Error" />.</summary>
@@ -194,13 +193,11 @@ public sealed record class Error
 
 		return new
 		(
-			ErrorKind.Failure,
+			kind: ErrorKind.Failure,
 			description: $"{description}. {e.JoinMessages(" <-- ")}",
-			details: e.ToString()
-		)
-		{
-			Cause = cause
-		};
+			details: e.ToString(),
+			cause: cause
+		);
 	}
 
 	/// <summary>Creates an <see cref="ErrorKind.Unexpected" /> <see cref="Error" />.</summary>
@@ -219,13 +216,11 @@ public sealed record class Error
 
 		return new
 		(
-			ErrorKind.Unexpected,
+			kind: ErrorKind.Unexpected,
 			description: richDescription.ToString(),
-			details: e.ToString()
-		)
-		{
-			Cause = cause
-		};
+			details: e.ToString(),
+			cause: cause
+		);
 	}
 
 	/// <summary>Creates an <see cref="ErrorKind.Unexpected" /> <see cref="Error" />.</summary>
@@ -240,12 +235,11 @@ public sealed record class Error
 
 		return new
 		(
-			ErrorKind.Unexpected,
-			description: richDescription.ToString()
-		)
-		{
-			Cause = cause
-		};
+			kind: ErrorKind.Unexpected,
+			description: richDescription.ToString(),
+			details: null,
+			cause: cause
+		);
 	}
 
 	#endregion
