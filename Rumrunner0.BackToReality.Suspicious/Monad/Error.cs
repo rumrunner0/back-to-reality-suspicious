@@ -145,6 +145,7 @@ public sealed record class Error
 			description: description,
 			details: null,
 			cause: cause
+		);
 	}
 
 	/// <summary>Creates a <see cref="ErrorKind.NoResult" /> <see cref="Error" />.</summary>
