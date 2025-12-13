@@ -54,9 +54,6 @@ public sealed class ErrorCollection
 	/// <summary>Inner error collection that caused this one.</summary>
 	public ErrorCollection? Cause => this._cause;
 
-	/// <summary>All errors, including those contained in <see cref="Cause" />.</summary>
-	public IEnumerable<Error> AllErrors => this._cause is { } ? this._errors.Concat(this._cause.AllErrors) : this._errors;
-
 	/// <summary>Flag that indicates whether any errors exist.</summary>
 	public bool HasErrors => this._errors.Any() || this._cause is { HasErrors: true };
 
@@ -90,9 +87,51 @@ public sealed class ErrorCollection
 		return this;
 	}
 
+	/// <summary>Retrieves the most critical <see cref="Error" />.</summary>
+	/// <returns>The <see cref="Error" />.</returns>
+	/// <exception cref="InvalidOperationException">Thrown if the collection doesn't have any errors.</exception>
+	/// <exception cref="UnreachableException">Thrown if most critical error can't be retrieved.</exception>
+	public Error GetTheMostCriticalError()
+	{
+		if (!this.HasErrors) throw new InvalidOperationException("The collection doesn't have any errors");
+
+		var result = this.GetTheMostCriticalErrorInChain();
+		if (result is null) throw new UnreachableException("The most critical error can't be retrieved");
+
+		return result;
+	}
+
 	#endregion
 
 	#region Instance Utilities
+
+	/// <summary>Retrieves the most critical <see cref="Error" /> in the chain.</summary>
+	/// <returns>The <see cref="Error" />.</returns>
+	internal Error? GetTheMostCriticalErrorInChain()
+	{
+		return Error.GetTheMostCritical
+		(
+			this.GetTheMostCriticalErrorFromCurrent(),
+			this._cause?.GetTheMostCriticalErrorInChain()
+		);
+	}
+
+	/// <summary>Retrieves the most critical <see cref="Error" /> from the current <see cref="ErrorCollection" />.</summary>
+	/// <returns>The <see cref="Error" />.</returns>
+	internal Error? GetTheMostCriticalErrorFromCurrent()
+	{
+		var mostCriticalOverall = default(Error);
+		foreach (var error in this._errors)
+		{
+			var mostCritical = error.GetTheMostCriticalErrorInChain();
+			if (mostCritical.CompareTo(mostCriticalOverall) > 0)
+			{
+				mostCriticalOverall = mostCritical;
+			}
+		}
+
+		return mostCriticalOverall;
+	}
 
 	/// <summary>Prints members.</summary>
 	/// <param name="builder">The <see cref="StringBuilder" />.</param>

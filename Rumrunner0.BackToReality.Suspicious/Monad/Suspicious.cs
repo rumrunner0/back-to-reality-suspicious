@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -105,15 +104,13 @@ public sealed class Suspicious<TResult>
 		return this;
 	}
 
-	// TODO: Maybe we'll need a Try version of this method.
-	// TODO: Add options to configure throw on error or not (if created from result or anything else).
-	/// <summary>Finds the most critical <see cref="ErrorKind" /> based on priority.</summary>
-	/// <returns>An <see cref="ErrorKind" /> with the highest priority.</returns>
-	/// <exception cref="InvalidOperationException">If this <see cref="Suspicious{TResult}" /> doesn't contain any errors.</exception>
-	public ErrorKind FindTheMostCriticalErrorKind()
+	/// <summary>Retrieves the most critical <see cref="Error" /> based on priority.</summary>
+	/// <returns>An <see cref="Error" /> with the highest priority.</returns>
+	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TResult}" /> doesn't contain any errors.</exception>
+	public Error GetTheMostCriticalError()
 	{
 		this.EnsureHasErrors();
-		return ErrorKind.FindWithHighestPriority(this._errorCollection!.AllErrors.Select(e => e.Kind));
+		return this._errorCollection!.GetTheMostCriticalError();
 	}
 
 	#endregion

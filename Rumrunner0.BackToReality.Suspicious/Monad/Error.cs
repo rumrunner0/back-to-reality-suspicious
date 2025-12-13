@@ -8,7 +8,7 @@ using Rumrunner0.BackToReality.SharedExtensions.Extensions;
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>Error related to <see cref="ErrorCollection" />.</summary>
-public sealed record class Error
+public sealed record class Error : IComparable<Error>
 {
 	#region Insance State
 
@@ -62,6 +62,20 @@ public sealed record class Error
 
 		this._cause = error;
 		return this;
+	}
+
+	/// <summary>Retrieves the most critical <see cref="Error" /> in the chain.</summary>
+	/// <returns>The <see cref="Error" />.</returns>
+	public Error GetTheMostCriticalErrorInChain()
+	{
+		var mostCriticalInCause = this._cause?.GetTheMostCriticalErrorInChain();
+		return this.CompareTo(mostCriticalInCause) > 0 ? this : mostCriticalInCause!;
+	}
+
+	/// <inheritdoc />
+	public int CompareTo(Error? other)
+	{
+		return _severityComparer.Compare(this, other);
 	}
 
 	#endregion
@@ -130,7 +144,32 @@ public sealed record class Error
 
 	#endregion
 
+	#region Static State
+
+	/// <inheritdoc cref="SeverityComparer" />
+	private static readonly SeverityComparer _severityComparer = new ();
+
+	/// <inheritdoc />
+	private sealed class SeverityComparer : IComparer<Error?>
+	{
+		/// <inheritdoc />
+		public int Compare(Error? x, Error? y)
+		{
+			return x is null ? -1 : y is null ? 1 : x.Kind.CompareTo(y.Kind);
+		}
+	}
+
+	#endregion
+
 	#region Static API
+
+	/// <summary>Retrieves the most critical <see cref="Error" />.</summary>
+	/// <param name="errors">The <see cref="Error" />s.</param>
+	/// <returns>The most critical <see cref="Error" />.</returns>
+	internal static Error? GetTheMostCritical(params IEnumerable<Error?> errors)
+	{
+		return errors.Max(_severityComparer);
+	}
 
 	/// <summary>Creates a custom <see cref="Error" />.</summary>
 	/// <param name="kind">The kind.</param>

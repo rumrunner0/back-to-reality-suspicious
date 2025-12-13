@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>Kind of <see cref="Error" />.</summary>
-public sealed record class ErrorKind
+public sealed record class ErrorKind : IComparable<ErrorKind>
 {
 	#region Instance State
 
@@ -54,6 +53,9 @@ public sealed record class ErrorKind
 	/// <returns><c>true</c> if the condition is satisfied; <c>false</c> otherwise.</returns>
 	public bool IsLessThanOrEqualsTo(ErrorKind other) => this._priority <= other._priority;
 
+	/// <inheritdoc />
+	public int CompareTo(ErrorKind? other) => _priorityComparer.Compare(this, other);
+
 	#endregion
 
 	#region Instance Utilities
@@ -74,10 +76,13 @@ public sealed record class ErrorKind
 	private static readonly PriorityComparer _priorityComparer = new ();
 
 	/// <inheritdoc />
-	private sealed class PriorityComparer : IComparer<ErrorKind>
+	private sealed class PriorityComparer : IComparer<ErrorKind?>
 	{
 		/// <inheritdoc />
-		public int Compare(ErrorKind? x, ErrorKind? y) => x is null ? -1 : y is null ? 1 : x._priority.CompareTo(y._priority);
+		public int Compare(ErrorKind? x, ErrorKind? y)
+		{
+			return x is null ? -1 : y is null ? 1 : x._priority.CompareTo(y._priority);
+		}
 	}
 
 	#endregion
@@ -111,14 +116,12 @@ public sealed record class ErrorKind
 		return new (name, priority);
 	}
 
-	/// <summary>
-	/// Finds the <see cref="ErrorKind" /> with the highest priority.
-	/// </summary>
+	/// <summary>Retrieves an <see cref="ErrorKind" /> with the highest priority.</summary>
 	/// <param name="kinds">The <see cref="ErrorKind" />s.</param>
 	/// <returns>The <see cref="ErrorKind" /> with the highest priority.</returns>
-	public static ErrorKind FindWithHighestPriority(IEnumerable<ErrorKind> kinds)
+	internal static ErrorKind? GetWithHighestPriority(params IEnumerable<ErrorKind?> kinds)
 	{
-		return kinds.Max(ErrorKind._priorityComparer)!;
+		return kinds.Max(_priorityComparer);
 	}
 
 	/// <summary>Determines whether <paramref name="left" /> has higher priority than <paramref name="right" />.</summary>
