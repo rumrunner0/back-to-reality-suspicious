@@ -210,9 +210,6 @@ public sealed class Suspicious<TResult>
 	/// <inheritdoc cref="From(TResult)" />
 	public static implicit operator Suspicious<TResult>(TResult result) => From(result);
 
-	/// <inheritdoc cref="Result" />
-	public static implicit operator TResult(Suspicious<TResult> suspicious) => suspicious.Result;
-
 	/// <summary>Creates a <see cref="Suspicious{TResult}" /> from a <paramref name="result" />.</summary>
 	/// <param name="result">The <paramref name="result" />.</param>
 	/// <returns>A new <see cref="Suspicious{TResult}" />.</returns>
