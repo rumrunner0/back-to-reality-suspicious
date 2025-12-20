@@ -155,7 +155,9 @@ public sealed record class Error : IComparable<Error>
 		/// <inheritdoc />
 		public int Compare(Error? x, Error? y)
 		{
-			return x is null ? -1 : y is null ? 1 : x.Kind.CompareTo(y.Kind);
+			if (x is null) return -1;
+			if (y is null) return 1;
+			return x._kind.CompareTo(y._kind);
 		}
 	}
 

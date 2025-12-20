@@ -104,13 +104,22 @@ public sealed class Suspicious<TResult>
 		return this;
 	}
 
-	/// <summary>Retrieves the most critical <see cref="Error" /> based on priority.</summary>
-	/// <returns>An <see cref="Error" /> with the highest priority.</returns>
-	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TResult}" /> doesn't contain any errors.</exception>
-	public Error GetTheMostCriticalError()
+	/// <summary>Gets the first error with the provided <paramref name="kind" />.</summary>
+	/// <param name="kind">The kind.</param>
+	/// <returns>An <see cref="Error" /> or <c>null</c>.</returns>
+	public Error? GetFirstErrorByKind(ErrorKind kind)
 	{
 		this.EnsureHasErrors();
-		return this._errorCollection!.GetTheMostCriticalError();
+		return this._errorCollection!.GetFirstByKind(kind);
+	}
+
+	/// <summary>Retrieves the most critical <see cref="Error" /> based on priority recursive.</summary>
+	/// <returns>An <see cref="Error" /> with the highest priority.</returns>
+	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TResult}" /> doesn't contain any errors.</exception>
+	public Error GetTheMostCriticalErrorRecursive()
+	{
+		this.EnsureHasErrors();
+		return this._errorCollection!.GetTheMostCriticalErrorRecursive();
 	}
 
 	#endregion

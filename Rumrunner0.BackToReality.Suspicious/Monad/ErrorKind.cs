@@ -81,7 +81,9 @@ public sealed record class ErrorKind : IComparable<ErrorKind>
 		/// <inheritdoc />
 		public int Compare(ErrorKind? x, ErrorKind? y)
 		{
-			return x is null ? -1 : y is null ? 1 : x._priority.CompareTo(y._priority);
+			if (x is null) return -1;
+			if (y is null) return 1;
+			return x._priority.CompareTo(y._priority);
 		}
 	}
 
@@ -104,6 +106,8 @@ public sealed record class ErrorKind : IComparable<ErrorKind>
 	/// <summary>All predefined <see cref="ErrorKind" />s.</summary>
 	private static readonly ErrorKind[] _allPredefined = [NoResult, Failure, Unexpected, Unspecified];
 
+
+
 	/// <summary>Factory for a custom <see cref="ErrorKind" />.</summary>
 	public static ErrorKind Custom(string name, int priority)
 	{
@@ -116,6 +120,8 @@ public sealed record class ErrorKind : IComparable<ErrorKind>
 		return new (name, priority);
 	}
 
+
+
 	/// <summary>Retrieves an <see cref="ErrorKind" /> with the highest priority.</summary>
 	/// <param name="kinds">The <see cref="ErrorKind" />s.</param>
 	/// <returns>The <see cref="ErrorKind" /> with the highest priority.</returns>
@@ -123,6 +129,8 @@ public sealed record class ErrorKind : IComparable<ErrorKind>
 	{
 		return kinds.Max(_priorityComparer);
 	}
+
+
 
 	/// <summary>Determines whether <paramref name="left" /> has higher priority than <paramref name="right" />.</summary>
 	/// <param name="left">The first <see cref="ErrorKind" /> to compare.</param>

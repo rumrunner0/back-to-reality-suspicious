@@ -55,7 +55,10 @@ public sealed class ErrorCollection
 	public ErrorCollection? Cause => this._cause;
 
 	/// <summary>Flag that indicates whether any errors exist.</summary>
-	public bool HasErrors => this._errors.Any() || this._cause is { HasErrors: true };
+	public bool HasErrors => this._errors.Any();
+
+	/// <summary>Flag that indicates whether any errors exist recursive.</summary>
+	public bool HasErrorsRecursive => this._errors.Any() || this._cause is { HasErrorsRecursive: true };
 
 	/// <summary>Tries to add an <paramref name="error" />.</summary>
 	/// <param name="error">The <see cref="Error" />.</param>
@@ -87,13 +90,32 @@ public sealed class ErrorCollection
 		return this;
 	}
 
-	/// <summary>Retrieves the most critical <see cref="Error" />.</summary>
+	/// <summary>Gets the first error with the provided <paramref name="kind" />.</summary>
+	/// <param name="kind">The kind.</param>
+	/// <returns>An <see cref="Error" /> or <c>null</c>.</returns>
+	public Error? GetFirstByKind(ErrorKind kind)
+	{
+		if (!this.HasErrors) throw new InvalidOperationException("The collection doesn't have any errors");
+
+		return this._errors.FirstOrDefault(e => e.Kind == kind);
+	}
+
+	// TODO: Separate searching only this._errors and recursive search.
+	/// <summary>Gets the first error with the provided <paramref name="kind" />.</summary>
+	/// <param name="kind">The kind.</param>
+	/// <returns>An <see cref="Error" /> or <c>null</c>.</returns>
+	public Error GetFirstByKindResursive(ErrorKind kind)
+	{
+		throw new NotImplementedException();
+	}
+
+	/// <summary>Retrieves the most critical <see cref="Error" /> recursive.</summary>
 	/// <returns>The <see cref="Error" />.</returns>
 	/// <exception cref="InvalidOperationException">Thrown if the collection doesn't have any errors.</exception>
 	/// <exception cref="UnreachableException">Thrown if most critical error can't be retrieved.</exception>
-	public Error GetTheMostCriticalError()
+	public Error GetTheMostCriticalErrorRecursive()
 	{
-		if (!this.HasErrors) throw new InvalidOperationException("The collection doesn't have any errors");
+		if (!this.HasErrorsRecursive) throw new InvalidOperationException("The collection doesn't have any errors");
 
 		var result = this.GetTheMostCriticalErrorInChain();
 		if (result is null) throw new UnreachableException("The most critical error can't be retrieved");
@@ -107,7 +129,7 @@ public sealed class ErrorCollection
 
 	/// <summary>Retrieves the most critical <see cref="Error" /> in the chain.</summary>
 	/// <returns>The <see cref="Error" />.</returns>
-	internal Error? GetTheMostCriticalErrorInChain()
+	private Error? GetTheMostCriticalErrorInChain()
 	{
 		return Error.GetTheMostCritical
 		(
@@ -118,7 +140,7 @@ public sealed class ErrorCollection
 
 	/// <summary>Retrieves the most critical <see cref="Error" /> from the current <see cref="ErrorCollection" />.</summary>
 	/// <returns>The <see cref="Error" />.</returns>
-	internal Error? GetTheMostCriticalErrorFromCurrent()
+	private Error? GetTheMostCriticalErrorFromCurrent()
 	{
 		var mostCriticalOverall = default(Error);
 		foreach (var error in this._errors)

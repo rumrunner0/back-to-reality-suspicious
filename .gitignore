@@ -1,17 +1,13 @@
-#
-# Folders
-#
+# Directories
 
-/.vs/
-/.vscode/
-/.idea/
+**/.vs/
+**/.vscode/
+**/.idea/
 
-/*/bin/
-/*/obj/
+**/bin/
+**/obj/
 
-#
 # Files
-#
 
 *.log
 *.user
