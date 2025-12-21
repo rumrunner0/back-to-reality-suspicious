@@ -36,22 +36,22 @@ public sealed record class ErrorKind : IComparable<ErrorKind>
 	/// <summary>Determines whether this instance is greater than the <paramref name="other" />.</summary>
 	/// <param name="other">The other.</param>
 	/// <returns><c>true</c> if the condition is satisfied; <c>false</c> otherwise.</returns>
-	public bool IsGreaterThan(ErrorKind other) => this._priority > other._priority;
+	public bool IsGreaterThan(ErrorKind other) => _priorityComparer.Compare(this, other) > 0;
 
 	/// <summary>Determines whether this instance is greater than or equals to the <paramref name="other" />.</summary>
 	/// <param name="other">The other.</param>
 	/// <returns><c>true</c> if the condition is satisfied; <c>false</c> otherwise.</returns>
-	public bool IsGreaterThanOrEqualsTo(ErrorKind other) => this._priority >= other._priority;
+	public bool IsGreaterThanOrEqualsTo(ErrorKind other) => _priorityComparer.Compare(this, other) >= 0;
 
 	/// <summary>Determines whether this instance is less than the <paramref name="other" />.</summary>
 	/// <param name="other">The other.</param>
 	/// <returns><c>true</c> if the condition is satisfied; <c>false</c> otherwise.</returns>
-	public bool IsLessThan(ErrorKind other) => this._priority < other._priority;
+	public bool IsLessThan(ErrorKind other) => _priorityComparer.Compare(this, other) < 0;
 
 	/// <summary>Determines whether this instance is less than or equals to the <paramref name="other" />.</summary>
 	/// <param name="other">The other.</param>
 	/// <returns><c>true</c> if the condition is satisfied; <c>false</c> otherwise.</returns>
-	public bool IsLessThanOrEqualsTo(ErrorKind other) => this._priority <= other._priority;
+	public bool IsLessThanOrEqualsTo(ErrorKind other) => _priorityComparer.Compare(this, other) <= 0;
 
 	/// <inheritdoc />
 	public int CompareTo(ErrorKind? other) => _priorityComparer.Compare(this, other);
@@ -92,7 +92,7 @@ public sealed record class ErrorKind : IComparable<ErrorKind>
 	#region Static API
 
 	/// <summary>Failure <see cref="ErrorKind" />.</summary>
-	public static ErrorKind NoResult { get; } = new (name: "no-result", priority: 10_000);
+	public static ErrorKind NoValue { get; } = new (name: "no_value", priority: 10_000);
 
 	/// <summary>Failure <see cref="ErrorKind" />.</summary>
 	public static ErrorKind Failure { get; } = new (name: "failure", priority: 100_000);
@@ -103,31 +103,11 @@ public sealed record class ErrorKind : IComparable<ErrorKind>
 	/// <summary>Unspecified <see cref="ErrorKind" />.</summary>
 	public static ErrorKind Unspecified { get; } = new (name: "unspecified", priority: int.MaxValue);
 
-	/// <summary>All predefined <see cref="ErrorKind" />s.</summary>
-	private static readonly ErrorKind[] _allPredefined = [NoResult, Failure, Unexpected, Unspecified];
-
-
-
 	/// <summary>Factory for a custom <see cref="ErrorKind" />.</summary>
 	public static ErrorKind Custom(string name, int priority)
 	{
-		if (_allPredefined.FirstOrDefault(k => k._name == name || k._priority == priority) is { } conflict)
-		{
-			ArgumentExceptionExtensions.Throw($"Custom properties ({name}, {priority}) conflict with: {conflict}");
-		}
-
 		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(name);
 		return new (name, priority);
-	}
-
-
-
-	/// <summary>Retrieves an <see cref="ErrorKind" /> with the highest priority.</summary>
-	/// <param name="kinds">The <see cref="ErrorKind" />s.</param>
-	/// <returns>The <see cref="ErrorKind" /> with the highest priority.</returns>
-	internal static ErrorKind? GetWithHighestPriority(params IEnumerable<ErrorKind?> kinds)
-	{
-		return kinds.Max(_priorityComparer);
 	}
 
 

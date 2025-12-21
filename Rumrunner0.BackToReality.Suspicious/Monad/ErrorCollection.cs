@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
@@ -8,7 +7,7 @@ using Rumrunner0.BackToReality.SharedExtensions.Collections;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>Collection of <see cref="Error"/>s related to <see cref="Suspicious{TResult}" />.</summary>
+/// <summary>Collection of <see cref="Error"/>s.</summary>
 public sealed class ErrorCollection
 {
 	#region Instance State
@@ -31,6 +30,7 @@ public sealed class ErrorCollection
 		ArgumentExceptionExtensions.ThrowIfNull(category);
 		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(header);
 		ArgumentExceptionExtensions.ThrowIfNull(errors);
+		this.EnsureCauseDoesNotCreateCycle(cause);
 
 		this._category = category;
 		this._header = header;
@@ -54,11 +54,22 @@ public sealed class ErrorCollection
 	/// <summary>Inner error collection that caused this one.</summary>
 	public ErrorCollection? Cause => this._cause;
 
-	/// <summary>Flag that indicates whether any errors exist.</summary>
-	public bool HasErrors => this._errors.Any();
+	/// <summary>Flag that indicates whether the collection contains any errors.</summary>
+	public bool ContainsErrors => this._errors.Any();
 
-	/// <summary>Flag that indicates whether any errors exist recursive.</summary>
-	public bool HasErrorsRecursive => this._errors.Any() || this._cause is { HasErrorsRecursive: true };
+	/// <summary>Flag that indicates whether the collection contains any errors in the cause chain, including self.</summary>
+	public bool ContainsErrorsDeep
+	{
+		get
+		{
+			for (var current = this; current is not null; current = current._cause)
+			{
+				if (current.ContainsErrors) return true;
+			}
+
+			return false;
+		}
+	}
 
 	/// <summary>Tries to add an <paramref name="error" />.</summary>
 	/// <param name="error">The <see cref="Error" />.</param>
@@ -74,85 +85,82 @@ public sealed class ErrorCollection
 	/// <exception cref="InvalidOperationException">Thrown if identical <paramref name="error" /> has already been added.</exception>
 	public ErrorCollection AddError(Error error)
 	{
-		if (!this._errors.Add(error)) throw new InvalidOperationException($"Identical error {error} has already been added");
+		if (!this.TryAddError(error)) throw new InvalidOperationException($"Identical error {error} has already been added");
 		return this;
 	}
 
 	/// <summary>Sets an inner <see cref="ErrorCollection" /> that caused this one.</summary>
-	/// <param name="errorCollection">The inner <see cref="ErrorCollection" />to set, or <c>null</c> to remove it.</param>
+	/// <param name="cause">The inner <see cref="ErrorCollection" />to set, or <c>null</c> to remove it.</param>
 	/// <returns>This <see cref="ErrorCollection" />.</returns>
 	/// <remarks><c>null</c> can be used to remove the existing inner <see cref="ErrorCollection" />.</remarks>
-	public ErrorCollection SetCause(ErrorCollection? errorCollection)
+	public ErrorCollection SetCause(ErrorCollection? cause)
 	{
-		if (errorCollection == this) ArgumentExceptionExtensions.Throw("Cause collection can't be the same as the collection for which the cause is being set");
-
-		this._cause = errorCollection;
+		this.EnsureCauseDoesNotCreateCycle(cause);
+		this._cause = cause;
 		return this;
 	}
 
-	/// <summary>Gets the first error with the provided <paramref name="kind" />.</summary>
+	/// <summary>Searches for the first <see cref="Error" /> with the provided <paramref name="kind" /> among errors only in the current collection.</summary>
 	/// <param name="kind">The kind.</param>
 	/// <returns>An <see cref="Error" /> or <c>null</c>.</returns>
-	public Error? GetFirstByKind(ErrorKind kind)
+	public Error? FindError(ErrorKind kind)
 	{
-		if (!this.HasErrors) throw new InvalidOperationException("The collection doesn't have any errors");
-
-		return this._errors.FirstOrDefault(e => e.Kind == kind);
+		return this._errors.FirstOrDefault(e => e.Find(kind) is not null);
 	}
 
-	// TODO: Separate searching only this._errors and recursive search.
-	/// <summary>Gets the first error with the provided <paramref name="kind" />.</summary>
+	/// <summary>Searches for the first <see cref="Error" /> with the provided <paramref name="kind" /> among all errors in the cause chain, including self.</summary>
 	/// <param name="kind">The kind.</param>
 	/// <returns>An <see cref="Error" /> or <c>null</c>.</returns>
-	public Error GetFirstByKindResursive(ErrorKind kind)
+	public Error? FindErrorDeep(ErrorKind kind)
 	{
-		throw new NotImplementedException();
+		for (var current = this; current is not null; current = current._cause)
+		{
+			foreach (var error in current._errors)
+			{
+				if (error.Find(kind) is { } target) return target;
+			}
+		}
+
+		return null;
 	}
 
-	/// <summary>Retrieves the most critical <see cref="Error" /> recursive.</summary>
+	/// <summary>Searches for the most critical <see cref="Error" /> among all errors in the cause chain, including self.</summary>
 	/// <returns>The <see cref="Error" />.</returns>
-	/// <exception cref="InvalidOperationException">Thrown if the collection doesn't have any errors.</exception>
-	/// <exception cref="UnreachableException">Thrown if most critical error can't be retrieved.</exception>
-	public Error GetTheMostCriticalErrorRecursive()
+	public Error? FindMostCriticalErrorDeep()
 	{
-		if (!this.HasErrorsRecursive) throw new InvalidOperationException("The collection doesn't have any errors");
+		var target = default(Error?);
 
-		var result = this.GetTheMostCriticalErrorInChain();
-		if (result is null) throw new UnreachableException("The most critical error can't be retrieved");
+		for (var current = this; current is not null; current = current._cause)
+		{
+			foreach (var error in current._errors)
+			{
+				var candidate = error.FindMostCritical();
+				if (candidate.CompareTo(target) > 0) target = candidate;
+			}
+		}
 
-		return result;
+		return target;
 	}
 
 	#endregion
 
 	#region Instance Utilities
 
-	/// <summary>Retrieves the most critical <see cref="Error" /> in the chain.</summary>
-	/// <returns>The <see cref="Error" />.</returns>
-	private Error? GetTheMostCriticalErrorInChain()
+	/// <summary>Ensures that <paramref name="cause" /> doesn't create a cycle.</summary>
+	/// <param name="cause">The cause.</param>
+	/// <exception cref="ArgumentException">Thrown if the <paramref name="cause" /> already contains a cycle or would create a cycle.</exception>
+	private void EnsureCauseDoesNotCreateCycle(ErrorCollection? cause)
 	{
-		return Error.GetTheMostCritical
-		(
-			this.GetTheMostCriticalErrorFromCurrent(),
-			this._cause?.GetTheMostCriticalErrorInChain()
-		);
-	}
+		if (cause is null) return;
+		if (ReferenceEquals(cause, this)) ArgumentExceptionExtensions.Throw("An instance cannot be its own cause", cause);
 
-	/// <summary>Retrieves the most critical <see cref="Error" /> from the current <see cref="ErrorCollection" />.</summary>
-	/// <returns>The <see cref="Error" />.</returns>
-	private Error? GetTheMostCriticalErrorFromCurrent()
-	{
-		var mostCriticalOverall = default(Error);
-		foreach (var error in this._errors)
+		var visited = HashSetFactory.ReferenceEquality<ErrorCollection>();
+
+		for (var current = cause; current is not null; current = current._cause)
 		{
-			var mostCritical = error.GetTheMostCriticalErrorInChain();
-			if (mostCritical.CompareTo(mostCriticalOverall) > 0)
-			{
-				mostCriticalOverall = mostCritical;
-			}
+			if (!visited.Add(current)) ArgumentExceptionExtensions.Throw("Cause chain already contains a cycle", cause);
+			if (ReferenceEquals(current, this)) ArgumentExceptionExtensions.Throw("Setting the cause would create a cycle", cause);
 		}
-
-		return mostCriticalOverall;
 	}
 
 	/// <summary>Prints members.</summary>

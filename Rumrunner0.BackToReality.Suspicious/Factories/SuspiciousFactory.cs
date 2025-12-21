@@ -4,34 +4,34 @@ using Rumrunner0.BackToReality.Suspicious.Results;
 
 namespace Rumrunner0.BackToReality.Suspicious.Factories;
 
-/// <summary>Factory for a <see cref="Suspicious{TResult}" />.</summary>
+/// <summary>Factory for a <see cref="Suspicious{TValue}" />.</summary>
 public static class Suspicious
 {
-	/// <summary>A <see cref="Success" /> wrapped in a <see cref="Suspicious{TResult}" />.</summary>
+	/// <summary>A <see cref="Success" /> wrapped in a <see cref="Suspicious{TValue}" />.</summary>
 	public static Suspicious<Success> Success { get; } = Suspicious<Success>.From(new Success());
 
-	/// <summary>An <see cref="Ok" /> wrapped in a <see cref="Suspicious{TResult}" />.</summary>
+	/// <summary>An <see cref="Ok" /> wrapped in a <see cref="Suspicious{TValue}" />.</summary>
 	public static Suspicious<Ok> Ok { get; } = Suspicious<Ok>.From(new Ok());
 
-	/// <summary>Creates a new <see cref="Suspicious{TResult}" /> from a <paramref name="result" />.</summary>
-	/// <param name="result">The result.</param>
-	/// <typeparam name="TResult">The result type.</typeparam>
-	/// <returns>A new <see cref="Suspicious{TResult}" /> created from the  <paramref name="result" />.</returns>
-	public static Suspicious<TResult> Result<TResult>(TResult result) =>  Suspicious<TResult>.From(result);
+	/// <summary>Creates a new <see cref="Suspicious{TValue}" /> from a <paramref name="value" />.</summary>
+	/// <param name="value">The value.</param>
+	/// <typeparam name="TValue">The value type.</typeparam>
+	/// <returns>A new <see cref="Suspicious{TValue}" /> created from the <paramref name="value" />.</returns>
+	public static Suspicious<TValue> Value<TValue>(TValue value) =>  Suspicious<TValue>.From(value);
 
-	/// <summary>Factory for an error <see cref="Suspicious{TResult}" />.</summary>
-	public static class Not<TResult>
+	/// <summary>Factory for an error <see cref="Suspicious{TValue}" />.</summary>
+	public static class Not<TValue>
 	{
-		/// <summary>Creates a <see cref="Suspicious{TResult}" /> from <see cref="ErrorCollection" /> parameters.</summary>
+		/// <summary>Creates a <see cref="Suspicious{TValue}" /> from <see cref="ErrorCollection" /> parameters.</summary>
 		/// <param name="category">The category.</param>
 		/// <param name="header">The header.</param>
 		/// <param name="errors">The <see cref="Error" />s.</param>
-		/// <returns>A new <see cref="Suspicious{TResult}" /> created from an <see cref="ErrorCollection" />.</returns>
-		public static Suspicious<TResult> But(ErrorCollectionCategory category, string header, params IEnumerable<Error> errors) => But(ErrorCollection.New(category, header, errors));
+		/// <returns>A new <see cref="Suspicious{TValue}" /> created from an <see cref="ErrorCollection" />.</returns>
+		public static Suspicious<TValue> But(ErrorCollectionCategory category, string header, params IEnumerable<Error> errors) => But(ErrorCollection.New(category, header, errors));
 
-		/// <summary>Creates a <see cref="Suspicious{TResult}" /> from an <see cref="ErrorCollection" />.</summary>
+		/// <summary>Creates a <see cref="Suspicious{TValue}" /> from an <see cref="ErrorCollection" />.</summary>
 		/// <param name="errorCollection">The <see cref="ErrorCollection" />.</param>
-		/// <returns>A new <see cref="Suspicious{TResult}" /> created from the <see cref="ErrorCollection" />.</returns>
-		public static Suspicious<TResult> But(ErrorCollection errorCollection) => Suspicious<TResult>.From(errorCollection);
+		/// <returns>A new <see cref="Suspicious{TValue}" /> created from the <see cref="ErrorCollection" />.</returns>
+		public static Suspicious<TValue> But(ErrorCollection errorCollection) => Suspicious<TValue>.From(errorCollection);
 	}
 }

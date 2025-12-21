@@ -14,9 +14,6 @@ public sealed record class ErrorCollectionCategory : StringValueObject
 
 	#region Static API
 
-	/// <summary>Unspecified.</summary>
-	public static ErrorCollectionCategory Unspecified { get; } = new ("unspecified");
-
 	/// <summary>Custom.</summary>
 	public static ErrorCollectionCategory Custom(string value) => new (value);
 
