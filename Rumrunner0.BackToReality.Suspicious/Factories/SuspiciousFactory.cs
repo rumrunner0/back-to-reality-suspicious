@@ -22,16 +22,16 @@ public static class Suspicious
 	/// <summary>Factory for an error <see cref="Suspicious{TValue}" />.</summary>
 	public static class Not<TValue>
 	{
-		/// <summary>Creates a <see cref="Suspicious{TValue}" /> from <see cref="ErrorCollection" /> parameters.</summary>
+		/// <summary>Creates a <see cref="Suspicious{TValue}" /> from <see cref="ErrorSet" /> parameters.</summary>
 		/// <param name="category">The category.</param>
 		/// <param name="header">The header.</param>
 		/// <param name="errors">The <see cref="Error" />s.</param>
-		/// <returns>A new <see cref="Suspicious{TValue}" /> created from an <see cref="ErrorCollection" />.</returns>
-		public static Suspicious<TValue> But(ErrorCollectionCategory category, string header, params IEnumerable<Error> errors) => But(ErrorCollection.New(category, header, errors));
+		/// <returns>A new <see cref="Suspicious{TValue}" /> created from an <see cref="ErrorSet" />.</returns>
+		public static Suspicious<TValue> But(ErrorSetCategory category, string header, params IEnumerable<Error> errors) => But(ErrorSet.New(category, header, errors));
 
-		/// <summary>Creates a <see cref="Suspicious{TValue}" /> from an <see cref="ErrorCollection" />.</summary>
-		/// <param name="errorCollection">The <see cref="ErrorCollection" />.</param>
-		/// <returns>A new <see cref="Suspicious{TValue}" /> created from the <see cref="ErrorCollection" />.</returns>
-		public static Suspicious<TValue> But(ErrorCollection errorCollection) => Suspicious<TValue>.From(errorCollection);
+		/// <summary>Creates a <see cref="Suspicious{TValue}" /> from an <see cref="ErrorSet" />.</summary>
+		/// <param name="errorSet">The <see cref="ErrorSet" />.</param>
+		/// <returns>A new <see cref="Suspicious{TValue}" /> created from the <see cref="ErrorSet" />.</returns>
+		public static Suspicious<TValue> But(ErrorSet errorSet) => Suspicious<TValue>.From(errorSet);
 	}
 }

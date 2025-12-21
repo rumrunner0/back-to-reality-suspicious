@@ -7,13 +7,13 @@ using Rumrunner0.BackToReality.SharedExtensions.Collections;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>Collection of <see cref="Error"/>s.</summary>
-public sealed class ErrorCollection
+/// <summary>Set of <see cref="Error"/>s.</summary>
+public sealed class ErrorSet
 {
 	#region Instance State
 
 	/// <summary>Category.</summary>
-	private readonly ErrorCollectionCategory _category;
+	private readonly ErrorSetCategory _category;
 
 	/// <summary>Header.</summary>
 	private readonly string _header;
@@ -21,11 +21,11 @@ public sealed class ErrorCollection
 	/// <summary>Errors.</summary>
 	private readonly HashSet<Error> _errors;
 
-	/// <summary>Inner error collection that caused this one.</summary>
-	private ErrorCollection? _cause;
+	/// <summary>Cause.</summary>
+	private ErrorSet? _cause;
 
-	/// <inheritdoc cref="ErrorCollection" />
-	private ErrorCollection(ErrorCollectionCategory category, string header, IEnumerable<Error> errors, ErrorCollection? cause = null)
+	/// <inheritdoc cref="ErrorSet" />
+	private ErrorSet(ErrorSetCategory category, string header, IEnumerable<Error> errors, ErrorSet? cause = null)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(category);
 		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(header);
@@ -43,7 +43,7 @@ public sealed class ErrorCollection
 	#region Instance API
 
 	/// <summary>Category.</summary>
-	public ErrorCollectionCategory Category => this._category;
+	public ErrorSetCategory Category => this._category;
 
 	/// <summary>Header.</summary>
 	public string Header => this._header;
@@ -51,13 +51,13 @@ public sealed class ErrorCollection
 	/// <summary>Errors.</summary>
 	public IReadOnlySet<Error> Errors => this._errors;
 
-	/// <summary>Inner error collection that caused this one.</summary>
-	public ErrorCollection? Cause => this._cause;
+	/// <summary>Cause.</summary>
+	public ErrorSet? Cause => this._cause;
 
-	/// <summary>Flag that indicates whether the collection contains any errors.</summary>
+	/// <summary>Flag that indicates whether the current <see cref="ErrorSet" /> contains any errors.</summary>
 	public bool ContainsErrors => this._errors.Any();
 
-	/// <summary>Flag that indicates whether the collection contains any errors in the cause chain, including self.</summary>
+	/// <summary>Flag that indicates whether the <see cref="ErrorSet" /> contains any errors in the cause chain, including self.</summary>
 	public bool ContainsErrorsDeep
 	{
 		get
@@ -81,26 +81,26 @@ public sealed class ErrorCollection
 
 	/// <summary>Adds an <paramref name="error" />.</summary>
 	/// <param name="error">The <see cref="Error" />.</param>
-	/// <returns>This <see cref="ErrorCollection" />.</returns>
+	/// <returns>This <see cref="ErrorSet" />.</returns>
 	/// <exception cref="InvalidOperationException">Thrown if identical <paramref name="error" /> has already been added.</exception>
-	public ErrorCollection AddError(Error error)
+	public ErrorSet AddError(Error error)
 	{
 		if (!this.TryAddError(error)) throw new InvalidOperationException($"Identical error {error} has already been added");
 		return this;
 	}
 
-	/// <summary>Sets an inner <see cref="ErrorCollection" /> that caused this one.</summary>
-	/// <param name="cause">The inner <see cref="ErrorCollection" />to set, or <c>null</c> to remove it.</param>
-	/// <returns>This <see cref="ErrorCollection" />.</returns>
-	/// <remarks><c>null</c> can be used to remove the existing inner <see cref="ErrorCollection" />.</remarks>
-	public ErrorCollection SetCause(ErrorCollection? cause)
+	/// <summary>Sets an inner <see cref="ErrorSet" /> that caused this one.</summary>
+	/// <param name="cause">The inner <see cref="ErrorSet" />to set, or <c>null</c> to remove it.</param>
+	/// <returns>This <see cref="ErrorSet" />.</returns>
+	/// <remarks><c>null</c> can be used to remove the existing inner <see cref="ErrorSet" />.</remarks>
+	public ErrorSet SetCause(ErrorSet? cause)
 	{
 		this.EnsureCauseDoesNotCreateCycle(cause);
 		this._cause = cause;
 		return this;
 	}
 
-	/// <summary>Searches for the first <see cref="Error" /> with the provided <paramref name="kind" /> among errors only in the current collection.</summary>
+	/// <summary>Searches for the first <see cref="Error" /> with the provided <paramref name="kind" /> among errors only in the current <see cref="ErrorSet" />.</summary>
 	/// <param name="kind">The kind.</param>
 	/// <returns>An <see cref="Error" /> or <c>null</c>.</returns>
 	public Error? FindError(ErrorKind kind)
@@ -149,12 +149,12 @@ public sealed class ErrorCollection
 	/// <summary>Ensures that <paramref name="cause" /> doesn't create a cycle.</summary>
 	/// <param name="cause">The cause.</param>
 	/// <exception cref="ArgumentException">Thrown if the <paramref name="cause" /> already contains a cycle or would create a cycle.</exception>
-	private void EnsureCauseDoesNotCreateCycle(ErrorCollection? cause)
+	private void EnsureCauseDoesNotCreateCycle(ErrorSet? cause)
 	{
 		if (cause is null) return;
 		if (ReferenceEquals(cause, this)) ArgumentExceptionExtensions.Throw("An instance cannot be its own cause", cause);
 
-		var visited = HashSetFactory.ReferenceEquality<ErrorCollection>();
+		var visited = HashSetFactory.ReferenceEquality<ErrorSet>();
 
 		for (var current = cause; current is not null; current = current._cause)
 		{
@@ -210,7 +210,7 @@ public sealed class ErrorCollection
 	{
 		var builder = new StringBuilder();
 
-		builder.Append($"{nameof(ErrorCollection)} {{ ");
+		builder.Append($"{nameof(ErrorSet)} {{ ");
 		if (this.PrintMembers(builder)) builder.Append(' ');
 		builder.Append('}');
 
@@ -232,11 +232,11 @@ public sealed class ErrorCollection
 
 	#region Static API
 
-	/// <summary>Empty <see cref="ErrorCollection" />.</summary>
-	public static ErrorCollection Empty(ErrorCollectionCategory category, string header) => new (category, header, []);
+	/// <summary>Empty <see cref="ErrorSet" />.</summary>
+	public static ErrorSet Empty(ErrorSetCategory category, string header) => new (category, header, []);
 
-	/// <summary>Empty <see cref="ErrorCollection" />.</summary>
-	public static ErrorCollection New(ErrorCollectionCategory category, string header, IEnumerable<Error> errors) => new (category, header, errors);
+	/// <summary>Empty <see cref="ErrorSet" />.</summary>
+	public static ErrorSet New(ErrorSetCategory category, string header, IEnumerable<Error> errors) => new (category, header, errors);
 
 	#endregion
 }

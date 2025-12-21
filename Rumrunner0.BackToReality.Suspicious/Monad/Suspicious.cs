@@ -5,7 +5,7 @@ using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>Result monad that wraps either an actual value or a collection of errors.</summary>
+/// <summary>Result monad that wraps either an actual value or a set of errors.</summary>
 /// <typeparam name="TValue">The value type.</typeparam>
 public sealed record class Suspicious<TValue>
 {
@@ -14,8 +14,8 @@ public sealed record class Suspicious<TValue>
 	/// <summary>Value.</summary>
 	private readonly TValue? _value;
 
-	/// <summary>Error collection.</summary>
-	private readonly ErrorCollection? _errorCollection;
+	/// <summary>Error set.</summary>
+	private readonly ErrorSet? _errorSet;
 
 	/// <inheritdoc cref="Suspicious{TValue}" />
 	private Suspicious(TValue value)
@@ -25,10 +25,10 @@ public sealed record class Suspicious<TValue>
 	}
 
 	/// <inheritdoc cref="Suspicious{TValue}" />
-	private Suspicious(ErrorCollection errorCollection)
+	private Suspicious(ErrorSet errorSet)
 	{
-		ArgumentExceptionExtensions.ThrowIfNull(errorCollection);
-		this._errorCollection = errorCollection;
+		ArgumentExceptionExtensions.ThrowIfNull(errorSet);
+		this._errorSet = errorSet;
 	}
 
 	#endregion
@@ -39,9 +39,9 @@ public sealed record class Suspicious<TValue>
 	/// <remarks>Will be <c>null</c> or <c>default</c>, if this <see cref="Suspicious{TValue}" /> wasn't created from a value.</remarks>
 	public TValue Value => this._value!;
 
-	/// <summary>Error collection.</summary>
+	/// <summary>Error set.</summary>
 	/// <remarks>Will be <c>null</c>, if this <see cref="Suspicious{TValue}" /> wasn't created from an error.</remarks>
-	public ErrorCollection ErrorCollection => this._errorCollection!;
+	public ErrorSet ErrorSet => this._errorSet!;
 
 	/// <summary>Flag that indicates whether this <see cref="Suspicious{TValue}" /> was created from a value.</summary>
 	public bool FromValue => this.State == SuspiciousState.Value;
@@ -55,12 +55,12 @@ public sealed record class Suspicious<TValue>
 		get
 		{
 			if (this._value is not null) return SuspiciousState.Value;
-			if (this._errorCollection is not null) return SuspiciousState.Error;
+			if (this._errorSet is not null) return SuspiciousState.Error;
 			return SuspiciousState.Unexpected;
 		}
 	}
 
-	/// <summary>Adds an <see cref="Error" /> to the <see cref="ErrorCollection" />.</summary>
+	/// <summary>Adds an <see cref="Error" /> to the <see cref="ErrorSet" />.</summary>
 	/// <param name="error">The error.</param>
 	/// <returns>This <see cref="Suspicious{TValue}" />.</returns>
 	/// <remarks>To use this method, this <see cref="Suspicious{TValue}" /> must have been created from an error.</remarks>
@@ -68,15 +68,15 @@ public sealed record class Suspicious<TValue>
 	public Suspicious<TValue> AddError(Error error)
 	{
 		this.EnsureCreatedFromError();
-		this._errorCollection!.TryAddError(error);
+		this._errorSet!.TryAddError(error);
 		return this;
 	}
 
 	/// <summary>
-	/// Sets the <see cref="ErrorCollection" /> of an <paramref name="other" /> <see cref="Suspicious{TValue}" />
-	/// as the inner <see cref="ErrorCollection" /> of this, indicating that this result was caused by <paramref name="other" />.
+	/// Sets the <see cref="ErrorSet" /> of an <paramref name="other" /> <see cref="Suspicious{TValue}" />
+	/// as the inner <see cref="ErrorSet" /> of this, indicating that this result was caused by <paramref name="other" />.
 	/// </summary>
-	/// <param name="other">The <see cref="Suspicious{TValue}" /> whose <see cref="ErrorCollection" /> will be used as the inner.</param>
+	/// <param name="other">The <see cref="Suspicious{TValue}" /> whose <see cref="ErrorSet" /> will be used as the inner.</param>
 	/// <typeparam name="TOtherValue">The type of the <paramref name="other" /> <see cref="Suspicious{TValue}" />.</typeparam>
 	/// <returns>This <see cref="Suspicious{TValue}" />.</returns>
 	/// <exception cref="InvalidOperationException">Thrown if either this instance or <paramref name="other" /> was not created from an error.</exception>
@@ -84,17 +84,17 @@ public sealed record class Suspicious<TValue>
 	{
 		this.EnsureCreatedFromError();
 		other.EnsureCreatedFromError();
-		this._errorCollection!.SetCause(other._errorCollection!);
+		this._errorSet!.SetCause(other._errorSet!);
 		return this;
 	}
 
-	/// <summary>Searches for the first <see cref="Error" /> with the provided <paramref name="kind" /> among errors only in the current collection.</summary>
+	/// <summary>Searches for the first <see cref="Error" /> with the provided <paramref name="kind" /> among errors only in the current <see cref="ErrorSet" />.</summary>
 	/// <param name="kind">The kind.</param>
 	/// <returns>An <see cref="Error" /> or <c>null</c>.</returns>
 	public Error? FindError(ErrorKind kind)
 	{
 		this.EnsureCreatedFromError();
-		return this._errorCollection!.FindError(kind);
+		return this._errorSet!.FindError(kind);
 	}
 
 	/// <summary>Searches for the first <see cref="Error" /> with the provided <paramref name="kind" /> among all errors in the cause chain, including self.</summary>
@@ -103,7 +103,7 @@ public sealed record class Suspicious<TValue>
 	public Error? FindErrorDeep(ErrorKind kind)
 	{
 		this.EnsureCreatedFromError();
-		return this._errorCollection!.FindErrorDeep(kind);
+		return this._errorSet!.FindErrorDeep(kind);
 	}
 
 	/// <summary>Searches for the most critical <see cref="Error" /> among all errors in the cause chain, including self.</summary>
@@ -112,28 +112,28 @@ public sealed record class Suspicious<TValue>
 	public Error? FindMostCriticalErrorDeep()
 	{
 		this.EnsureCreatedFromError();
-		return this._errorCollection!.FindMostCriticalErrorDeep();
+		return this._errorSet!.FindMostCriticalErrorDeep();
 	}
 
 	#endregion
 
 	#region Instance Utilities
 
-	/// <summary>Ensures that this <see cref="Suspicious{TValue}" /> instance was created from an error and has a valid <see cref="ErrorCollection" />.</summary>
+	/// <summary>Ensures that this <see cref="Suspicious{TValue}" /> instance was created from an error and has a valid <see cref="ErrorSet" />.</summary>
 	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TValue}" /> was not created from an error.</exception>
-	/// <exception cref="UnreachableException">Thrown if the internal <see cref="ErrorCollection" /> is <c>null</c> despite <see cref="FromError" /> being <c>true</c>.</exception>
+	/// <exception cref="UnreachableException">Thrown if the internal <see cref="ErrorSet" /> is <c>null</c> despite <see cref="FromError" /> being <c>true</c>.</exception>
 	private void EnsureCreatedFromError()
 	{
 		if (!this.FromError) throw new InvalidOperationException($"The {nameof(Suspicious<TValue>)} wasn't created from an error");
-		if (this._errorCollection is null) throw new UnreachableException($"The error collection is null but '.{nameof(this.FromError)}' is {this.FromError}");
+		if (this._errorSet is null) throw new UnreachableException($"The error set is null but '.{nameof(this.FromError)}' is {this.FromError}");
 	}
 
-	/// <summary>Ensures that this <see cref="Suspicious{TValue}" /> instance was created from an error and contains actual <see cref="Error" />s in its <see cref="ErrorCollection" />.</summary>
-	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TValue}" /> was not created from an error, or if its <see cref="ErrorCollection" /> doesn't contain any errors.</exception>
+	/// <summary>Ensures that this <see cref="Suspicious{TValue}" /> instance was created from an error and contains actual <see cref="Error" />s in its <see cref="ErrorSet" />.</summary>
+	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TValue}" /> was not created from an error, or if its <see cref="ErrorSet" /> doesn't contain any errors.</exception>
 	private void EnsureContainErrors()
 	{
 		this.EnsureCreatedFromError();
-		if (!this._errorCollection!.ContainsErrors) throw new InvalidOperationException("The error collection doesn't contain any errors");
+		if (!this._errorSet!.ContainsErrors) throw new InvalidOperationException("The error set doesn't contain any errors");
 	}
 
 	/// <summary>Prints members.</summary>
@@ -145,9 +145,9 @@ public sealed record class Suspicious<TValue>
 		{
 			builder.Append(this._value.ToString());
 		}
-		else if (this._errorCollection is not null)
+		else if (this._errorSet is not null)
 		{
-			builder.Append(this._errorCollection.ToString());
+			builder.Append(this._errorSet.ToString());
 		}
 
 		return true;
@@ -162,9 +162,9 @@ public sealed record class Suspicious<TValue>
 		{
 			builder.Append(this._value.ToString());
 		}
-		else if (this._errorCollection is not null)
+		else if (this._errorSet is not null)
 		{
-			builder.Append(this._errorCollection.ToStringRedacted());
+			builder.Append(this._errorSet.ToStringRedacted());
 		}
 
 		return true;
@@ -206,10 +206,10 @@ public sealed record class Suspicious<TValue>
 	/// <returns>A new <see cref="Suspicious{TValue}" />.</returns>
 	internal static Suspicious<TValue> From(TValue value) => new (value);
 
-	/// <summary>Creates a <see cref="Suspicious{TValue}" /> from an <paramref name="errorCollection" />.</summary>
-	/// <param name="errorCollection">The <see cref="ErrorCollection"/>.</param>
+	/// <summary>Creates a <see cref="Suspicious{TValue}" /> from an <paramref name="errorSet" />.</summary>
+	/// <param name="errorSet">The <see cref="ErrorSet"/>.</param>
 	/// <returns>A new <see cref="Suspicious{TValue}" />.</returns>
-	internal static Suspicious<TValue> From(ErrorCollection errorCollection) => new (errorCollection);
+	internal static Suspicious<TValue> From(ErrorSet errorSet) => new (errorSet);
 
 	#endregion
 }
