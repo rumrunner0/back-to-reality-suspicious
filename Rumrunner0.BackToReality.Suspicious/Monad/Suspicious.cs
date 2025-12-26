@@ -39,6 +39,10 @@ public sealed record class Suspicious<TValue>
 	/// <remarks>Will be <c>null</c> or <c>default</c>, if this <see cref="Suspicious{TValue}" /> wasn't created from a value.</remarks>
 	public TValue Value => this._value!;
 
+	/// <summary>EXPERIMENTAL! Flag that indicates whether this <see cref="Suspicious{TValue}" /> represents a success.</summary>
+	/// <remarks>Will be <c>true</c> if this <see cref="Suspicious{TValue}" /> was created from a value or contains <see cref="Error.NoValue" /> as the most critical error.</remarks>
+	public bool Success => this.FromValue || this.FindMostCriticalErrorDeep()?.Kind == ErrorKind.NoValue;
+
 	/// <summary>Error set.</summary>
 	/// <remarks>Will be <c>null</c>, if this <see cref="Suspicious{TValue}" /> wasn't created from an error.</remarks>
 	public ErrorSet ErrorSet => this._errorSet!;
@@ -198,9 +202,6 @@ public sealed record class Suspicious<TValue>
 
 	#region Static API
 
-	/// <inheritdoc cref="From(TValue)" />
-	public static implicit operator Suspicious<TValue>(TValue value) => From(value);
-
 	/// <summary>Creates a <see cref="Suspicious{TValue}" /> from a <paramref name="value" />.</summary>
 	/// <param name="value">The <paramref name="value" />.</param>
 	/// <returns>A new <see cref="Suspicious{TValue}" />.</returns>
@@ -210,6 +211,14 @@ public sealed record class Suspicious<TValue>
 	/// <param name="errorSet">The <see cref="ErrorSet"/>.</param>
 	/// <returns>A new <see cref="Suspicious{TValue}" />.</returns>
 	internal static Suspicious<TValue> From(ErrorSet errorSet) => new (errorSet);
+
+	/// <inheritdoc cref="From(TValue)" />
+	public static implicit operator Suspicious<TValue>(TValue value) => From(value);
+
+	/// <summary>EXPERIMENTAL! May break switch-case. Implicitly converts a <see cref="Suspicious{TValue}" /> to a <see cref="bool" /> indicating that this <see cref="Suspicious{TValue}" /> was created from a value.</summary>
+	/// <param name="source">The source.</param>
+	/// <remarks><c>true</c>, only if <see cref="FromValue" /> is <c>true</c>; <c>false</c>, otherwise. Simply, this is a shortcut for <see cref="FromValue" />.</remarks>
+	public static implicit operator bool(Suspicious<TValue> source) => source.FromValue;
 
 	#endregion
 }

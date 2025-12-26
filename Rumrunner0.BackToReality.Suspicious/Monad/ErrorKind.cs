@@ -91,16 +91,16 @@ public sealed record class ErrorKind : IComparable<ErrorKind>
 	#region Static API
 
 	/// <summary>Failure <see cref="ErrorKind" />.</summary>
-	public static ErrorKind NoValue { get; } = new (name: "no_value", priority: 10_000);
+	public static ErrorKind NoValue { get; } = new ("no_value", priority: 0);
 
 	/// <summary>Failure <see cref="ErrorKind" />.</summary>
-	public static ErrorKind Failure { get; } = new (name: "failure", priority: 100_000);
+	public static ErrorKind Failure { get; } = new ("failure", priority: 1);
 
 	/// <summary>Unexpected <see cref="ErrorKind" />.</summary>
-	public static ErrorKind Unexpected { get; } = new (name: "unexpected", priority: int.MaxValue - 1);
+	public static ErrorKind Unexpected { get; } = new ("unexpected", priority: int.MaxValue - 1);
 
 	/// <summary>Unspecified <see cref="ErrorKind" />.</summary>
-	public static ErrorKind Unspecified { get; } = new (name: "unspecified", priority: int.MaxValue);
+	public static ErrorKind Unspecified { get; } = new ("unspecified", priority: int.MaxValue);
 
 	/// <summary>Factory for a custom <see cref="ErrorKind" />.</summary>
 	public static ErrorKind Custom(string name, int priority)
