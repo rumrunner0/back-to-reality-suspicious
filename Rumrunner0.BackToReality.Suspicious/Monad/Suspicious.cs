@@ -119,6 +119,16 @@ public sealed record class Suspicious<TValue>
 		return this._errorSet!.FindMostCriticalErrorDeep();
 	}
 
+	/// <summary>Determines whether an <see cref="Error" /> with the provided <paramref name="kind" /> exists among errors only in the current <see cref="ErrorSet" />.</summary>
+	/// <param name="kind">The kind.</param>
+	/// <returns><c>true</c>, if an <see cref="Error" /> exists; <c>false</c>, otherwise.</returns>
+	public bool ContainsError(ErrorKind kind) => this.FindError(kind) is not null;
+
+	/// <summary>Determines whether an <see cref="Error" /> with the provided <paramref name="kind" /> exists among all errors in the cause chain, including self.</summary>
+	/// <param name="kind">The kind.</param>
+	/// <returns><c>true</c>, if an <see cref="Error" /> exists; <c>false</c>, otherwise.</returns>
+	public bool ContainsErrorDeep(ErrorKind kind) => this.FindErrorDeep(kind) is not null;
+
 	#endregion
 
 	#region Instance Utilities

@@ -17,7 +17,7 @@
 		<Title>Rumrunner0.BackToReality.Suspicious</Title>
 		<Description>Result monad with rich error semantics and traceable context.</Description>
 		<VersionPrefix>0.11.1</VersionPrefix>
-		<VersionSuffix>dev.20251230.1</VersionSuffix>
+		<VersionSuffix>dev.20251230.2</VersionSuffix>
 		<Authors>Roman Malyi</Authors>
 		<Copyright>Copyright (C) 2025 Roman Malyi</Copyright>
 		<PackageProjectUrl>https://github.com/rumrunner0/back-to-reality-suspicious</PackageProjectUrl>
