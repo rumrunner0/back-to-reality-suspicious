@@ -55,6 +55,11 @@ public sealed record class ErrorKind : IComparable<ErrorKind>
 	/// <inheritdoc />
 	public int CompareTo(ErrorKind? other) => _priorityComparer.Compare(this, other);
 
+	/// <summary>Gets the priority adjusted by the specified <paramref name="offset" />.</summary>
+	/// <param name="offset">The offset applied to the current priority.</param>
+	/// <returns>The adjusted priority.</returns>
+	public int GetAdjustedPriority(int offset) => this._priority + offset;
+
 	#endregion
 
 	#region Instance Utilities
