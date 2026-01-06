@@ -1,12 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net9</TargetFramework>
-		<LangVersion>latest</LangVersion>
-		<ImplicitUsings>disable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-		<Platform>AnyCPU</Platform>
-		<Configurations>Debug;Release</Configurations>
 		<OutputType>Library</OutputType>
 	</PropertyGroup>
 
@@ -56,17 +50,8 @@
 		<DefineConstants />
 	</PropertyGroup>
 
-	<PropertyGroup>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	</PropertyGroup>
-
 	<ItemGroup>
-		<None Include="..\README.md" Pack="true" PackagePath="\" />
-		<None Include="..\LICENSE" Pack="true" PackagePath="\" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Rumrunner0.BackToReality.SharedExtensions" Version="0.8.8" />
+		<PackageReference Include="Rumrunner0.BackToReality.SharedExtensions" />
 	</ItemGroup>
 
 </Project>

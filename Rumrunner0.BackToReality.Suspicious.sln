@@ -2,6 +2,16 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rumrunner0.BackToReality.Suspicious", "Rumrunner0.BackToReality.Suspicious\Rumrunner0.BackToReality.Suspicious.csproj", "{61BB9900-6343-443B-9E95-A5D4AEAC502F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Directory", "Directory", "{8E167D8C-7CCD-4954-A956-07FDF47C7EB1}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Nuget", "Nuget", "{00C096C1-5D54-4AF1-8631-F19A0E975EA2}"
+	ProjectSection(SolutionItems) = preProject
+		Nuget\pack.zsh = Nuget\pack.zsh
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
