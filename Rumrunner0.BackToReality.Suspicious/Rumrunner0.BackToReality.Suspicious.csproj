@@ -16,10 +16,10 @@
 		<PackageId>Rumrunner0.BackToReality.Suspicious</PackageId>
 		<Title>Rumrunner0.BackToReality.Suspicious</Title>
 		<Description>Result monad with rich error semantics and traceable context.</Description>
-		<VersionPrefix>0.11.1</VersionPrefix>
-		<VersionSuffix>dev.20251230.2</VersionSuffix>
+		<VersionPrefix>0.11.2</VersionPrefix>
+		<VersionSuffix></VersionSuffix>
 		<Authors>Roman Malyi</Authors>
-		<Copyright>Copyright (C) 2025 Roman Malyi</Copyright>
+		<Copyright>Copyright (C) 2026 Roman Malyi</Copyright>
 		<PackageProjectUrl>https://github.com/rumrunner0/back-to-reality-suspicious</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/rumrunner0/back-to-reality-suspicious</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
@@ -66,7 +66,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Rumrunner0.BackToReality.SharedExtensions" Version="0.8.4" />
+		<PackageReference Include="Rumrunner0.BackToReality.SharedExtensions" Version="0.8.8" />
 	</ItemGroup>
 
 </Project>

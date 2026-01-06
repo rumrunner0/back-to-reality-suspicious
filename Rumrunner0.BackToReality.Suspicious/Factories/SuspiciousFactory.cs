@@ -17,10 +17,10 @@ public static class Suspicious
 	/// <param name="value">The value.</param>
 	/// <typeparam name="TValue">The value type.</typeparam>
 	/// <returns>A new <see cref="Suspicious{TValue}" /> created from the <paramref name="value" />.</returns>
-	public static Suspicious<TValue> Value<TValue>(TValue value) =>  Suspicious<TValue>.From(value);
+	public static Suspicious<TValue> Value<TValue>(TValue value) where TValue : notnull => Suspicious<TValue>.From(value);
 
 	/// <summary>Factory for an error <see cref="Suspicious{TValue}" />.</summary>
-	public static class Not<TValue>
+	public static class Not<TValue> where TValue : notnull
 	{
 		/// <summary>Creates a <see cref="Suspicious{TValue}" /> from <see cref="ErrorSet" /> parameters.</summary>
 		/// <param name="category">The category.</param>

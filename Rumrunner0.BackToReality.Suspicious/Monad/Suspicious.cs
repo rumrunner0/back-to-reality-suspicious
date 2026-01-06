@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
 
@@ -7,62 +8,83 @@ namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>Result monad that wraps either an actual value or a set of errors.</summary>
 /// <typeparam name="TValue">The value type.</typeparam>
-public sealed record class Suspicious<TValue>
+public sealed class Suspicious<TValue> where TValue : notnull
 {
 	#region Instance State
 
 	/// <summary>Value.</summary>
-	private readonly TValue? _value;
+	private readonly TValue _value;
 
 	/// <summary>Error set.</summary>
 	private readonly ErrorSet? _errorSet;
 
+	/// <summary>State.</summary>
+	private readonly SuspiciousState _state;
+
 	/// <inheritdoc cref="Suspicious{TValue}" />
 	private Suspicious(TValue value)
 	{
-		ArgumentExceptionExtensions.ThrowIfNull(value);
+		// Consider trade-offs for more comprehensive type-parameter checking.
+		// if (_valueIsOfReferenceType && value is null)
+		// {
+		// 	throw new ArgumentNullException(nameof(value));
+		// }
+		//
+		// if (_valueIsOfNullableValueType && EqualityComparer<TValue>.Default.Equals(value, default!))
+		// {
+		// 	throw new ArgumentNullException(nameof(value));
+		// }
+
+		if (_valueCanBeNull && value is null) throw new ArgumentNullException(nameof(value));
+
 		this._value = value;
+		this._errorSet = null;
+		this._state = SuspiciousState.Value;
 	}
 
 	/// <inheritdoc cref="Suspicious{TValue}" />
 	private Suspicious(ErrorSet errorSet)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(errorSet);
+
+		this._value = default!;
 		this._errorSet = errorSet;
+		this._state = SuspiciousState.Error;
 	}
 
 	#endregion
 
 	#region Instance API
 
-	/// <summary>Value.</summary>
-	/// <remarks>Will be <c>null</c> or <c>default</c>, if this <see cref="Suspicious{TValue}" /> wasn't created from a value.</remarks>
-	public TValue Value => this._value!;
+	/// <summary>State.</summary>
+	public SuspiciousState State => this._state;
 
+	/// <summary>Flag that indicates whether this <see cref="Suspicious{TValue}" /> was created from a value.</summary>
+	[MemberNotNullWhen(true, nameof(_value))]
+	[MemberNotNullWhen(true, nameof(Value))]
+	[MemberNotNullWhen(false, nameof(_errorSet))]
+	[MemberNotNullWhen(false, nameof(ErrorSet))]
+	public bool FromValue => this._state == SuspiciousState.Value;
+
+	/// <summary>Flag that indicates whether this <see cref="Suspicious{TValue}" /> was created from an error.</summary>
+	[MemberNotNullWhen(false, nameof(_value))]
+	[MemberNotNullWhen(false, nameof(Value))]
+	[MemberNotNullWhen(true, nameof(_errorSet))]
+	[MemberNotNullWhen(true, nameof(ErrorSet))]
+	public bool FromError => this._state == SuspiciousState.Error;
+
+	// TODO: Rework Success to contain different Success values. NoValue is success, not error.
 	/// <summary>EXPERIMENTAL! Flag that indicates whether this <see cref="Suspicious{TValue}" /> represents a success.</summary>
 	/// <remarks>Will be <c>true</c> if this <see cref="Suspicious{TValue}" /> was created from a value or contains <see cref="Error.NoValue" /> as the most critical error.</remarks>
 	public bool Success => this.FromValue || this.FindMostCriticalErrorDeep()?.Kind == ErrorKind.NoValue;
 
+	/// <summary>Value.</summary>
+	/// <remarks>Will be <c>default</c> of <typeparamref name="TValue" />, if this <see cref="Suspicious{TValue}" /> wasn't created from a value.</remarks>
+	public TValue Value => this.FromValue ? this._value : default!;
+
 	/// <summary>Error set.</summary>
 	/// <remarks>Will be <c>null</c>, if this <see cref="Suspicious{TValue}" /> wasn't created from an error.</remarks>
-	public ErrorSet ErrorSet => this._errorSet!;
-
-	/// <summary>Flag that indicates whether this <see cref="Suspicious{TValue}" /> was created from a value.</summary>
-	public bool FromValue => this.State == SuspiciousState.Value;
-
-	/// <summary>Flag that indicates whether this <see cref="Suspicious{TValue}" /> was created from an error.</summary>
-	public bool FromError => this.State == SuspiciousState.Error;
-
-	/// <summary>State.</summary>
-	public SuspiciousState State
-	{
-		get
-		{
-			if (this._value is not null) return SuspiciousState.Value;
-			if (this._errorSet is not null) return SuspiciousState.Error;
-			return SuspiciousState.Unexpected;
-		}
-	}
+	public ErrorSet ErrorSet => this.FromError ? this._errorSet : null!;
 
 	/// <summary>Adds an <see cref="Error" /> to the <see cref="ErrorSet" />.</summary>
 	/// <param name="error">The error.</param>
@@ -84,7 +106,7 @@ public sealed record class Suspicious<TValue>
 	/// <typeparam name="TOtherValue">The type of the <paramref name="other" /> <see cref="Suspicious{TValue}" />.</typeparam>
 	/// <returns>This <see cref="Suspicious{TValue}" />.</returns>
 	/// <exception cref="InvalidOperationException">Thrown if either this instance or <paramref name="other" /> was not created from an error.</exception>
-	public Suspicious<TValue> SetCause<TOtherValue>(Suspicious<TOtherValue> other)
+	public Suspicious<TValue> SetCause<TOtherValue>(Suspicious<TOtherValue> other) where TOtherValue : notnull
 	{
 		this.EnsureCreatedFromError();
 		other.EnsureCreatedFromError();
@@ -155,14 +177,8 @@ public sealed record class Suspicious<TValue>
 	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
 	private bool PrintMembers(StringBuilder builder)
 	{
-		if (this._value is not null)
-		{
-			builder.Append(this._value.ToString());
-		}
-		else if (this._errorSet is not null)
-		{
-			builder.Append(this._errorSet.ToString());
-		}
+		if (this.FromValue) builder.Append(this._value.ToString());
+		else if (this.FromError) builder.Append(this._errorSet.ToString());
 
 		return true;
 	}
@@ -172,14 +188,8 @@ public sealed record class Suspicious<TValue>
 	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
 	private bool PrintMembersRedacted(StringBuilder builder)
 	{
-		if (this._value is not null)
-		{
-			builder.Append(this._value.ToString());
-		}
-		else if (this._errorSet is not null)
-		{
-			builder.Append(this._errorSet.ToStringRedacted());
-		}
+		if (this.FromValue) builder.Append(this._value.ToString());
+		else if (this.FromError) builder.Append(this._errorSet.ToStringRedacted());
 
 		return true;
 	}
@@ -210,6 +220,20 @@ public sealed record class Suspicious<TValue>
 
 	#endregion
 
+	#region Static State
+
+	/// <summary>Flag that indicates whether <typeparamref name="TValue" /> can be <c>null</c>.</summary>
+	private static readonly bool _valueCanBeNull = default(TValue) is null;
+
+	// Consider trade-offs for more comprehensive type-parameter checking.
+	// /// <summary>Flag that indicates whether <typeparamref name="TValue" /> is a reference type.</summary>
+	// private static readonly bool _valueIsOfReferenceType = !typeof(TValue).IsValueType;
+	//
+	// /// <summary>Flag that indicates whether <typeparamref name="TValue" /> is a <see cref="Nullable{T}" /> value type.</summary>
+	// private static readonly bool _valueIsOfNullableValueType = Nullable.GetUnderlyingType(typeof(TValue)) is not null;
+
+	#endregion
+
 	#region Static API
 
 	/// <summary>Creates a <see cref="Suspicious{TValue}" /> from a <paramref name="value" />.</summary>
@@ -222,8 +246,9 @@ public sealed record class Suspicious<TValue>
 	/// <returns>A new <see cref="Suspicious{TValue}" />.</returns>
 	internal static Suspicious<TValue> From(ErrorSet errorSet) => new (errorSet);
 
-	/// <inheritdoc cref="From(TValue)" />
-	public static implicit operator Suspicious<TValue>(TValue value) => From(value);
+	/// <summary>Implicitly converts a <typeparamref name="TValue" /> to a <see cref="string" />.</summary>
+	/// <param name="source">The <typeparamref name="TValue" />.</param>
+	public static implicit operator Suspicious<TValue>(TValue source) => From(source);
 
 	/// <summary>EXPERIMENTAL! May break switch-case. Implicitly converts a <see cref="Suspicious{TValue}" /> to a <see cref="bool" /> indicating that this <see cref="Suspicious{TValue}" /> was created from a value.</summary>
 	/// <param name="source">The source.</param>

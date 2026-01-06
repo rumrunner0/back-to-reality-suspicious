@@ -106,14 +106,14 @@ public sealed record class Error : IComparable<Error>
 	private void EnsureCauseDoesNotCreateCycle(Error? cause)
 	{
 		if (cause is null) return;
-		if (ReferenceEquals(cause, this)) ArgumentExceptionExtensions.Throw("An instance cannot be its own cause", cause);
+		if (ReferenceEquals(cause, this)) ArgumentExceptionExtensions.Throw("An instance cannot be its own cause", nameof(cause));
 
 		var visited = HashSetFactory.ReferenceEquality<Error>();
 
 		for (var current = cause; current is not null; current = current._cause)
 		{
-			if (!visited.Add(current)) ArgumentExceptionExtensions.Throw("Cause chain already contains a cycle", cause);
-			if (ReferenceEquals(current, this)) ArgumentExceptionExtensions.Throw("Setting the cause would create a cycle", cause);
+			if (!visited.Add(current)) ArgumentExceptionExtensions.Throw("Cause chain already contains a cycle", nameof(cause));
+			if (ReferenceEquals(current, this)) ArgumentExceptionExtensions.Throw("Setting the cause would create a cycle", nameof(cause));
 		}
 	}
 
