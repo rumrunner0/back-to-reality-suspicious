@@ -5,7 +5,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageVersion Include="Rumrunner0.BackToReality.SharedExtensions" Version="0.8.8" />
+		<PackageVersion Include="Rumrunner0.BackToReality.SharedExtensions" Version="0.8.9" />
 	</ItemGroup>
 
 </Project>
