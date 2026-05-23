@@ -27,6 +27,13 @@ public static class Suspicious
 		/// <param name="header">The header.</param>
 		/// <param name="errors">The <see cref="Error" />s.</param>
 		/// <returns>A new <see cref="Suspicious{TValue}" /> created from an <see cref="ErrorSet" />.</returns>
+		public static Suspicious<TValue> But(string category, string header, params IEnumerable<Error> errors) => But(ErrorSetCategory.From(category), header, errors);
+
+		/// <summary>Creates a <see cref="Suspicious{TValue}" /> from <see cref="ErrorSet" /> parameters.</summary>
+		/// <param name="category">The category.</param>
+		/// <param name="header">The header.</param>
+		/// <param name="errors">The <see cref="Error" />s.</param>
+		/// <returns>A new <see cref="Suspicious{TValue}" /> created from an <see cref="ErrorSet" />.</returns>
 		public static Suspicious<TValue> But(ErrorSetCategory category, string header, params IEnumerable<Error> errors) => But(ErrorSet.New(category, header, errors));
 
 		/// <summary>Creates a <see cref="Suspicious{TValue}" /> from an <see cref="ErrorSet" />.</summary>

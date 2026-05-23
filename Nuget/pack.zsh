@@ -1,15 +1,15 @@
-#!/bin/zsh
+#!/usr/bin/env zsh
 
 set -euo pipefail
 
-SCRIPT_DIR=${0:A:h}
+SCRIPT_DIRECTORY=$(dirname "$(readlink -f "$0")")
 
-cd "$SCRIPT_DIR"
+cd "$SCRIPT_DIRECTORY" || { echo "Failed to cd to $SCRIPT_DIRECTORY" >&2; exit 1; }
 echo "Script directory: $PWD"
 
 cd ".."
 echo "Working directory: $PWD"
 
-CONFIGURATION="Release"
+CONFIGURATION="Release" \
 
 dotnet pack --configuration ${CONFIGURATION}
