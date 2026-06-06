@@ -94,7 +94,8 @@ public sealed class Suspicious<TValue> where TValue : notnull
 	public Suspicious<TValue> AddError(Error error)
 	{
 		this.EnsureCreatedFromError();
-		this._errorSet!.TryAddError(error);
+		this._errorSet!.AddError(error);
+		// this._errorSet!.TryAddError(error);
 		return this;
 	}
 

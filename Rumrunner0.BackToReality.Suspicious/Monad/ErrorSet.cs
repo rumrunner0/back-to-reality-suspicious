@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
 using Rumrunner0.BackToReality.SharedExtensions.Collections;
@@ -12,27 +14,22 @@ public sealed class ErrorSet
 {
 	#region Instance State
 
-	/// <summary>Category.</summary>
-	private readonly ErrorSetCategory _category;
-
 	/// <summary>Header.</summary>
 	private readonly string _header;
 
 	/// <summary>Errors.</summary>
-	private readonly HashSet<Error> _errors;
+	private readonly List<Error> _errors;
 
 	/// <summary>Cause.</summary>
 	private ErrorSet? _cause;
 
 	/// <inheritdoc cref="ErrorSet" />
-	private ErrorSet(ErrorSetCategory category, string header, IEnumerable<Error> errors, ErrorSet? cause = null)
+	private ErrorSet(string header, IEnumerable<Error> errors, ErrorSet? cause = null)
 	{
-		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(category);
 		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(header);
 		ArgumentExceptionExtensions.ThrowIfNull(errors);
 		this.EnsureCauseDoesNotCreateCycle(cause);
 
-		this._category = category;
 		this._header = header;
 		this._errors = [..errors];
 		this._cause = cause;
@@ -42,14 +39,11 @@ public sealed class ErrorSet
 
 	#region Instance API
 
-	/// <summary>Category.</summary>
-	public ErrorSetCategory Category => this._category;
-
 	/// <summary>Header.</summary>
 	public string Header => this._header;
 
 	/// <summary>Errors.</summary>
-	public IReadOnlySet<Error> Errors => this._errors;
+	public IReadOnlyList<Error> Errors => this._errors;
 
 	/// <summary>Cause.</summary>
 	public ErrorSet? Cause => this._cause;
@@ -71,13 +65,23 @@ public sealed class ErrorSet
 		}
 	}
 
-	/// <summary>Tries to add an <paramref name="error" />.</summary>
-	/// <param name="error">The <see cref="Error" />.</param>
-	/// <returns><c>true</c>, if the <paramref name="error" /> has been added; <c>false</c>, otherwise.</returns>
-	public bool TryAddError(Error error)
-	{
-		return this._errors.Add(error);
-	}
+	// /// <summary>Tries to add an <paramref name="error" />.</summary>
+	// /// <param name="error">The <see cref="Error" />.</param>
+	// /// <returns><c>true</c>, if the <paramref name="error" /> has been added; <c>false</c>, otherwise.</returns>
+	// public bool TryAddError(Error error)
+	// {
+	// 	return this._errors.Add(error);
+	// }
+
+	// /// <summary>Adds an <paramref name="error" />.</summary>
+	// /// <param name="error">The <see cref="Error" />.</param>
+	// /// <returns>This <see cref="ErrorSet" />.</returns>
+	// /// <exception cref="InvalidOperationException">Thrown if identical <paramref name="error" /> has already been added.</exception>
+	// public ErrorSet AddError(Error error)
+	// {
+	// 	if (!this.TryAddError(error)) throw new InvalidOperationException($"Identical error {error} has already been added");
+	// 	return this;
+	// }
 
 	/// <summary>Adds an <paramref name="error" />.</summary>
 	/// <param name="error">The <see cref="Error" />.</param>
@@ -85,7 +89,7 @@ public sealed class ErrorSet
 	/// <exception cref="InvalidOperationException">Thrown if identical <paramref name="error" /> has already been added.</exception>
 	public ErrorSet AddError(Error error)
 	{
-		if (!this.TryAddError(error)) throw new InvalidOperationException($"Identical error {error} has already been added");
+		this._errors.Add(error);
 		return this;
 	}
 
@@ -178,8 +182,7 @@ public sealed class ErrorSet
 	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
 	private bool PrintMembers(StringBuilder builder)
 	{
-		builder.Append($"Category = {this._category}");
-		builder.Append($", Header = {this._header}");
+		builder.Append($"Header = {this._header}");
 
 		if (this._errors.Any())
 		{
@@ -212,10 +215,29 @@ public sealed class ErrorSet
 	#region Static API
 
 	/// <summary>Empty <see cref="ErrorSet" />.</summary>
-	public static ErrorSet Empty(ErrorSetCategory category, string header) => new (category, header, []);
+	public static ErrorSet Empty
+	(
+		[CallerMemberName] string member = "",
+		[CallerFilePath] string filePath = "",
+		[CallerLineNumber] int line = 0
+	)
+	{
+		return New([], member, filePath, line);
+	}
 
 	/// <summary>Empty <see cref="ErrorSet" />.</summary>
-	public static ErrorSet New(ErrorSetCategory category, string header, IEnumerable<Error> errors) => new (category, header, errors);
+	public static ErrorSet New
+	(
+		IEnumerable<Error> errors,
+		[CallerMemberName] string member = "",
+		[CallerFilePath] string filePath = "",
+		[CallerLineNumber] int line = 0
+	)
+	{
+		var file = Path.GetFileName(filePath);
+		var header = $"Something went wrong in {member} (file {file}, line {line})";
+		return new (header, errors);
+	}
 
 	#endregion
 }

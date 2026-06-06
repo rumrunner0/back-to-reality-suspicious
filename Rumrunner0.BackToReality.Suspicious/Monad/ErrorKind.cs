@@ -5,7 +5,7 @@ using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>Kind of <see cref="Error" />.</summary>
-public sealed record class ErrorKind : IComparable<ErrorKind>
+public sealed record class ErrorKind : IEquatable<ErrorKind>, IComparable<ErrorKind>
 {
 	#region Instance State
 
@@ -47,9 +47,33 @@ public sealed record class ErrorKind : IComparable<ErrorKind>
 
 	#endregion
 
+	#region Equality
+
+	/// <inheritdoc />
+	/// <remarks>Indicates whether the <see cref="Name" /> and <see cref="Priority" /> of the current instance is equal to the <see cref="Name" /> and <see cref="Priority" /> of another instance.</remarks>
+	public bool Equals(ErrorKind? other)
+	{
+		if (object.ReferenceEquals(this, other)) return true;
+
+		return
+			other is not null &&
+			this.EqualityContract == other.EqualityContract &&
+			this._name == other._name &&
+			this._priority == other._priority;
+	}
+
+	/// <inheritdoc />
+	public override int GetHashCode()
+	{
+		return HashCode.Combine(this.EqualityContract, this._name, this._priority);
+	}
+
+	#endregion
+
 	#region Comparison
 
 	/// <inheritdoc />
+	/// <remarks>Compares the priorities of the current instance and another instance.</remarks>
 	public int CompareTo(ErrorKind? other) => _priorityComparer.Compare(this, other);
 
 	/// <summary>Determines whether this instance is greater than the <paramref name="other" />.</summary>

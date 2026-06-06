@@ -8,7 +8,7 @@ using Rumrunner0.BackToReality.SharedExtensions.Extensions;
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
 /// <summary>Error.</summary>
-public sealed record class Error : IComparable<Error>
+public sealed record class Error : IEquatable<Error>, IComparable<Error>
 {
 	#region Insance State
 
@@ -143,9 +143,32 @@ public sealed record class Error : IComparable<Error>
 
 	#endregion
 
+	// #region Equality
+	//
+	// /// <inheritdoc />
+	// /// <remarks>Indicates whether the <see cref="Kind" /> of the current instance is equal to the <see cref="Kind" /> of another instance.</remarks>
+	// public bool Equals(Error? other)
+	// {
+	// 	if (object.ReferenceEquals(this, other)) return true;
+	//
+	// 	return
+	// 		other is not null &&
+	// 		this.EqualityContract == other.EqualityContract &&
+	// 		this._kind == other._kind;
+	// }
+	//
+	// /// <inheritdoc />
+	// public override int GetHashCode()
+	// {
+	// 	return HashCode.Combine(this.EqualityContract, this._kind);
+	// }
+	//
+	// #endregion
+
 	#region Comparison
 
 	/// <inheritdoc />
+	/// <remarks>Compares the <see cref="Kind" /> of the current instance to the <see cref="Kind" /> of another instance.</remarks>
 	public int CompareTo(Error? other) => _kindComparer.Compare(this, other);
 
 	/// <inheritdoc cref="KindComparer" />
@@ -213,6 +236,18 @@ public sealed record class Error : IComparable<Error>
 			exception: e,
 			cause: cause
 		);
+	}
+
+	/// <summary>Creates a custom <see cref="Error" />.</summary>
+	/// <param name="name">The name.</param>
+	/// <param name="priority">The priority.</param>
+	/// <param name="e">The exception.</param>
+	/// <param name="description">The description.</param>
+	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <returns>A new custom error.</returns>
+	public static Error Custom(string name, int priority, string? description = null, Exception? e = null, Error? cause = null)
+	{
+		return Custom(ErrorKind.Custom(name, priority), description, e, cause);
 	}
 
 	/// <summary>Creates a custom <see cref="Error" />.</summary>
