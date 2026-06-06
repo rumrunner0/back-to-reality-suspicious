@@ -16,7 +16,7 @@ public sealed record class Error : IComparable<Error>
 	private readonly ErrorKind _kind;
 
 	/// <summary>Description.</summary>
-	private readonly string _description;
+	private readonly string? _description;
 
 	/// <summary>Details.</summary>
 	private readonly Exception? _exception;
@@ -25,14 +25,13 @@ public sealed record class Error : IComparable<Error>
 	private Error? _cause;
 
 	/// <inheritdoc cref="Error" />
-	private Error(ErrorKind kind, string description, Exception? exception = null, Error? cause = null)
+	private Error(ErrorKind kind, string? description, Exception? exception = null, Error? cause = null)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(kind);
-		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(description);
 		this.EnsureCauseDoesNotCreateCycle(cause);
 
 		this._kind = kind;
-		this._description = description;
+		this._description = !description.IsNullOrEmptyOrWhitespace() ? description : null;
 		this._exception = exception;
 		this._cause = cause;
 	}
@@ -45,7 +44,7 @@ public sealed record class Error : IComparable<Error>
 	public ErrorKind Kind => this._kind;
 
 	/// <summary>Description.</summary>
-	public string Description => this._description;
+	public string? Description => this._description;
 
 	/// <summary>Exception.</summary>
 	public Exception? Exception => this._exception;
@@ -90,15 +89,9 @@ public sealed record class Error : IComparable<Error>
 		return target;
 	}
 
-	/// <inheritdoc />
-	public int CompareTo(Error? other)
-	{
-		return _kindComparer.Compare(this, other);
-	}
-
 	#endregion
 
-	#region Instance Utilities
+	#region Consistency
 
 	/// <summary>Ensures that <paramref name="cause" /> doesn't create a cycle.</summary>
 	/// <param name="cause">The cause.</param>
@@ -116,6 +109,10 @@ public sealed record class Error : IComparable<Error>
 			if (ReferenceEquals(current, this)) ArgumentExceptionExtensions.Throw("Setting the cause would create a cycle", nameof(cause));
 		}
 	}
+
+	#endregion
+
+	#region Display
 
 	/// <summary>Creates a string that represents this instance.</summary>
 	/// <returns>A string that represents this instance.</returns>
@@ -136,50 +133,20 @@ public sealed record class Error : IComparable<Error>
 	private bool PrintMembers(StringBuilder builder)
 	{
 		builder.Append($"Kind = {this._kind}");
-		builder.Append($", Description = {this._description}");
 
-		if (this._exception is not null)
-		{
-			builder.Append($", Exception = {this._exception}");
-		}
-
-		if (this._cause is not null)
-		{
-			builder.Append($", Cause = {this._cause}");
-		}
-
-		return true;
-	}
-
-	/// <summary>Creates a string that represents this instance in redacted mode.</summary>
-	/// <returns>A string that represents this instance in redacted mode.</returns>
-	public string ToStringRedacted()
-	{
-		var builder = new StringBuilder();
-
-		this.PrintMembersRedacted(builder);
-
-		return builder.ToString();
-	}
-
-	/// <summary>Prints members in redacted mode.</summary>
-	/// <param name="builder">The <see cref="StringBuilder" />.</param>
-	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
-	private bool PrintMembersRedacted(StringBuilder builder)
-	{
-		builder.Append(this._description);
-
-		if (this._cause is not null)
-		{
-			builder.Append($" <-- {this._cause.ToStringRedacted()}");
-		}
+		if (this._description is not null) builder.Append($", Description = {this._description}");
+		if (this._exception is not null) builder.Append($", Exception = {this._exception}");
+		if (this._cause is not null) builder.Append($", Cause = {this._cause}");
 
 		return true;
 	}
 
 	#endregion
 
-	#region Static State
+	#region Comparison
+
+	/// <inheritdoc />
+	public int CompareTo(Error? other) => _kindComparer.Compare(this, other);
 
 	/// <inheritdoc cref="KindComparer" />
 	private static readonly KindComparer _kindComparer = new ();
@@ -198,38 +165,20 @@ public sealed record class Error : IComparable<Error>
 
 	#endregion
 
-	#region Static API
+	#region Creation
 
 	/// <summary>Creates a <see cref="ErrorKind.NoValue" /> <see cref="Error" />.</summary>
 	/// <param name="description">The description.</param>
+	/// <param name="e">The exception.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
 	/// <returns>A new <see cref="ErrorKind.NoValue" /> error.</returns>
-	public static Error NoValue(string description, Error? cause = null)
+	public static Error NoValue(string? description = null, Exception? e = null, Error? cause = null)
 	{
-		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(description);
-
 		return new
 		(
 			kind: ErrorKind.NoValue,
 			description: description,
-			exception: null,
-			cause: cause
-		);
-	}
-
-	/// <summary>Creates a <see cref="ErrorKind.Failure" /> <see cref="Error" />.</summary>
-	/// <param name="description">The description.</param>
-	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <returns>A new <see cref="ErrorKind.Failure" /> error.</returns>
-	public static Error Failure(string description, Error? cause = null)
-	{
-		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(description);
-
-		return new
-		(
-			kind: ErrorKind.Failure,
-			description: description,
-			exception: null,
+			exception: e,
 			cause: cause
 		);
 	}
@@ -239,32 +188,13 @@ public sealed record class Error : IComparable<Error>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
 	/// <returns>A new <see cref="ErrorKind.Failure" /> error.</returns>
-	public static Error Failure(Exception e, string? description = null, Error? cause = null)
+	public static Error Failure(string? description = null, Exception? e = null, Error? cause = null)
 	{
-		ArgumentExceptionExtensions.ThrowIfNull(e);
-
 		return new
 		(
 			kind: ErrorKind.Failure,
-			description: !description.IsNullOrEmptyOrWhitespace() ? description : $"Failure error has occured: {e.JoinMessages(" <-- ")}",
-			exception: e,
-			cause: cause
-		);
-	}
-
-	/// <summary>Creates an <see cref="ErrorKind.Unexpected" /> <see cref="Error" />.</summary>
-	/// <param name="description">The description.</param>
-	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <returns>A new <see cref="ErrorKind.Unexpected" /> error.</returns>
-	public static Error Unexpected(string description, Error? cause = null)
-	{
-		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(description);
-
-		return new
-		(
-			kind: ErrorKind.Unexpected,
 			description: description,
-			exception: null,
+			exception: e,
 			cause: cause
 		);
 	}
@@ -274,34 +204,13 @@ public sealed record class Error : IComparable<Error>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
 	/// <returns>A new <see cref="ErrorKind.Unexpected" /> error.</returns>
-	public static Error Unexpected(Exception e, string? description = null, Error? cause = null)
+	public static Error Unexpected(Exception? e = null, string? description = null, Error? cause = null)
 	{
-		ArgumentExceptionExtensions.ThrowIfNull(e);
-
 		return new
 		(
 			kind: ErrorKind.Unexpected,
-			description: !description.IsNullOrEmptyOrWhitespace() ? description : $"Unexpected error has occured: {e.JoinMessages(" <-- ")}",
-			exception: e,
-			cause: cause
-		);
-	}
-
-	/// <summary>Creates a custom <see cref="Error" />.</summary>
-	/// <param name="kind">The kind.</param>
-	/// <param name="description">The description.</param>
-	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <returns>A new custom error.</returns>
-	public static Error Custom(ErrorKind kind, string description, Error? cause = null)
-	{
-		ArgumentExceptionExtensions.ThrowIfNull(kind);
-		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(description);
-
-		return new
-		(
-			kind: kind,
 			description: description,
-			exception: null,
+			exception: e,
 			cause: cause
 		);
 	}
@@ -312,15 +221,12 @@ public sealed record class Error : IComparable<Error>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
 	/// <returns>A new custom error.</returns>
-	public static Error Custom(ErrorKind kind, Exception e, string? description = null, Error? cause = null)
+	public static Error Custom(ErrorKind kind, string? description = null, Exception? e = null, Error? cause = null)
 	{
-		ArgumentExceptionExtensions.ThrowIfNull(kind);
-		ArgumentExceptionExtensions.ThrowIfNull(e);
-
 		return new
 		(
 			kind: kind,
-			description: !description.IsNullOrEmptyOrWhitespace() ? description : $"An error has occured: {e.JoinMessages(" <-- ")}",
+			description: description,
 			exception: e,
 			cause: cause
 		);

@@ -183,17 +183,6 @@ public sealed class Suspicious<TValue> where TValue : notnull
 		return true;
 	}
 
-	/// <summary>Prints members in redacted mode.</summary>
-	/// <param name="builder">The <see cref="StringBuilder" />.</param>
-	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
-	private bool PrintMembersRedacted(StringBuilder builder)
-	{
-		if (this.FromValue) builder.Append(this._value.ToString());
-		else if (this.FromError) builder.Append(this._errorSet.ToStringRedacted());
-
-		return true;
-	}
-
 	/// <summary>Creates a string that represents this instance.</summary>
 	/// <returns>A string that represents this instance.</returns>
 	public override string ToString()
@@ -203,17 +192,6 @@ public sealed class Suspicious<TValue> where TValue : notnull
 		builder.Append($"{nameof(Suspicious<TValue>)} {{ ");
 		if (this.PrintMembers(builder)) builder.Append(' ');
 		builder.Append('}');
-
-		return builder.ToString();
-	}
-
-	/// <summary>Creates a string that represents this instance in redacted mode.</summary>
-	/// <returns>A string that represents this instance in redacted mode.</returns>
-	public string ToStringRedacted()
-	{
-		var builder = new StringBuilder();
-
-		this.PrintMembersRedacted(builder);
 
 		return builder.ToString();
 	}

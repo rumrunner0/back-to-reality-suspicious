@@ -32,6 +32,26 @@ public sealed record class ErrorKind : IComparable<ErrorKind>
 	/// <summary>Priority.</summary>
 	public int Priority => this._priority;
 
+	/// <summary>Gets the priority adjusted by the specified <paramref name="offset" />.</summary>
+	/// <param name="offset">The offset applied to the current priority.</param>
+	/// <returns>The adjusted priority.</returns>
+	public int GetAdjustedPriority(int offset) => this._priority + offset;
+
+	#endregion
+
+	#region Display
+
+	/// <summary>Creates a string that represents this instance.</summary>
+	/// <returns>A string that represents this instance.</returns>
+	public override string ToString() => $"{this._name} ({this._priority})";
+
+	#endregion
+
+	#region Comparison
+
+	/// <inheritdoc />
+	public int CompareTo(ErrorKind? other) => _priorityComparer.Compare(this, other);
+
 	/// <summary>Determines whether this instance is greater than the <paramref name="other" />.</summary>
 	/// <param name="other">The other.</param>
 	/// <returns><c>true</c> if the condition is satisfied; <c>false</c> otherwise.</returns>
@@ -51,70 +71,6 @@ public sealed record class ErrorKind : IComparable<ErrorKind>
 	/// <param name="other">The other.</param>
 	/// <returns><c>true</c> if the condition is satisfied; <c>false</c> otherwise.</returns>
 	public bool IsLessThanOrEqualsTo(ErrorKind other) => _priorityComparer.Compare(this, other) <= 0;
-
-	/// <inheritdoc />
-	public int CompareTo(ErrorKind? other) => _priorityComparer.Compare(this, other);
-
-	/// <summary>Gets the priority adjusted by the specified <paramref name="offset" />.</summary>
-	/// <param name="offset">The offset applied to the current priority.</param>
-	/// <returns>The adjusted priority.</returns>
-	public int GetAdjustedPriority(int offset) => this._priority + offset;
-
-	#endregion
-
-	#region Instance Utilities
-
-	/// <summary>Creates a string that represents this instance in redacted mode.</summary>
-	/// <returns>A string that represents this instance in redacted mode.</returns>
-	public override string ToString() => $"{this._name} ({this._priority})";
-
-	/// <summary>Creates a string that represents this instance in redacted mode.</summary>
-	/// <returns>A string that represents this instance in redacted mode.</returns>
-	public string ToStringRedacted() => this._name;
-
-	#endregion
-
-	#region Static State
-
-	/// <inheritdoc cref="PriorityComparer" />
-	private static readonly PriorityComparer _priorityComparer = new ();
-
-	/// <inheritdoc />
-	private sealed class PriorityComparer : IComparer<ErrorKind?>
-	{
-		/// <inheritdoc />
-		public int Compare(ErrorKind? x, ErrorKind? y)
-		{
-			if (x is null) return -1;
-			if (y is null) return 1;
-			return x._priority.CompareTo(y._priority);
-		}
-	}
-
-	#endregion
-
-	#region Static API
-
-	/// <summary>Failure <see cref="ErrorKind" />.</summary>
-	public static ErrorKind NoValue { get; } = new ("no_value", priority: 0);
-
-	/// <summary>Failure <see cref="ErrorKind" />.</summary>
-	public static ErrorKind Failure { get; } = new ("failure", priority: 1);
-
-	/// <summary>Unexpected <see cref="ErrorKind" />.</summary>
-	public static ErrorKind Unexpected { get; } = new ("unexpected", priority: int.MaxValue - 1);
-
-	/// <summary>Unspecified <see cref="ErrorKind" />.</summary>
-	public static ErrorKind Unspecified { get; } = new ("unspecified", priority: int.MaxValue);
-
-	/// <summary>Factory for a custom <see cref="ErrorKind" />.</summary>
-	public static ErrorKind Custom(string name, int priority)
-	{
-		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(name);
-		return new (name, priority);
-	}
-
-
 
 	/// <summary>Determines whether <paramref name="left" /> has higher priority than <paramref name="right" />.</summary>
 	/// <param name="left">The first <see cref="ErrorKind" /> to compare.</param>
@@ -139,6 +95,44 @@ public sealed record class ErrorKind : IComparable<ErrorKind>
 	/// <param name="right">The second <see cref="ErrorKind" /> to compare.</param>
 	/// <returns><c>true</c> if <paramref name="left" /> has lower or equal priority; <c>false</c> otherwise.</returns>
 	public static bool operator <=(ErrorKind left, ErrorKind right) => left.IsLessThanOrEqualsTo(right);
+
+	/// <inheritdoc cref="PriorityComparer" />
+	private static readonly PriorityComparer _priorityComparer = new ();
+
+	/// <inheritdoc />
+	private sealed class PriorityComparer : IComparer<ErrorKind?>
+	{
+		/// <inheritdoc />
+		public int Compare(ErrorKind? x, ErrorKind? y)
+		{
+			if (x is null) return -1;
+			if (y is null) return 1;
+			return x._priority.CompareTo(y._priority);
+		}
+	}
+
+	#endregion
+
+	#region Creation
+
+	/// <summary>Failure <see cref="ErrorKind" />.</summary>
+	public static ErrorKind NoValue { get; } = new ("no_value", priority: 0);
+
+	/// <summary>Failure <see cref="ErrorKind" />.</summary>
+	public static ErrorKind Failure { get; } = new ("failure", priority: 1);
+
+	/// <summary>Unexpected <see cref="ErrorKind" />.</summary>
+	public static ErrorKind Unexpected { get; } = new ("unexpected", priority: int.MaxValue - 1);
+
+	/// <summary>Unspecified <see cref="ErrorKind" />.</summary>
+	public static ErrorKind Unspecified { get; } = new ("unspecified", priority: int.MaxValue);
+
+	/// <summary>Factory for a custom <see cref="ErrorKind" />.</summary>
+	public static ErrorKind Custom(string name, int priority)
+	{
+		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(name);
+		return new (name, priority);
+	}
 
 	#endregion
 }

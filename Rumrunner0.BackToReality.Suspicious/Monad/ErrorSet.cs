@@ -194,26 +194,6 @@ public sealed class ErrorSet
 		return true;
 	}
 
-	/// <summary>Prints members in redacted mode.</summary>
-	/// <param name="builder">The <see cref="StringBuilder" />.</param>
-	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
-	private bool PrintMembersRedacted(StringBuilder builder)
-	{
-		builder.Append(this._header);
-
-		if (this._errors.Any())
-		{
-			builder.Append($" [ {this._errors.Select(e => e.ToStringRedacted()).StringJoin(", ")} ]");
-		}
-
-		if (this._cause is not null)
-		{
-			builder.Append($" <== {this._cause.ToStringRedacted()}");
-		}
-
-		return true;
-	}
-
 	/// <summary>Creates a string that represents this instance.</summary>
 	/// <returns>A string that represents this instance.</returns>
 	public override string ToString()
@@ -223,17 +203,6 @@ public sealed class ErrorSet
 		builder.Append($"{nameof(ErrorSet)} {{ ");
 		if (this.PrintMembers(builder)) builder.Append(' ');
 		builder.Append('}');
-
-		return builder.ToString();
-	}
-
-	/// <summary>Creates a string that represents this instance in redacted mode.</summary>
-	/// <returns>A string that represents this instance in redacted mode.</returns>
-	public string ToStringRedacted()
-	{
-		var builder = new StringBuilder();
-
-		this.PrintMembersRedacted(builder);
 
 		return builder.ToString();
 	}
