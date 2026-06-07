@@ -73,7 +73,7 @@ public sealed class Suspicious<TValue> where TValue : notnull
 	[MemberNotNullWhen(true, nameof(ErrorSet))]
 	public bool FromError => this._state == SuspiciousState.Error;
 
-	// TODO: Rework Success to contain different Success values. NoValue is success, not error.
+	// TODO: Rework Success to contain different Success values. NoValue can be success or error. Those must not be named Errors but something neutral.
 	/// <summary>EXPERIMENTAL! Flag that indicates whether this <see cref="Suspicious{TValue}" /> represents a success.</summary>
 	/// <remarks>Will be <c>true</c> if this <see cref="Suspicious{TValue}" /> was created from a value or contains <see cref="Error.NoValue" /> as the most critical error.</remarks>
 	public bool Success => this.FromValue || this.FindMostCriticalErrorDeep()?.Kind == ErrorKind.NoValue;
@@ -172,6 +172,10 @@ public sealed class Suspicious<TValue> where TValue : notnull
 		this.EnsureCreatedFromError();
 		if (!this._errorSet!.ContainsErrors) throw new InvalidOperationException("The error set doesn't contain any errors");
 	}
+
+	#endregion
+
+	#region Display
 
 	/// <summary>Prints members.</summary>
 	/// <param name="builder">The <see cref="StringBuilder" />.</param>

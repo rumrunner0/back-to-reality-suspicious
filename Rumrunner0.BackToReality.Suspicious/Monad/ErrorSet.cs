@@ -177,6 +177,10 @@ public sealed class ErrorSet
 		}
 	}
 
+	#endregion
+
+	#region Display
+
 	/// <summary>Prints members.</summary>
 	/// <param name="builder">The <see cref="StringBuilder" />.</param>
 	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
@@ -212,7 +216,7 @@ public sealed class ErrorSet
 
 	#endregion
 
-	#region Static API
+	#region Creation
 
 	/// <summary>Empty <see cref="ErrorSet" />.</summary>
 	public static ErrorSet Empty
@@ -222,7 +226,7 @@ public sealed class ErrorSet
 		[CallerLineNumber] int line = 0
 	)
 	{
-		return New([], member, filePath, line);
+		return New(errors: [], member, filePath, line);
 	}
 
 	/// <summary>Empty <see cref="ErrorSet" />.</summary>
@@ -234,9 +238,13 @@ public sealed class ErrorSet
 		[CallerLineNumber] int line = 0
 	)
 	{
+		ArgumentExceptionExtensions.ThrowIfNull(errors);
+		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(member);
+		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(filePath);
+
 		var file = Path.GetFileName(filePath);
 		var header = $"Something went wrong in {member} (file {file}, line {line})";
-		return new (header, errors);
+		return new (header, errors, cause: null);
 	}
 
 	#endregion

@@ -25,7 +25,7 @@ public sealed record class Error : IEquatable<Error>, IComparable<Error>
 	private Error? _cause;
 
 	/// <inheritdoc cref="Error" />
-	private Error(ErrorKind kind, string? description, Exception? exception = null, Error? cause = null)
+	private Error(ErrorKind kind, string? description = null, Exception? exception = null, Error? cause = null)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(kind);
 		this.EnsureCauseDoesNotCreateCycle(cause);
@@ -192,79 +192,99 @@ public sealed record class Error : IEquatable<Error>, IComparable<Error>
 
 	/// <summary>Creates a <see cref="ErrorKind.NoValue" /> <see cref="Error" />.</summary>
 	/// <param name="description">The description.</param>
-	/// <param name="e">The exception.</param>
+	/// <param name="exception">The exception.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
 	/// <returns>A new <see cref="ErrorKind.NoValue" /> error.</returns>
-	public static Error NoValue(string? description = null, Exception? e = null, Error? cause = null)
+	public static Error NoValue(string? description = null, Exception? exception = null, Error? cause = null)
 	{
-		return new
-		(
-			kind: ErrorKind.NoValue,
-			description: description,
-			exception: e,
-			cause: cause
-		);
+		return new (ErrorKind.NoValue, description, exception, cause);
 	}
 
 	/// <summary>Creates a <see cref="ErrorKind.Failure" /> <see cref="Error" />.</summary>
-	/// <param name="e">The exception.</param>
+	/// <param name="exception">The exception.</param>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <returns>A new <see cref="ErrorKind.Failure" /> error.</returns>
-	public static Error Failure(string? description = null, Exception? e = null, Error? cause = null)
+	/// <returns>A new <see cref="ErrorKind.Failure" /> <see cref="Error" />.</returns>
+	public static Error Failure(Exception exception, string? description = null, Error? cause = null)
 	{
-		return new
-		(
-			kind: ErrorKind.Failure,
-			description: description,
-			exception: e,
-			cause: cause
-		);
+		ArgumentExceptionExtensions.ThrowIfNull(exception);
+		return new (ErrorKind.Failure, description, exception, cause);
+	}
+
+	/// <summary>Creates a <see cref="ErrorKind.Failure" /> <see cref="Error" />.</summary>
+	/// <param name="description">The description.</param>
+	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <returns>A new <see cref="ErrorKind.Failure" /> <see cref="Error" />.</returns>
+	public static Error Failure(string? description = null, Error? cause = null)
+	{
+		return new (ErrorKind.Failure, description, exception: null, cause);
 	}
 
 	/// <summary>Creates an <see cref="ErrorKind.Unexpected" /> <see cref="Error" />.</summary>
-	/// <param name="e">The exception.</param>
+	/// <param name="exception">The exception.</param>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <returns>A new <see cref="ErrorKind.Unexpected" /> error.</returns>
-	public static Error Unexpected(Exception? e = null, string? description = null, Error? cause = null)
+	/// <returns>A new <see cref="ErrorKind.Unexpected" /> <see cref="Error" />.</returns>
+	public static Error Unexpected(Exception exception, string? description = null, Error? cause = null)
 	{
-		return new
-		(
-			kind: ErrorKind.Unexpected,
-			description: description,
-			exception: e,
-			cause: cause
-		);
+		ArgumentExceptionExtensions.ThrowIfNull(exception);
+		return new (ErrorKind.Unexpected, description, exception, cause);
 	}
 
-	/// <summary>Creates a custom <see cref="Error" />.</summary>
+	/// <summary>Creates an <see cref="ErrorKind.Unexpected" /> <see cref="Error" />.</summary>
+	/// <param name="description">The description.</param>
+	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <returns>A new <see cref="ErrorKind.Unexpected" /> <see cref="Error" />.</returns>
+	public static Error Unexpected(string? description = null, Error? cause = null)
+	{
+		return new (ErrorKind.Unexpected, description, exception: null, cause);
+	}
+
+	/// <summary>Creates a <see cref="ErrorKind.Custom" /> <see cref="Error" />.</summary>
 	/// <param name="name">The name.</param>
 	/// <param name="priority">The priority.</param>
-	/// <param name="e">The exception.</param>
+	/// <param name="exception">The exception.</param>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <returns>A new custom error.</returns>
-	public static Error Custom(string name, int priority, string? description = null, Exception? e = null, Error? cause = null)
+	/// <returns>A new <see cref="ErrorKind.Custom" /> <see cref="Error" />.</returns>
+	public static Error Custom(string name, int priority, Exception exception, string? description = null, Error? cause = null)
 	{
-		return Custom(ErrorKind.Custom(name, priority), description, e, cause);
+		ArgumentExceptionExtensions.ThrowIfNull(exception);
+		return Custom(ErrorKind.Custom(name, priority), exception, description, cause);
 	}
 
-	/// <summary>Creates a custom <see cref="Error" />.</summary>
-	/// <param name="kind">The kind.</param>
-	/// <param name="e">The exception.</param>
+	/// <summary>Creates a <see cref="ErrorKind.Custom" /> <see cref="Error" />.</summary>
+	/// <param name="name">The name.</param>
+	/// <param name="priority">The priority.</param>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <returns>A new custom error.</returns>
-	public static Error Custom(ErrorKind kind, string? description = null, Exception? e = null, Error? cause = null)
+	/// <returns>A new <see cref="ErrorKind.Custom" /> <see cref="Error" />.</returns>
+	public static Error Custom(string name, int priority, string? description = null, Error? cause = null)
 	{
-		return new
-		(
-			kind: kind,
-			description: description,
-			exception: e,
-			cause: cause
-		);
+		return Custom(ErrorKind.Custom(name, priority), description, cause);
+	}
+
+	/// <summary>Creates a <see cref="ErrorKind.Custom" /> <see cref="Error" />.</summary>
+	/// <param name="kind">The kind.</param>
+	/// <param name="exception">The exception.</param>
+	/// <param name="description">The description.</param>
+	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <returns>A new <see cref="ErrorKind.Custom" /> <see cref="Error" />.</returns>
+	public static Error Custom(ErrorKind kind, Exception exception, string? description = null, Error? cause = null)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(exception);
+		return new (kind, description, exception, cause);
+	}
+
+	/// <summary>Creates a <see cref="ErrorKind.Custom" /> <see cref="Error" />.</summary>
+	/// <param name="kind">The kind.</param>
+	/// <param name="description">The description.</param>
+	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <returns>A new <see cref="ErrorKind.Custom" /> <see cref="Error" />.</returns>
+	public static Error Custom(ErrorKind kind, string? description = null, Error? cause = null)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(kind);
+		return new (kind, description, exception: null, cause);
 	}
 
 	#endregion

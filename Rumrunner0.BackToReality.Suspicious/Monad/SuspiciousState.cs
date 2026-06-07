@@ -12,7 +12,7 @@ public sealed record class SuspiciousState : StringEnumeration<SuspiciousState>
 
 	#endregion
 
-	#region Static API
+	#region Variants
 
 	/// <summary>Value.</summary>
 	public new static SuspiciousState Value { get; } = new ("value");

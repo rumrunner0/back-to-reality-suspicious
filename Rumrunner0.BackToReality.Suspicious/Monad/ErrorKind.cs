@@ -18,6 +18,8 @@ public sealed record class ErrorKind : IEquatable<ErrorKind>, IComparable<ErrorK
 	/// <inheritdoc cref="ErrorKind" />
 	private ErrorKind(string name, int priority)
 	{
+		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(name);
+
 		this._name = name;
 		this._priority = priority;
 	}
@@ -152,11 +154,7 @@ public sealed record class ErrorKind : IEquatable<ErrorKind>, IComparable<ErrorK
 	public static ErrorKind Unspecified { get; } = new ("unspecified", priority: int.MaxValue);
 
 	/// <summary>Factory for a custom <see cref="ErrorKind" />.</summary>
-	public static ErrorKind Custom(string name, int priority)
-	{
-		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(name);
-		return new (name, priority);
-	}
+	public static ErrorKind Custom(string name, int priority) => new (name, priority);
 
 	#endregion
 }
