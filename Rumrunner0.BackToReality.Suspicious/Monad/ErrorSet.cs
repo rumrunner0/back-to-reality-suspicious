@@ -14,9 +14,6 @@ public sealed class ErrorSet
 {
 	#region Instance State
 
-	/// <summary>Header.</summary>
-	private readonly string _header;
-
 	/// <summary>Errors.</summary>
 	private readonly List<Error> _errors;
 
@@ -24,13 +21,11 @@ public sealed class ErrorSet
 	private ErrorSet? _cause;
 
 	/// <inheritdoc cref="ErrorSet" />
-	private ErrorSet(string header, IEnumerable<Error> errors, ErrorSet? cause = null)
+	private ErrorSet(IEnumerable<Error> errors, ErrorSet? cause = null)
 	{
-		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(header);
 		ArgumentExceptionExtensions.ThrowIfNull(errors);
 		this.EnsureCauseDoesNotCreateCycle(cause);
 
-		this._header = header;
 		this._errors = [..errors];
 		this._cause = cause;
 	}
@@ -38,9 +33,6 @@ public sealed class ErrorSet
 	#endregion
 
 	#region Instance API
-
-	/// <summary>Header.</summary>
-	public string Header => this._header;
 
 	/// <summary>Errors.</summary>
 	public IReadOnlyList<Error> Errors => this._errors;
@@ -186,16 +178,18 @@ public sealed class ErrorSet
 	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
 	private bool PrintMembers(StringBuilder builder)
 	{
-		builder.Append($"Header = {this._header}");
+		var hasErrors = this._errors.Any();
+		var hasCause = this._cause is not null;
 
-		if (this._errors.Any())
+		if (hasErrors)
 		{
-			builder.Append($", Errors = [ {this._errors.StringJoin(", ")} ]");
+			builder.Append($"Errors = [ {this._errors.StringJoin(", ")} ]");
 		}
 
-		if (this._cause is not null)
+		if (hasCause)
 		{
-			builder.Append($", Cause = {this._cause}");
+			if (hasErrors) builder.Append(", ");
+			builder.Append($"Cause = {this._cause}");
 		}
 
 		return true;
@@ -219,33 +213,10 @@ public sealed class ErrorSet
 	#region Creation
 
 	/// <summary>Empty <see cref="ErrorSet" />.</summary>
-	public static ErrorSet Empty
-	(
-		[CallerMemberName] string member = "",
-		[CallerFilePath] string filePath = "",
-		[CallerLineNumber] int line = 0
-	)
-	{
-		return New(errors: [], member, filePath, line);
-	}
+	public static ErrorSet Empty() => New();
 
 	/// <summary>Empty <see cref="ErrorSet" />.</summary>
-	public static ErrorSet New
-	(
-		IEnumerable<Error> errors,
-		[CallerMemberName] string member = "",
-		[CallerFilePath] string filePath = "",
-		[CallerLineNumber] int line = 0
-	)
-	{
-		ArgumentExceptionExtensions.ThrowIfNull(errors);
-		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(member);
-		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(filePath);
-
-		var file = Path.GetFileName(filePath);
-		var header = $"Something went wrong in {member} (file {file}, line {line})";
-		return new (header, errors, cause: null);
-	}
+	public static ErrorSet New(params IEnumerable<Error> errors) => new (errors, cause: null);
 
 	#endregion
 }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Rumrunner0.BackToReality.SharedExtensions.Collections;
 using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
@@ -25,13 +27,30 @@ public sealed record class Error : IEquatable<Error>, IComparable<Error>
 	private Error? _cause;
 
 	/// <inheritdoc cref="Error" />
-	private Error(ErrorKind kind, string? description = null, Exception? exception = null, Error? cause = null)
+	private Error
+	(
+		ErrorKind kind,
+		string? description = null,
+		Exception? exception = null,
+		Error? cause = null,
+		string callerMember = "",
+		string callerFilePath = "",
+		int callerLine = 0
+
+	)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(kind);
 		this.EnsureCauseDoesNotCreateCycle(cause);
 
+		var callerFile = Path.GetFileName(callerFilePath);
+		var descriptionCallerDetails = $"at {callerMember} in {callerFile}, line {callerLine}";
+		this._description = description.IsNullOrEmptyOrWhitespace() switch
+		{
+			true => $"Something went wrong {descriptionCallerDetails}",
+			false => $"{description} ({descriptionCallerDetails})"
+		};
+
 		this._kind = kind;
-		this._description = !description.IsNullOrEmptyOrWhitespace() ? description : null;
 		this._exception = exception;
 		this._cause = cause;
 	}
@@ -194,50 +213,150 @@ public sealed record class Error : IEquatable<Error>, IComparable<Error>
 	/// <param name="description">The description.</param>
 	/// <param name="exception">The exception.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <param name="callerMember">The caller member.</param>
+	/// <param name="callerFilePath">The caller file path.</param>
+	/// <param name="callerLine">The caller line.</param>
 	/// <returns>A new <see cref="ErrorKind.NoValue" /> error.</returns>
-	public static Error NoValue(string? description = null, Exception? exception = null, Error? cause = null)
+	public static Error NoValue
+	(
+		string? description = null,
+		Exception? exception = null,
+		Error? cause = null,
+		[CallerMemberName] string callerMember = "",
+		[CallerFilePath] string callerFilePath = "",
+		[CallerLineNumber] int callerLine = 0
+	)
 	{
-		return new (ErrorKind.NoValue, description, exception, cause);
+		return new
+		(
+			ErrorKind.NoValue,
+			description,
+			exception,
+			cause,
+			callerMember,
+			callerFilePath,
+			callerLine
+		);
 	}
 
 	/// <summary>Creates a <see cref="ErrorKind.Failure" /> <see cref="Error" />.</summary>
 	/// <param name="exception">The exception.</param>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <param name="callerMember">The caller member.</param>
+	/// <param name="callerFilePath">The caller file path.</param>
+	/// <param name="callerLine">The caller line.</param>
 	/// <returns>A new <see cref="ErrorKind.Failure" /> <see cref="Error" />.</returns>
-	public static Error Failure(Exception exception, string? description = null, Error? cause = null)
+	public static Error Failure
+	(
+		Exception exception,
+		string? description = null,
+		Error? cause = null,
+		[CallerMemberName] string callerMember = "",
+		[CallerFilePath] string callerFilePath = "",
+		[CallerLineNumber] int callerLine = 0
+	)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(exception);
-		return new (ErrorKind.Failure, description, exception, cause);
+
+		return new
+		(
+			ErrorKind.Failure,
+			description,
+			exception,
+			cause,
+			callerMember,
+			callerFilePath,
+			callerLine
+		);
 	}
 
 	/// <summary>Creates a <see cref="ErrorKind.Failure" /> <see cref="Error" />.</summary>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <param name="callerMember">The caller member.</param>
+	/// <param name="callerFilePath">The caller file path.</param>
+	/// <param name="callerLine">The caller line.</param>
 	/// <returns>A new <see cref="ErrorKind.Failure" /> <see cref="Error" />.</returns>
-	public static Error Failure(string? description = null, Error? cause = null)
+	public static Error Failure
+	(
+		string? description = null,
+		Error? cause = null,
+		[CallerMemberName] string callerMember = "",
+		[CallerFilePath] string callerFilePath = "",
+		[CallerLineNumber] int callerLine = 0
+	)
 	{
-		return new (ErrorKind.Failure, description, exception: null, cause);
+		return new
+		(
+			ErrorKind.Failure,
+			description,
+			exception: null,
+			cause,
+			callerMember,
+			callerFilePath,
+			callerLine
+		);
 	}
 
 	/// <summary>Creates an <see cref="ErrorKind.Unexpected" /> <see cref="Error" />.</summary>
 	/// <param name="exception">The exception.</param>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <param name="callerMember">The caller member.</param>
+	/// <param name="callerFilePath">The caller file path.</param>
+	/// <param name="callerLine">The caller line.</param>
 	/// <returns>A new <see cref="ErrorKind.Unexpected" /> <see cref="Error" />.</returns>
-	public static Error Unexpected(Exception exception, string? description = null, Error? cause = null)
+	public static Error Unexpected
+	(
+		Exception exception,
+		string? description = null,
+		Error? cause = null,
+		[CallerMemberName] string callerMember = "",
+		[CallerFilePath] string callerFilePath = "",
+		[CallerLineNumber] int callerLine = 0
+	)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(exception);
-		return new (ErrorKind.Unexpected, description, exception, cause);
+
+		return new
+		(
+			ErrorKind.Unexpected,
+			description,
+			exception,
+			cause,
+			callerMember,
+			callerFilePath,
+			callerLine
+		);
 	}
 
 	/// <summary>Creates an <see cref="ErrorKind.Unexpected" /> <see cref="Error" />.</summary>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <param name="callerMember">The caller member.</param>
+	/// <param name="callerFilePath">The caller file path.</param>
+	/// <param name="callerLine">The caller line.</param>
 	/// <returns>A new <see cref="ErrorKind.Unexpected" /> <see cref="Error" />.</returns>
-	public static Error Unexpected(string? description = null, Error? cause = null)
+	public static Error Unexpected
+	(
+		string? description = null,
+		Error? cause = null,
+		[CallerMemberName] string callerMember = "",
+		[CallerFilePath] string callerFilePath = "",
+		[CallerLineNumber] int callerLine = 0
+	)
 	{
-		return new (ErrorKind.Unexpected, description, exception: null, cause);
+		return new
+		(
+			ErrorKind.Unexpected,
+			description,
+			exception: null,
+			cause,
+			callerMember,
+			callerFilePath,
+			callerLine
+		);
 	}
 
 	/// <summary>Creates a <see cref="ErrorKind.Custom" /> <see cref="Error" />.</summary>
@@ -246,11 +365,34 @@ public sealed record class Error : IEquatable<Error>, IComparable<Error>
 	/// <param name="exception">The exception.</param>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <param name="callerMember">The caller member.</param>
+	/// <param name="callerFilePath">The caller file path.</param>
+	/// <param name="callerLine">The caller line.</param>
 	/// <returns>A new <see cref="ErrorKind.Custom" /> <see cref="Error" />.</returns>
-	public static Error Custom(string name, int priority, Exception exception, string? description = null, Error? cause = null)
+	public static Error Custom
+	(
+		string name,
+		int priority,
+		Exception exception,
+		string? description = null,
+		Error? cause = null,
+		[CallerMemberName] string callerMember = "",
+		[CallerFilePath] string callerFilePath = "",
+		[CallerLineNumber] int callerLine = 0
+	)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(exception);
-		return Custom(ErrorKind.Custom(name, priority), exception, description, cause);
+
+		return Custom
+		(
+			ErrorKind.Custom(name, priority),
+			exception,
+			description,
+			cause,
+			callerMember,
+			callerFilePath,
+			callerLine
+		);
 	}
 
 	/// <summary>Creates a <see cref="ErrorKind.Custom" /> <see cref="Error" />.</summary>
@@ -258,10 +400,30 @@ public sealed record class Error : IEquatable<Error>, IComparable<Error>
 	/// <param name="priority">The priority.</param>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <param name="callerMember">The caller member.</param>
+	/// <param name="callerFilePath">The caller file path.</param>
+	/// <param name="callerLine">The caller line.</param>
 	/// <returns>A new <see cref="ErrorKind.Custom" /> <see cref="Error" />.</returns>
-	public static Error Custom(string name, int priority, string? description = null, Error? cause = null)
+	public static Error Custom
+	(
+		string name,
+		int priority,
+		string? description = null,
+		Error? cause = null,
+		[CallerMemberName] string callerMember = "",
+		[CallerFilePath] string callerFilePath = "",
+		[CallerLineNumber] int callerLine = 0
+	)
 	{
-		return Custom(ErrorKind.Custom(name, priority), description, cause);
+		return Custom
+		(
+			ErrorKind.Custom(name, priority),
+			description,
+			cause,
+			callerMember,
+			callerFilePath,
+			callerLine
+		);
 	}
 
 	/// <summary>Creates a <see cref="ErrorKind.Custom" /> <see cref="Error" />.</summary>
@@ -269,22 +431,65 @@ public sealed record class Error : IEquatable<Error>, IComparable<Error>
 	/// <param name="exception">The exception.</param>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <param name="callerMember">The caller member.</param>
+	/// <param name="callerFilePath">The caller file path.</param>
+	/// <param name="callerLine">The caller line.</param>
 	/// <returns>A new <see cref="ErrorKind.Custom" /> <see cref="Error" />.</returns>
-	public static Error Custom(ErrorKind kind, Exception exception, string? description = null, Error? cause = null)
+	public static Error Custom
+	(
+		ErrorKind kind,
+		Exception exception,
+		string? description = null,
+		Error? cause = null,
+		[CallerMemberName] string callerMember = "",
+		[CallerFilePath] string callerFilePath = "",
+		[CallerLineNumber] int callerLine = 0
+	)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(exception);
-		return new (kind, description, exception, cause);
+
+		return new
+		(
+			kind,
+			description,
+			exception,
+			cause,
+			callerMember,
+			callerFilePath,
+			callerLine
+		);
 	}
 
 	/// <summary>Creates a <see cref="ErrorKind.Custom" /> <see cref="Error" />.</summary>
 	/// <param name="kind">The kind.</param>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
+	/// <param name="callerMember">The caller member.</param>
+	/// <param name="callerFilePath">The caller file path.</param>
+	/// <param name="callerLine">The caller line.</param>
 	/// <returns>A new <see cref="ErrorKind.Custom" /> <see cref="Error" />.</returns>
-	public static Error Custom(ErrorKind kind, string? description = null, Error? cause = null)
+	public static Error Custom
+	(
+		ErrorKind kind,
+		string? description = null,
+		Error? cause = null,
+		[CallerMemberName] string callerMember = "",
+		[CallerFilePath] string callerFilePath = "",
+		[CallerLineNumber] int callerLine = 0
+	)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(kind);
-		return new (kind, description, exception: null, cause);
+
+		return new
+		(
+			kind,
+			description,
+			exception: null,
+			cause,
+			callerMember,
+			callerFilePath,
+			callerLine
+		);
 	}
 
 	#endregion
