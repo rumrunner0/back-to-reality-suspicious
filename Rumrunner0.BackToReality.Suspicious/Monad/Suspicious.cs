@@ -167,7 +167,7 @@ public sealed class Suspicious<TValue> where TValue : notnull
 
 	/// <summary>Ensures that this <see cref="Suspicious{TValue}" /> instance was created from an error and contains actual <see cref="Error" />s in its <see cref="ErrorSet" />.</summary>
 	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TValue}" /> was not created from an error, or if its <see cref="ErrorSet" /> doesn't contain any errors.</exception>
-	private void EnsureContainErrors()
+	private void EnsureContainsErrors()
 	{
 		this.EnsureCreatedFromError();
 		if (!this._errorSet!.ContainsErrors) throw new InvalidOperationException("The error set doesn't contain any errors");

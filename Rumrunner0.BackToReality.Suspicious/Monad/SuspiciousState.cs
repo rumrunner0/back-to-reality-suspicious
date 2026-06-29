@@ -1,24 +1,19 @@
-using Rumrunner0.BackToReality.SharedExtensions.Enums;
+using System.Text.Json.Serialization;
+using Ardalis.SmartEnum;
+using Ardalis.SmartEnum.SystemTextJson;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>State of <see cref="Suspicious{TValue}" />.</summary>
-public sealed record class SuspiciousState : StringEnumeration<SuspiciousState>
+/// <summary><see cref="Suspicious{TValue}" /> state.</summary>
+[JsonConverter(typeof(SmartEnumValueConverter<SuspiciousState, string>))]
+public sealed class SuspiciousState : SmartEnum<SuspiciousState, string>
 {
-	#region Instance State
-
 	/// <inheritdoc cref="SuspiciousState" />
-	private SuspiciousState(string value) : base(value) { }
-
-	#endregion
-
-	#region Variants
+	private SuspiciousState(string name, string value) : base(name, value) { }
 
 	/// <summary>Value.</summary>
-	public new static SuspiciousState Value { get; } = new ("value");
+	public new static readonly SuspiciousState Value = new (nameof(Value), "value");
 
 	/// <summary>Error.</summary>
-	public static SuspiciousState Error { get; } = new ("error");
-
-	#endregion
+	public static readonly SuspiciousState Error = new (nameof(Error), "error");
 }

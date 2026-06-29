@@ -11,7 +11,7 @@
 		<Title>Rumrunner0.BackToReality.Suspicious</Title>
 		<Description>Result monad with rich error semantics and traceable context.</Description>
 		<VersionPrefix>0.13.0</VersionPrefix>
-		<VersionSuffix>dev.20260607.1</VersionSuffix>
+		<VersionSuffix></VersionSuffix>
 		<Authors>Roman Malyi</Authors>
 		<Copyright>Copyright (C) 2026 Roman Malyi</Copyright>
 		<PackageProjectUrl>https://github.com/rumrunner0/back-to-reality-suspicious</PackageProjectUrl>
@@ -51,6 +51,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Ardalis.SmartEnum" />
+		<PackageReference Include="Ardalis.SmartEnum.SystemTextJson" />
 		<PackageReference Include="Rumrunner0.BackToReality.SharedExtensions" />
 	</ItemGroup>
 

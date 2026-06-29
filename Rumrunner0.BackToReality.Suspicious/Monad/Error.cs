@@ -9,7 +9,7 @@ using Rumrunner0.BackToReality.SharedExtensions.Extensions;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>Error.</summary>
+/// <summary><see cref="Suspicious{TValue}" /> rrror.</summary>
 public sealed record class Error : IEquatable<Error>, IComparable<Error>
 {
 	#region Insance State

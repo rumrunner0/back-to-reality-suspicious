@@ -5,14 +5,14 @@ using Rumrunner0.BackToReality.Suspicious.Results;
 
 namespace Rumrunner0.BackToReality.Suspicious.Factories;
 
-/// <summary>Factory for a <see cref="Suspicious{TValue}" />.</summary>
+/// <summary><see cref="Suspicious{TValue}" /> factory.</summary>
 public static class Suspicious
 {
 	/// <summary>A <see cref="Success" /> wrapped in a <see cref="Suspicious{TValue}" />.</summary>
-	public static Suspicious<Success> Success { get; } = Suspicious<Success>.From(new Success());
+	public static Suspicious<Success> Success { get; } = Value(new Success());
 
 	/// <summary>An <see cref="Ok" /> wrapped in a <see cref="Suspicious{TValue}" />.</summary>
-	public static Suspicious<Ok> Ok { get; } = Suspicious<Ok>.From(new Ok());
+	public static Suspicious<Ok> Ok { get; } = Value(new Ok());
 
 	/// <summary>Creates a new <see cref="Suspicious{TValue}" /> from a <paramref name="value" />.</summary>
 	/// <param name="value">The value.</param>
