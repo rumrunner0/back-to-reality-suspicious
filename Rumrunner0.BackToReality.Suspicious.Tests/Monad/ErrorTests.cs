@@ -146,17 +146,19 @@ public sealed class ErrorTests
 		Assert.False(error.Contains(OutcomeKind.Conflict));
 	}
 
-	/// <summary>Ensures that <see cref="Error.Find" /> searches the details of an aggregate.</summary>
+	/// <summary>Ensures that <see cref="Error.Find" /> searches the details BEFORE self — the kind an aggregate escalated to resolves to the concrete child, not the synthetic aggregate.</summary>
 	[Fact]
-	public void Find_SearchesDetails()
+	public void Find_SearchesDetailsBeforeSelf()
 	{
 		var invalid = Error.Invalid("Name is required");
 		var conflict = Error.Conflict("Entity already exists", cause: Error.Unavailable());
 		var aggregate = Error.Aggregate([invalid, conflict]);
 
-		Assert.Same(aggregate, aggregate.Find(OutcomeKind.Conflict));
+		Assert.Equal(OutcomeKind.Conflict, aggregate.Kind);
+		Assert.Same(conflict, aggregate.Find(OutcomeKind.Conflict));
 		Assert.Same(invalid, aggregate.Find(OutcomeKind.Invalid));
 		Assert.NotNull(aggregate.Find(OutcomeKind.Unavailable));
+		Assert.True(aggregate.Contains(OutcomeKind.Conflict));
 	}
 
 	/// <summary>Ensures that <see cref="Error.Find" /> and <see cref="Error.Contains" /> reject a kind that can never appear in an error — the same rule the constructor enforces.</summary>

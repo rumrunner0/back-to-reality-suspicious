@@ -96,26 +96,27 @@ public sealed record class Error : IEquatable<Error>
 		);
 	}
 
-	/// <summary>Searches for the first <see cref="Error" /> with the provided <paramref name="kind" /> among self, the <see cref="Details" /> (recursively) and the <see cref="Cause" /> chain.</summary>
+	/// <summary>Searches for the first <see cref="Error" /> with the provided <paramref name="kind" /> among the <see cref="Details" /> (recursively), self and the <see cref="Cause" /> chain.</summary>
 	/// <param name="kind">The kind; its <see cref="OutcomeKind.Side" /> must allow the failure side.</param>
 	/// <returns>An <see cref="Error" /> or <c>null</c>.</returns>
+	/// <remarks>The <see cref="Details" /> are searched BEFORE self: an <see cref="Aggregate" /> escalates its kind from a child, so a query for that kind resolves to the concrete child rather than the synthetic aggregate. Only aggregates carry <see cref="Details" />, so for every other <see cref="Error" /> self is still effectively checked first.</remarks>
 	/// <exception cref="ArgumentException">Thrown if the <paramref name="kind" /> can never appear in an <see cref="Error" /> — searching for it is a contract violation, not control flow.</exception>
 	public Error? Find(OutcomeKind kind)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(kind);
 		if (!kind.Side.AllowsFailure) ArgumentExceptionExtensions.Throw($"The kind {kind} can never appear in an {nameof(Error)}", nameof(kind));
 
-		if (this._kind == kind) return this;
-
 		foreach (var detail in this._details)
 		{
 			if (detail.Find(kind) is { } target) return target;
 		}
 
+		if (this._kind == kind) return this;
+
 		return this._cause?.Find(kind);
 	}
 
-	/// <summary>Determines whether an <see cref="Error" /> with the provided <paramref name="kind" /> exists among self, the <see cref="Details" /> (recursively) and the <see cref="Cause" /> chain.</summary>
+	/// <summary>Determines whether an <see cref="Error" /> with the provided <paramref name="kind" /> exists among the <see cref="Details" /> (recursively), self and the <see cref="Cause" /> chain.</summary>
 	/// <param name="kind">The kind; its <see cref="OutcomeKind.Side" /> must allow the failure side.</param>
 	/// <returns><c>true</c>, if an <see cref="Error" /> exists; <c>false</c>, otherwise.</returns>
 	/// <exception cref="ArgumentException">Thrown if the <paramref name="kind" /> can never appear in an <see cref="Error" /> — searching for it is a contract violation, not control flow.</exception>

@@ -61,7 +61,7 @@ var validation = Suspicious.Combine
 if (validation.IsFailure) return Suspicious.Fail<User>(validation.Error);
 ```
 
-The error tree is queryable: `error.Find(kind)` and `error.Contains(kind)` search self, the `Details` (recursively), and the `Cause` chain. Both throw on a kind whose side can't ride the failure rail (e.g. `ok`) — such a kind can never appear in an error, so searching for it is API misuse, mirroring the `Error` constructor's own guard.
+The error tree is queryable: `error.Find(kind)` and `error.Contains(kind)` search the `Details` (recursively), then self, then the `Cause` chain — details-first means a query for the kind an aggregate escalated to resolves to the concrete child, not the synthetic aggregate. Both throw on a kind whose side can't ride the failure rail (e.g. `ok`) — such a kind can never appear in an error, so searching for it is API misuse, mirroring the `Error` constructor's own guard.
 
 ## Custom kinds
 
@@ -91,3 +91,7 @@ System.Text.Json converters ship with the library (wired via attributes) for **i
 ```
 
 Don't serialize results into public API schemas — `Match` into DTOs/ProblemDetails at the boundary. Exceptions serialize as `{type, message}` and deserialize to `null` (documented lossy round-trip).
+
+## Demo
+
+A guided tour lives in the `…Demo` project: `Essentials/` walks the fundamentals in reading order (creating → consuming → kinds → the dual-rail miss → chaining → query syntax → combining → errors and custom kinds); `Advanced/` shows real-world flows (a layered registration boundary, an any-side `partial` import, error triage, JSON transport). Run it with `dotnet run --project Rumrunner0.BackToReality.Suspicious.Demo`.
