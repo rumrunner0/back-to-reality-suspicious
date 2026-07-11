@@ -9,8 +9,8 @@ using Rumrunner0.BackToReality.Suspicious.Serialization;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>Result monad without a value — represents the outcome of a void-like operation.</summary>
-/// <remarks>Also hosts the static factories for <see cref="Suspicious{TValue}" />. Success is a per-instance fact: an instance is a success if and only if no <see cref="Error" /> is attached.</remarks>
+/// <summary>Result monad without a value that represents the outcome of a void-like operation.</summary>
+/// <remarks>Also hosts the static factories for <see cref="Suspicious{TValue}" />. Success is a per-instance fact which means an instance is a success iff no <see cref="Error" /> is attached.</remarks>
 [JsonConverter(typeof(SuspiciousJsonConverter))]
 public sealed class Suspicious
 {
@@ -43,23 +43,23 @@ public sealed class Suspicious
 
 	#endregion
 
-	#region Instance API
+	#region Common API
 
 	/// <summary>Outcome.</summary>
 	public OutcomeKind Outcome => this._outcome;
 
-	/// <summary>Flag that indicates whether this <see cref="Suspicious" /> is a success — no <see cref="Error" /> is attached.</summary>
+	/// <summary>Flag that indicates whether this <see cref="Suspicious" /> is a success (no <see cref="Error" /> is attached).</summary>
 	[MemberNotNullWhen(false, nameof(_error))]
 	[MemberNotNullWhen(false, nameof(Error))]
 	public bool IsSuccess => this._error is null;
 
-	/// <summary>Flag that indicates whether this <see cref="Suspicious" /> is a failure — an <see cref="Error" /> is attached.</summary>
+	/// <summary>Flag that indicates whether this <see cref="Suspicious" /> is a failure (an <see cref="Error" /> is attached).</summary>
 	[MemberNotNullWhen(true, nameof(_error))]
 	[MemberNotNullWhen(true, nameof(Error))]
 	public bool IsFailure => this._error is not null;
 
 	/// <summary>Error.</summary>
-	/// <remarks>Non-<c>null</c> if and only if this <see cref="Suspicious" /> is a failure.</remarks>
+	/// <remarks>Non-<c>null</c> iff this <see cref="Suspicious" /> is a failure.</remarks>
 	public Error? Error => this._error;
 
 	/// <summary>Determines whether the <see cref="Outcome" /> equals the provided <paramref name="kind" />.</summary>
@@ -80,7 +80,6 @@ public sealed class Suspicious
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(onSuccess);
 		ArgumentExceptionExtensions.ThrowIfNull(onError);
-
 		return this._error is not null ? onError(this._error) : onSuccess();
 	}
 
@@ -91,9 +90,7 @@ public sealed class Suspicious
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(onSuccess);
 		ArgumentExceptionExtensions.ThrowIfNull(onError);
-
-		if (this._error is not null) onError(this._error);
-		else onSuccess();
+		if (this._error is not null) onError(this._error); else onSuccess();
 	}
 
 	/// <summary>Maps the <see cref="Error" /> of a failure; a success is returned unchanged.</summary>
@@ -120,8 +117,7 @@ public sealed class Suspicious
 		return true;
 	}
 
-	/// <summary>Creates a string that represents this instance.</summary>
-	/// <returns>A string that represents this instance.</returns>
+	/// <inheritdoc />
 	public override string ToString()
 	{
 		var builder = new StringBuilder();
@@ -135,14 +131,10 @@ public sealed class Suspicious
 
 	#endregion
 
-	#region Static State
+	#region Creation (Unit)
 
 	/// <summary>Cached <see cref="OutcomeKind.Ok" /> <see cref="Suspicious" />.</summary>
 	private static readonly Suspicious _ok = new (OutcomeKind.Ok);
-
-	#endregion
-
-	#region Creation (Unit)
 
 	/// <summary>Creates an <see cref="OutcomeKind.Ok" /> <see cref="Suspicious" />.</summary>
 	/// <returns>The cached <see cref="OutcomeKind.Ok" /> <see cref="Suspicious" />.</returns>
@@ -174,7 +166,7 @@ public sealed class Suspicious
 		[CallerLineNumber] int callerLine = 0
 	)
 	{
-		return Fail(Monad.Error.Invalid
+		return Fail(Error.Invalid
 		(
 			description,
 			cause,
@@ -200,7 +192,7 @@ public sealed class Suspicious
 		[CallerLineNumber] int callerLine = 0
 	)
 	{
-		return Fail(Monad.Error.Conflict
+		return Fail(Error.Conflict
 		(
 			description,
 			cause,
@@ -228,7 +220,7 @@ public sealed class Suspicious
 		[CallerLineNumber] int callerLine = 0
 	)
 	{
-		return Fail(Monad.Error.Failure
+		return Fail(Error.Failure
 		(
 			description,
 			exception,
@@ -257,7 +249,7 @@ public sealed class Suspicious
 		[CallerLineNumber] int callerLine = 0
 	)
 	{
-		return Fail(Monad.Error.Unavailable
+		return Fail(Error.Unavailable
 		(
 			description,
 			exception,
@@ -286,7 +278,7 @@ public sealed class Suspicious
 		[CallerLineNumber] int callerLine = 0
 	)
 	{
-		return Fail(Monad.Error.Unexpected
+		return Fail(Error.Unexpected
 		(
 			exception,
 			description,
@@ -313,7 +305,7 @@ public sealed class Suspicious
 		[CallerLineNumber] int callerLine = 0
 	)
 	{
-		return Fail(Monad.Error.Unexpected
+		return Fail(Error.Unexpected
 		(
 			description,
 			cause,
@@ -333,10 +325,10 @@ public sealed class Suspicious
 	/// <returns>A new <see cref="OutcomeKind.Ok" /> <see cref="Suspicious{TValue}" />.</returns>
 	public static Suspicious<TValue> Ok<TValue>(TValue value) where TValue : notnull => Suspicious<TValue>.CreateSuccess(OutcomeKind.Ok, value);
 
-	/// <summary>Creates an <see cref="OutcomeKind.NoValue" /> <see cref="Suspicious{TValue}" /> — a successful miss.</summary>
+	/// <summary>Creates a successful miss <see cref="OutcomeKind.NoValue" /> <see cref="Suspicious{TValue}" />.</summary>
 	/// <typeparam name="TValue">The value type.</typeparam>
 	/// <returns>The cached <see cref="OutcomeKind.NoValue" /> <see cref="Suspicious{TValue}" />.</returns>
-	/// <remarks>A kind-named factory constructs on the home rail of its kind, and the home rail of <see cref="OutcomeKind.NoValue" /> is success — a plain miss. For a miss the producer treats as a failure, use <c>Fail&lt;TValue&gt;(Error.NoValue(…))</c> — the failure rail is the explicit opt-in.</remarks>
+	/// <remarks>A kind-named factory constructs on the home rail of its kind, and the home rail of <see cref="OutcomeKind.NoValue" /> is success (a plain miss). For a miss the producer treats as a failure, use <c>Fail&lt;TValue&gt;(Error.NoValue(…))</c> — the failure rail is the explicit opt-in.</remarks>
 	public static Suspicious<TValue> NoValue<TValue>() where TValue : notnull => Suspicious<TValue>.NoValue;
 
 	/// <summary>Creates a successful <see cref="Suspicious{TValue}" /> with the provided <paramref name="kind" /> and <paramref name="value" />.</summary>
@@ -375,7 +367,7 @@ public sealed class Suspicious
 		[CallerLineNumber] int callerLine = 0
 	) where TValue : notnull
 	{
-		return Fail<TValue>(Monad.Error.Invalid
+		return Fail<TValue>(Error.Invalid
 		(
 			description,
 			cause,
@@ -402,7 +394,7 @@ public sealed class Suspicious
 		[CallerLineNumber] int callerLine = 0
 	) where TValue : notnull
 	{
-		return Fail<TValue>(Monad.Error.Conflict
+		return Fail<TValue>(Error.Conflict
 		(
 			description,
 			cause,
@@ -431,7 +423,7 @@ public sealed class Suspicious
 		[CallerLineNumber] int callerLine = 0
 	) where TValue : notnull
 	{
-		return Fail<TValue>(Monad.Error.Failure
+		return Fail<TValue>(Error.Failure
 		(
 			description,
 			exception,
@@ -461,7 +453,7 @@ public sealed class Suspicious
 		[CallerLineNumber] int callerLine = 0
 	) where TValue : notnull
 	{
-		return Fail<TValue>(Monad.Error.Unavailable
+		return Fail<TValue>(Error.Unavailable
 		(
 			description,
 			exception,
@@ -491,7 +483,7 @@ public sealed class Suspicious
 		[CallerLineNumber] int callerLine = 0
 	) where TValue : notnull
 	{
-		return Fail<TValue>(Monad.Error.Unexpected
+		return Fail<TValue>(Error.Unexpected
 		(
 			exception,
 			description,
@@ -519,7 +511,7 @@ public sealed class Suspicious
 		[CallerLineNumber] int callerLine = 0
 	) where TValue : notnull
 	{
-		return Fail<TValue>(Monad.Error.Unexpected
+		return Fail<TValue>(Error.Unexpected
 		(
 			description,
 			cause,
@@ -549,13 +541,16 @@ public sealed class Suspicious
 			if (result.IsFailure) errors.Add(result.Error);
 		}
 
-		if (isEmpty) ArgumentExceptionExtensions.Throw("At least one result is required", nameof(results));
+		if (isEmpty)
+		{
+			ArgumentExceptionExtensions.Throw("At least one result is required", nameof(results));
+		}
 
 		return errors.Count switch
 		{
 			0 => Ok(),
 			1 => Fail(errors[0]),
-			_ => Fail(Monad.Error.Aggregate(errors))
+			_ => Fail(Error.Aggregate(errors))
 		};
 	}
 
@@ -583,7 +578,7 @@ public sealed class Suspicious
 		{
 			0 => Ok(),
 			1 => Fail(errors[0]),
-			_ => Fail(Monad.Error.Aggregate(errors))
+			_ => Fail(Error.Aggregate(errors))
 		};
 	}
 

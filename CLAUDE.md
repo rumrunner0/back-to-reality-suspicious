@@ -29,7 +29,7 @@ Match the existing source exactly; it deliberately differs from common C# defaul
 - Mandatory `this.` qualification for all instance member access.
 - XML doc comments on every member, including private ones (`GenerateDocumentationFile` is on; missing docs on public members raise CS1591).
 - Everything is `sealed`; data types are written `sealed record class` (never bare `record`).
-- File-scoped namespaces; files organized with `#region` blocks (`Instance State`, `Instance API`, `Creation`, `Display`, …).
+- File-scoped namespaces; files organized with `#region` blocks (`Instance State`, `Common API`, `Creation`, `Display`, …).
 - Allman braces, except single-statement `if` bodies stay inline without braces: `if (cause is null) return;`
 - Private fields `_camelCase`; `var` for initialized locals; digit separators in large numeric literals (`25_000`).
 - Long signatures/calls: one parameter per line with the parens on their own lines; named arguments for optional parameters.
@@ -44,4 +44,5 @@ Match the existing source exactly; it deliberately differs from common C# defaul
 - `OutcomeKind.Custom` codes are restricted to `[100, 900) ∪ [1100, 1900)` — no custom kind can outrank `unexpected (1999)` or underrank `ok (0)`; preset codes live outside the custom ranges.
 - `Error.Find`/`Contains` THROW on a kind whose `Side` doesn't allow the failure rail (e.g. `ok`, custom Success-only kinds) — such a kind can never appear in an error tree, so the query would be always-false; the guard mirrors the `Error` constructor's. `no_value` (`Any` side) stays legal.
 - `Error.Find` searches `Details` BEFORE self (then the `Cause` chain) — an aggregate escalates its kind from a child, so `Find` on that kind returns the concrete child, not the synthetic aggregate. Only aggregates have `Details`, so every other error still checks self first.
+- `Combine` DISCARDS values ("did they all succeed"); the generic overload is homogeneous — mix `TValue`s via `AsUnit()` + the unit overload. Reading `.Value` off the original results after a successful `Combine` throws if a producer returned a `no_value` success — use `TryGetValue` unless the flow is Ok-only. A value-keeping tuple `Combine<T1, T2>` is deliberately deferred pending its `no_value` semantics.
 - CS8002 warnings ("Ardalis.SmartEnum … does not have a strong name") are expected — the library is strong-named, that dependency isn't. Don't try to fix them.

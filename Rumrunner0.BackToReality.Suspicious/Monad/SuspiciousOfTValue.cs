@@ -69,7 +69,7 @@ public sealed class Suspicious<TValue> where TValue : notnull
 
 	#endregion
 
-	#region Instance API
+	#region Common API
 
 	/// <summary>Outcome.</summary>
 	public OutcomeKind Outcome => this._outcome;
@@ -265,8 +265,7 @@ public sealed class Suspicious<TValue> where TValue : notnull
 		return true;
 	}
 
-	/// <summary>Creates a string that represents this instance.</summary>
-	/// <returns>A string that represents this instance.</returns>
+	/// <inheritdoc />
 	public override string ToString()
 	{
 		var builder = new StringBuilder();
@@ -280,17 +279,13 @@ public sealed class Suspicious<TValue> where TValue : notnull
 
 	#endregion
 
-	#region Static State
+	#region Creation
 
 	/// <summary>Flag that indicates whether <typeparamref name="TValue" /> can be <c>null</c>.</summary>
 	private static readonly bool _valueCanBeNull = default(TValue) is null;
 
 	/// <summary>Cached <see cref="OutcomeKind.NoValue" /> <see cref="Suspicious{TValue}" />.</summary>
 	internal static Suspicious<TValue> NoValue { get; } = new (OutcomeKind.NoValue);
-
-	#endregion
-
-	#region Static API
 
 	/// <summary>Creates a successful <see cref="Suspicious{TValue}" /> with the provided <paramref name="kind" /> and <paramref name="value" />.</summary>
 	/// <param name="kind">The kind.</param>

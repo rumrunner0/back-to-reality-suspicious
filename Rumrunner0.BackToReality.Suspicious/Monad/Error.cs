@@ -59,7 +59,7 @@ public sealed record class Error : IEquatable<Error>
 
 	#endregion
 
-	#region Instance API
+	#region Common API
 
 	/// <summary>Kind.</summary>
 	public OutcomeKind Kind => this._kind;
@@ -100,26 +100,29 @@ public sealed record class Error : IEquatable<Error>
 	/// <param name="kind">The kind; its <see cref="OutcomeKind.Side" /> must allow the failure side.</param>
 	/// <returns>An <see cref="Error" /> or <c>null</c>.</returns>
 	/// <remarks>The <see cref="Details" /> are searched BEFORE self: an <see cref="Aggregate" /> escalates its kind from a child, so a query for that kind resolves to the concrete child rather than the synthetic aggregate. Only aggregates carry <see cref="Details" />, so for every other <see cref="Error" /> self is still effectively checked first.</remarks>
-	/// <exception cref="ArgumentException">Thrown if the <paramref name="kind" /> can never appear in an <see cref="Error" /> — searching for it is a contract violation, not control flow.</exception>
+	/// <exception cref="ArgumentException">Thrown if the <paramref name="kind" /> can never appear in an <see cref="Error" />.</exception>
 	public Error? Find(OutcomeKind kind)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(kind);
 		if (!kind.Side.AllowsFailure) ArgumentExceptionExtensions.Throw($"The kind {kind} can never appear in an {nameof(Error)}", nameof(kind));
 
+		// Searches in details.
 		foreach (var detail in this._details)
 		{
 			if (detail.Find(kind) is { } target) return target;
 		}
 
+		// Checks self.
 		if (this._kind == kind) return this;
 
+		// Searches in cause.
 		return this._cause?.Find(kind);
 	}
 
 	/// <summary>Determines whether an <see cref="Error" /> with the provided <paramref name="kind" /> exists among the <see cref="Details" /> (recursively), self and the <see cref="Cause" /> chain.</summary>
 	/// <param name="kind">The kind; its <see cref="OutcomeKind.Side" /> must allow the failure side.</param>
 	/// <returns><c>true</c>, if an <see cref="Error" /> exists; <c>false</c>, otherwise.</returns>
-	/// <exception cref="ArgumentException">Thrown if the <paramref name="kind" /> can never appear in an <see cref="Error" /> — searching for it is a contract violation, not control flow.</exception>
+	/// <exception cref="ArgumentException">Thrown if the <paramref name="kind" /> can never appear in an <see cref="Error" />.</exception>
 	public bool Contains(OutcomeKind kind) => this.Find(kind) is not null;
 
 	#endregion
@@ -173,13 +176,12 @@ public sealed record class Error : IEquatable<Error>
 		if (this._site is not null) builder.Append($", Site = {this._site}");
 		if (this._exception is not null) builder.Append($", Exception = {this._exception}");
 		if (this._cause is not null) builder.Append($", Cause = {this._cause}");
-		if (this._details.Count > 0) builder.Append($", Details = [ {this._details.StringJoin(", ")} ]");
+		if (this._details.Some()) builder.Append($", Details = [ {this._details.StringJoin(", ")} ]");
 
 		return true;
 	}
 
-	/// <summary>Creates a string that represents this instance.</summary>
-	/// <returns>A string that represents this instance.</returns>
+	/// <inheritdoc />
 	public override string ToString()
 	{
 		var builder = new StringBuilder();

@@ -61,6 +61,17 @@ var validation = Suspicious.Combine
 if (validation.IsFailure) return Suspicious.Fail<User>(validation.Error);
 ```
 
+`Combine` answers exactly one question — *did they all succeed* — so values are discarded and only errors are gathered. The generic overload is sugar for homogeneous batches (one `TValue` per call); combining differently-typed results drops to the unit rail explicitly:
+
+```csharp
+var all = Suspicious.Combine(user.AsUnit(), quota.AsUnit(), sessionCleanup);
+
+if (all.IsFailure) return Suspicious.Fail<Report>(all.Error);
+return new Report(user.Value, quota.Value); // read-back — see the caveat below
+```
+
+The read-back on the last line is safe only when those producers can't return a valueless success: `no_value` passes `Combine` as a *success* but carries no value, so `.Value` would throw — use `TryGetValue` in flows where a miss can occur. A value-keeping, error-accumulating `Combine<T1, T2>` (tuple result) is deliberately not shipped yet: unlike the fail-fast `Then`/query chains it would gather *all* errors and the values together, but its semantics for a valueless success (there is no tuple component to build from it) need deciding first.
+
 The error tree is queryable: `error.Find(kind)` and `error.Contains(kind)` search the `Details` (recursively), then self, then the `Cause` chain — details-first means a query for the kind an aggregate escalated to resolves to the concrete child, not the synthetic aggregate. Both throw on a kind whose side can't ride the failure rail (e.g. `ok`) — such a kind can never appear in an error, so searching for it is API misuse, mirroring the `Error` constructor's own guard.
 
 ## Custom kinds

@@ -6,8 +6,8 @@ using Rumrunner0.BackToReality.Suspicious.Serialization;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>Kind of an outcome — the domain identity of a result (e.g. ok, no_value, invalid).</summary>
-/// <remarks>The <see cref="Code" /> orders kinds by severity; aggregate escalation picks the highest code.</remarks>
+/// <summary>Kind of an outcome that should be treated as the domain identity of a result.</summary>
+/// <remarks>The <see cref="Code" /> orders kinds by severity.</remarks>
 [JsonConverter(typeof(OutcomeKindJsonConverter))]
 public sealed record class OutcomeKind : IEquatable<OutcomeKind>, IComparable<OutcomeKind>
 {
@@ -36,7 +36,7 @@ public sealed record class OutcomeKind : IEquatable<OutcomeKind>, IComparable<Ou
 
 	#endregion
 
-	#region Instance API
+	#region Common API
 
 	/// <summary>Name.</summary>
 	public string Name => this._name;
@@ -51,8 +51,7 @@ public sealed record class OutcomeKind : IEquatable<OutcomeKind>, IComparable<Ou
 
 	#region Display
 
-	/// <summary>Creates a string that represents this instance.</summary>
-	/// <returns>A string that represents this instance.</returns>
+	/// <inheritdoc />
 	public override string ToString() => $"{this._name} ({this._code})";
 
 	#endregion
@@ -128,7 +127,7 @@ public sealed record class OutcomeKind : IEquatable<OutcomeKind>, IComparable<Ou
 
 	#endregion
 
-	#region Static State
+	#region Creation
 
 	/// <summary>Minimum code (inclusive).</summary>
 	private const int _minCode = 0;
@@ -147,10 +146,6 @@ public sealed record class OutcomeKind : IEquatable<OutcomeKind>, IComparable<Ou
 
 	/// <summary>Maximum custom code of the upper range (exclusive).</summary>
 	private const int _customUpperMaxCode = 1900;
-
-	#endregion
-
-	#region Creation
 
 	/// <summary>Ok <see cref="OutcomeKind" />.</summary>
 	/// <remarks>The operation succeeded.</remarks>
@@ -197,7 +192,12 @@ public sealed record class OutcomeKind : IEquatable<OutcomeKind>, IComparable<Ou
 	}
 
 	/// <summary>Preset <see cref="OutcomeKind" />s — used by deserialization to return singleton instances.</summary>
-	internal static IReadOnlyList<OutcomeKind> Presets { get; } = [Ok, NoValue, Invalid, Conflict, Failure, Unavailable, Unexpected];
+	internal static IReadOnlyList<OutcomeKind> Presets { get; } =
+	[
+		Ok,
+		NoValue,
+		Invalid, Conflict, Failure, Unavailable, Unexpected
+	];
 
 	#endregion
 }

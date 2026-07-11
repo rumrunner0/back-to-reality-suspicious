@@ -29,7 +29,7 @@ internal static class CreatingResults
 		Suspicious<int> fromError = Error.Conflict("Age is already locked");
 		Console.WriteLine(fromError);
 
-		// Together the conversions keep producers linear: value out, error out.
+		// Together, the conversions keep producers linear: value out, error out.
 		Console.WriteLine(ParseAge("30"));
 		Console.WriteLine(ParseAge("-3"));
 	}

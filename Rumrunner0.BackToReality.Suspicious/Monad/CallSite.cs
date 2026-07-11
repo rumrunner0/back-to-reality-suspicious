@@ -35,7 +35,7 @@ public sealed record class CallSite : IEquatable<CallSite>
 
 	#endregion
 
-	#region Instance API
+	#region Common API
 
 	/// <summary>Member.</summary>
 	public string Member => this._member;
@@ -53,8 +53,7 @@ public sealed record class CallSite : IEquatable<CallSite>
 
 	#region Display
 
-	/// <summary>Creates a string that represents this instance.</summary>
-	/// <returns>A string that represents this instance.</returns>
+	/// <inheritdoc />
 	public override string ToString() => $"at {this._member} in {this.FileName}, line {this._line}";
 
 	#endregion
@@ -86,7 +85,15 @@ public sealed record class CallSite : IEquatable<CallSite>
 	/// <param name="filePath">The file path.</param>
 	/// <param name="line">The line.</param>
 	/// <returns>A new <see cref="CallSite" />.</returns>
-	internal static CallSite From(string member, string filePath, int line) => new (member, filePath, line);
+	internal static CallSite From(string member, string filePath, int line)
+	{
+		return new
+		(
+			member,
+			filePath,
+			line
+		);
+	}
 
 	#endregion
 }

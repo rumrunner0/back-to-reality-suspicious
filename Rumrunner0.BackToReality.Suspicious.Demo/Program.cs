@@ -2,7 +2,7 @@ using System;
 using Rumrunner0.BackToReality.Suspicious.Demo.Advanced;
 using Rumrunner0.BackToReality.Suspicious.Demo.Essentials;
 
-Console.WriteLine("Rumrunner0.BackToReality.Suspicious — a guided tour");
+Console.WriteLine("Rumrunner0.BackToReality.Suspicious Guide");
 
 Run("Essentials 1. Creating results", CreatingResults.Run);
 Run("Essentials 2. Consuming results", ConsumingResults.Run);
@@ -18,11 +18,12 @@ Run("Advanced 2. Partial import", PartialImport.Run);
 Run("Advanced 3. Error triage", ErrorTriage.Run);
 Run("Advanced 4. JSON transport", JsonTransport.Run);
 
+return;
+
 static void Run(string title, Action example)
 {
 	Console.WriteLine();
 	Console.WriteLine($"--- {title} ---");
 	Console.WriteLine();
-
 	example();
 }
