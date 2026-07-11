@@ -336,7 +336,7 @@ public sealed class Suspicious
 	/// <summary>Creates an <see cref="OutcomeKind.NoValue" /> <see cref="Suspicious{TValue}" /> — a successful miss.</summary>
 	/// <typeparam name="TValue">The value type.</typeparam>
 	/// <returns>The cached <see cref="OutcomeKind.NoValue" /> <see cref="Suspicious{TValue}" />.</returns>
-	/// <remarks>For a miss the producer treats as a failure, use <c>Fail&lt;TValue&gt;(Error.NoValue(…))</c>.</remarks>
+	/// <remarks>A kind-named factory constructs on the home rail of its kind, and the home rail of <see cref="OutcomeKind.NoValue" /> is success — a plain miss. For a miss the producer treats as a failure, use <c>Fail&lt;TValue&gt;(Error.NoValue(…))</c> — the failure rail is the explicit opt-in.</remarks>
 	public static Suspicious<TValue> NoValue<TValue>() where TValue : notnull => Suspicious<TValue>.NoValue;
 
 	/// <summary>Creates a successful <see cref="Suspicious{TValue}" /> with the provided <paramref name="kind" /> and <paramref name="value" />.</summary>

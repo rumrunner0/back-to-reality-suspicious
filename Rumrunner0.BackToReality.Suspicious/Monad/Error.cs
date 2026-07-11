@@ -97,11 +97,13 @@ public sealed record class Error : IEquatable<Error>
 	}
 
 	/// <summary>Searches for the first <see cref="Error" /> with the provided <paramref name="kind" /> among self, the <see cref="Details" /> (recursively) and the <see cref="Cause" /> chain.</summary>
-	/// <param name="kind">The kind.</param>
+	/// <param name="kind">The kind; its <see cref="OutcomeKind.Side" /> must allow the failure side.</param>
 	/// <returns>An <see cref="Error" /> or <c>null</c>.</returns>
+	/// <exception cref="ArgumentException">Thrown if the <paramref name="kind" /> can never appear in an <see cref="Error" /> — searching for it is a contract violation, not control flow.</exception>
 	public Error? Find(OutcomeKind kind)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(kind);
+		if (!kind.Side.AllowsFailure) ArgumentExceptionExtensions.Throw($"The kind {kind} can never appear in an {nameof(Error)}", nameof(kind));
 
 		if (this._kind == kind) return this;
 
@@ -114,8 +116,9 @@ public sealed record class Error : IEquatable<Error>
 	}
 
 	/// <summary>Determines whether an <see cref="Error" /> with the provided <paramref name="kind" /> exists among self, the <see cref="Details" /> (recursively) and the <see cref="Cause" /> chain.</summary>
-	/// <param name="kind">The kind.</param>
+	/// <param name="kind">The kind; its <see cref="OutcomeKind.Side" /> must allow the failure side.</param>
 	/// <returns><c>true</c>, if an <see cref="Error" /> exists; <c>false</c>, otherwise.</returns>
+	/// <exception cref="ArgumentException">Thrown if the <paramref name="kind" /> can never appear in an <see cref="Error" /> — searching for it is a contract violation, not control flow.</exception>
 	public bool Contains(OutcomeKind kind) => this.Find(kind) is not null;
 
 	#endregion
@@ -198,6 +201,7 @@ public sealed record class Error : IEquatable<Error>
 	/// <param name="callerFilePath">The caller file path.</param>
 	/// <param name="callerLine">The caller line.</param>
 	/// <returns>A new <see cref="OutcomeKind.NoValue" /> <see cref="Error" />.</returns>
+	/// <remarks>An <see cref="Error" /> is always the failure rail. For a miss that is a plain success, use <see cref="Suspicious.NoValue{TValue}" />.</remarks>
 	public static Error NoValue
 	(
 		string? description = null,

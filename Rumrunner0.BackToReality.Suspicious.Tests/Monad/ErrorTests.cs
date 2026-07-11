@@ -159,6 +159,30 @@ public sealed class ErrorTests
 		Assert.NotNull(aggregate.Find(OutcomeKind.Unavailable));
 	}
 
+	/// <summary>Ensures that <see cref="Error.Find" /> and <see cref="Error.Contains" /> reject a kind that can never appear in an error — the same rule the constructor enforces.</summary>
+	[Fact]
+	public void Find_WithSuccessOnlyKind_Throws()
+	{
+		var error = Error.Failure(description: "Something failed");
+		var custom = OutcomeKind.Custom("promoted", 200, OutcomeSide.Success);
+
+		Assert.ThrowsAny<ArgumentException>(() => error.Find(OutcomeKind.Ok));
+		Assert.ThrowsAny<ArgumentException>(() => error.Contains(OutcomeKind.Ok));
+		Assert.ThrowsAny<ArgumentException>(() => error.Find(custom));
+		Assert.ThrowsAny<ArgumentException>(() => error.Contains(custom));
+	}
+
+	/// <summary>Ensures that <see cref="Error.Find" /> accepts an any-side kind — a failure-rail miss is legal in an error tree.</summary>
+	[Fact]
+	public void Find_WithAnySideKind_Searches()
+	{
+		var miss = Error.NoValue();
+		var error = Error.Failure(description: "Something failed", cause: miss);
+
+		Assert.Same(miss, error.Find(OutcomeKind.NoValue));
+		Assert.True(error.Contains(OutcomeKind.NoValue));
+	}
+
 	#endregion
 
 	#region Aggregation

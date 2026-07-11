@@ -109,6 +109,7 @@ public sealed class Suspicious<TValue> where TValue : notnull
 	/// <summary>Tries to get the value.</summary>
 	/// <param name="value">The value, if present.</param>
 	/// <returns><c>true</c>, if a value is present; <c>false</c>, otherwise.</returns>
+	/// <remarks>The imperative access path — for loops and early returns. At boundaries where every rail must be handled, prefer <see cref="Match{TResult}(Func{TValue, TResult}, Func{TResult}, Func{Error, TResult})" /> or <see cref="Switch(Action{TValue}, Action, Action{Error})" />.</remarks>
 	public bool TryGetValue([MaybeNullWhen(false)] out TValue value)
 	{
 		value = this._hasValue ? this._value : default;
@@ -118,6 +119,7 @@ public sealed class Suspicious<TValue> where TValue : notnull
 	/// <summary>Gets the value, or the provided <paramref name="fallback" /> if no value is present.</summary>
 	/// <param name="fallback">The fallback value.</param>
 	/// <returns>The value or the <paramref name="fallback" />.</returns>
+	/// <remarks>For flows with a genuine fallback — the <see cref="Error" /> is deliberately discarded. At boundaries where every rail must be handled, prefer <see cref="Match{TResult}(Func{TValue, TResult}, Func{TResult}, Func{Error, TResult})" /> or <see cref="Switch(Action{TValue}, Action, Action{Error})" />.</remarks>
 	public TValue GetValueOr(TValue fallback)
 	{
 		if (_valueCanBeNull && fallback is null) throw new ArgumentNullException(nameof(fallback));
@@ -127,6 +129,7 @@ public sealed class Suspicious<TValue> where TValue : notnull
 	/// <summary>Gets the value, or the result of the provided <paramref name="fallbackFactory" /> if no value is present.</summary>
 	/// <param name="fallbackFactory">The fallback factory.</param>
 	/// <returns>The value or the result of the <paramref name="fallbackFactory" />.</returns>
+	/// <remarks>For flows with a genuine fallback — the <see cref="Error" /> is deliberately discarded. At boundaries where every rail must be handled, prefer <see cref="Match{TResult}(Func{TValue, TResult}, Func{TResult}, Func{Error, TResult})" /> or <see cref="Switch(Action{TValue}, Action, Action{Error})" />.</remarks>
 	public TValue GetValueOr(Func<TValue> fallbackFactory)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(fallbackFactory);
