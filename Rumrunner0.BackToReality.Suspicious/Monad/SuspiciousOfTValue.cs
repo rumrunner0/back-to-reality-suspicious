@@ -10,8 +10,8 @@ namespace Rumrunner0.BackToReality.Suspicious.Monad;
 /// <summary>Result monad that represents the outcome of an operation and, optionally, its value.</summary>
 /// <typeparam name="TValue">The value type.</typeparam>
 /// <remarks>
-/// <para>* Success is a per-instance fact: an instance is a success if and only if no <see cref="Error" /> is attached.</para>
-/// <para>* A success may carry a value (<see cref="OutcomeKind.Ok" />) or not (<see cref="OutcomeKind.NoValue" /> or a custom success kind).</para>
+/// <para>* Success is a per-instance fact which means an instance is a success iff no <see cref="Error" /> is attached.</para>
+/// <para>* A success may carry a value (<see cref="OutcomeKind.Ok" /> or a custom success kind) or not (<see cref="OutcomeKind.NoValue" /> or a custom success kind).</para>
 /// <para>* Create instances via the factories on the non-generic <see cref="Suspicious" />.</para>
 /// </remarks>
 [JsonConverter(typeof(SuspiciousJsonConverterFactory))]
@@ -74,12 +74,12 @@ public sealed class Suspicious<TValue> where TValue : notnull
 	/// <summary>Outcome.</summary>
 	public OutcomeKind Outcome => this._outcome;
 
-	/// <summary>Flag that indicates whether this <see cref="Suspicious{TValue}" /> is a success — no <see cref="Error" /> is attached.</summary>
+	/// <summary>Flag that indicates whether this <see cref="Suspicious{TValue}" /> is a success (no <see cref="Error" /> is attached).</summary>
 	[MemberNotNullWhen(false, nameof(_error))]
 	[MemberNotNullWhen(false, nameof(Error))]
 	public bool IsSuccess => this._error is null;
 
-	/// <summary>Flag that indicates whether this <see cref="Suspicious{TValue}" /> is a failure — an <see cref="Error" /> is attached.</summary>
+	/// <summary>Flag that indicates whether this <see cref="Suspicious{TValue}" /> is a failure (an <see cref="Error" /> is attached).</summary>
 	[MemberNotNullWhen(true, nameof(_error))]
 	[MemberNotNullWhen(true, nameof(Error))]
 	public bool IsFailure => this._error is not null;
@@ -89,7 +89,7 @@ public sealed class Suspicious<TValue> where TValue : notnull
 	public bool HasValue => this._hasValue;
 
 	/// <summary>Value.</summary>
-	/// <remarks>Safe access paths are <see cref="TryGetValue" />, <see cref="GetValueOr(TValue)" />, <see cref="Match{TResult}(Func{TValue, TResult}, Func{TResult}, Func{Error, TResult})" /> and <see cref="Switch(Action{TValue}, Action, Action{Error})" />.</remarks>
+	/// <remarks>Safe access paths are <see cref="TryGetValue" />, <see cref="GetValueOr(TValue)" />, <see cref="Match{TResult}(Func{TValue, TResult}, Func{TResult}, Func{Monad.Error, TResult})" /> and <see cref="Switch(Action{TValue}, Action, Action{Monad.Error})" />.</remarks>
 	/// <exception cref="InvalidOperationException">Thrown if no value is present — accessing <see cref="Value" /> on a valueless result is a contract violation, not control flow.</exception>
 	public TValue Value => this._hasValue ? this._value : throw new InvalidOperationException($"The {nameof(Suspicious<TValue>)} has no value; the outcome is {this._outcome}");
 
@@ -109,7 +109,7 @@ public sealed class Suspicious<TValue> where TValue : notnull
 	/// <summary>Tries to get the value.</summary>
 	/// <param name="value">The value, if present.</param>
 	/// <returns><c>true</c>, if a value is present; <c>false</c>, otherwise.</returns>
-	/// <remarks>The imperative access path — for loops and early returns. At boundaries where every rail must be handled, prefer <see cref="Match{TResult}(Func{TValue, TResult}, Func{TResult}, Func{Error, TResult})" /> or <see cref="Switch(Action{TValue}, Action, Action{Error})" />.</remarks>
+	/// <remarks>The imperative access path — for loops and early returns. At boundaries where every rail must be handled, prefer <see cref="Match{TResult}(Func{TValue, TResult}, Func{TResult}, Func{Monad.Error, TResult})" /> or <see cref="Switch(Action{TValue}, Action, Action{Monad.Error})" />.</remarks>
 	public bool TryGetValue([MaybeNullWhen(false)] out TValue value)
 	{
 		value = this._hasValue ? this._value : default;
@@ -119,7 +119,7 @@ public sealed class Suspicious<TValue> where TValue : notnull
 	/// <summary>Gets the value, or the provided <paramref name="fallback" /> if no value is present.</summary>
 	/// <param name="fallback">The fallback value.</param>
 	/// <returns>The value or the <paramref name="fallback" />.</returns>
-	/// <remarks>For flows with a genuine fallback — the <see cref="Error" /> is deliberately discarded. At boundaries where every rail must be handled, prefer <see cref="Match{TResult}(Func{TValue, TResult}, Func{TResult}, Func{Error, TResult})" /> or <see cref="Switch(Action{TValue}, Action, Action{Error})" />.</remarks>
+	/// <remarks>For flows with a genuine fallback — the <see cref="Error" /> is deliberately discarded. At boundaries where every rail must be handled, prefer <see cref="Match{TResult}(Func{TValue, TResult}, Func{TResult}, Func{Monad.Error, TResult})" /> or <see cref="Switch(Action{TValue}, Action, Action{Monad.Error})" />.</remarks>
 	public TValue GetValueOr(TValue fallback)
 	{
 		if (_valueCanBeNull && fallback is null) throw new ArgumentNullException(nameof(fallback));
@@ -129,7 +129,7 @@ public sealed class Suspicious<TValue> where TValue : notnull
 	/// <summary>Gets the value, or the result of the provided <paramref name="fallbackFactory" /> if no value is present.</summary>
 	/// <param name="fallbackFactory">The fallback factory.</param>
 	/// <returns>The value or the result of the <paramref name="fallbackFactory" />.</returns>
-	/// <remarks>For flows with a genuine fallback — the <see cref="Error" /> is deliberately discarded. At boundaries where every rail must be handled, prefer <see cref="Match{TResult}(Func{TValue, TResult}, Func{TResult}, Func{Error, TResult})" /> or <see cref="Switch(Action{TValue}, Action, Action{Error})" />.</remarks>
+	/// <remarks>For flows with a genuine fallback — the <see cref="Error" /> is deliberately discarded. At boundaries where every rail must be handled, prefer <see cref="Match{TResult}(Func{TValue, TResult}, Func{TResult}, Func{Monad.Error, TResult})" /> or <see cref="Switch(Action{TValue}, Action, Action{Monad.Error})" />.</remarks>
 	public TValue GetValueOr(Func<TValue> fallbackFactory)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(fallbackFactory);
