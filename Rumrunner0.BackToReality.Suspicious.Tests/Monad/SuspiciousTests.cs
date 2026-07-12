@@ -158,6 +158,23 @@ public sealed class SuspiciousTests
 		Assert.Throws<InvalidOperationException>(static () => Suspicious.Ok().AsFailure<int>());
 	}
 
+	/// <summary>Ensures that <c>Then</c> runs the binder on ANY success — rails gate execution, kinds never do — and short-circuits a failure.</summary>
+	[Fact]
+	public void Then_RunsBinderOnAnySuccess_AndShortCircuitsFailure()
+	{
+		Assert.Equal(42, Suspicious.Ok().Then(static () => Suspicious.Ok(42)).Value);
+		Assert.Same(Suspicious.Ok(), Suspicious.Ok().Then(Suspicious.Ok));
+
+		var partial = OutcomeKind.Custom("partial", 150, OutcomeSide.Any);
+
+		Assert.Equal(OutcomeKind.Ok, Suspicious.Success(partial).Then(Suspicious.Ok).Outcome);
+
+		var failure = Suspicious.Conflict("Entity already exists");
+
+		Assert.Same(failure, failure.Then(Suspicious.Ok));
+		Assert.Same(failure.Error, failure.Then(static () => Suspicious.Ok(42)).Error);
+	}
+
 	#endregion
 
 	#region Aggregation

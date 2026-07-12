@@ -273,6 +273,26 @@ public sealed class SuspiciousOfTValueTests
 		Assert.Same(error, failure.Error);
 	}
 
+	/// <summary>Ensures that the unit-returning <c>Then</c> mirrors the generic one — the binder runs only on a value; valueless results short-circuit.</summary>
+	[Fact]
+	public void Then_ToUnit_RunsBinderOnlyOnValue_AndShortCircuitsOtherwise()
+	{
+		Assert.True(Suspicious.Ok(42).Then(static _ => Suspicious.Ok()).IsSuccess);
+
+		var invoked = false;
+		var noValue = Suspicious.NoValue<int>().Then(_ => { invoked = true; return Suspicious.Ok(); });
+
+		Assert.False(invoked);
+		Assert.True(noValue.IsSuccess);
+		Assert.True(noValue.Is(OutcomeKind.NoValue));
+
+		var error = Error.Unavailable("Storage is down");
+		var failure = Suspicious.Fail<int>(error).Then(static _ => Suspicious.Ok());
+
+		Assert.True(failure.IsFailure);
+		Assert.Same(error, failure.Error);
+	}
+
 	/// <summary>Ensures that <c>MapError</c> maps only a failure and returns a success unchanged.</summary>
 	[Fact]
 	public void MapError_MapsOnlyFailure()

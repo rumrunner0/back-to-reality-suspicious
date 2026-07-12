@@ -235,6 +235,19 @@ public sealed class Suspicious<TValue> where TValue : notnull
 		return Suspicious<TResult>.CreateSuccess(this._outcome);
 	}
 
+	/// <summary>Chains a <paramref name="binder" /> that returns a unit <see cref="Suspicious" />; valueless results short-circuit.</summary>
+	/// <param name="binder">The binder.</param>
+	/// <returns>The result of the <paramref name="binder" />, or a propagated valueless result.</returns>
+	/// <remarks>The <paramref name="binder" /> runs ONLY when a value is present; both a success without a value and a failure are propagated unchanged (fail-fast).</remarks>
+	public Suspicious Then(Func<TValue, Suspicious> binder)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(binder);
+
+		if (this._hasValue) return binder(this._value);
+		if (this._error is not null) return Suspicious.Fail(this._error);
+		return Suspicious.Success(this._outcome);
+	}
+
 	/// <summary>Maps the <see cref="Error" /> of a failure; a success is returned unchanged.</summary>
 	/// <param name="mapper">The mapper.</param>
 	/// <returns>A new <see cref="Suspicious{TValue}" /> with the mapped <see cref="Error" />, or this instance if it is a success.</returns>

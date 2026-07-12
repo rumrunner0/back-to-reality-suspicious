@@ -29,6 +29,12 @@ internal static class ChainingResults
 
 		// AsUnit drops the value axis when only the outcome matters.
 		Console.WriteLine(greeting.AsUnit());
+
+		// The bind family spans both types: a unit success always runs the binder...
+		Console.WriteLine(Suspicious.Ok().Then(static () => ParseAge("30")));
+
+		// ...and a value chains into a void-like step.
+		Console.WriteLine(ParseAge("30").Then(static age => age >= 21 ? Suspicious.Ok() : Suspicious.Invalid("Must be at least 21")));
 	}
 
 	/// <summary>Parses an age.</summary>

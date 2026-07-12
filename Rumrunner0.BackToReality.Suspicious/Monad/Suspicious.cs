@@ -93,6 +93,27 @@ public sealed class Suspicious
 		if (this._error is not null) onError(this._error); else onSuccess();
 	}
 
+	/// <summary>Chains a <paramref name="binder" /> that itself returns a <see cref="Suspicious" />; a failure short-circuits.</summary>
+	/// <param name="binder">The binder.</param>
+	/// <returns>The result of the <paramref name="binder" />, or this failed <see cref="Suspicious" /> unchanged.</returns>
+	/// <remarks>The <paramref name="binder" /> runs on ANY success — rails gate execution, kinds never do; a non-<c>ok</c> success kind is consumed (the binder's outcome wins).</remarks>
+	public Suspicious Then(Func<Suspicious> binder)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(binder);
+		return this._error is not null ? this : binder();
+	}
+
+	/// <summary>Chains a <paramref name="binder" /> that returns a <see cref="Suspicious{TValue}" />; a failure short-circuits.</summary>
+	/// <param name="binder">The binder.</param>
+	/// <typeparam name="TValue">The value type.</typeparam>
+	/// <returns>The result of the <paramref name="binder" />, or a failed <see cref="Suspicious{TValue}" /> carrying this <see cref="Error" />.</returns>
+	/// <remarks>The <paramref name="binder" /> runs on ANY success — rails gate execution, kinds never do; a non-<c>ok</c> success kind is consumed (the binder's outcome wins).</remarks>
+	public Suspicious<TValue> Then<TValue>(Func<Suspicious<TValue>> binder) where TValue : notnull
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(binder);
+		return this._error is not null ? Suspicious<TValue>.CreateFailure(this._error) : binder();
+	}
+
 	/// <summary>Maps the <see cref="Error" /> of a failure; a success is returned unchanged.</summary>
 	/// <param name="mapper">The mapper.</param>
 	/// <returns>A new <see cref="Suspicious" /> with the mapped <see cref="Error" />, or this instance if it is a success.</returns>

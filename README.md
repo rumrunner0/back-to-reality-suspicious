@@ -28,7 +28,7 @@ The rail rule: `Error.*` always builds the failure rail — you're constructing 
 
 ## Pipelines
 
-`Then` is a short-circuiting bind: the first failure (or valueless success) skips everything downstream. Unwrap with `Match` at the application boundary.
+`Then` is a short-circuiting bind: the first failure (or valueless success) skips everything downstream. Unwrap with `Match` at the application boundary. The bind family spans both types — unit→unit, unit→generic (`Validate().Then(() => Load())`) and generic→unit (`Load(id).Then(user => Archive(user))`); a **unit** success always runs the binder (rails gate execution, kinds never do — a non-`ok` success kind is consumed by the chain).
 
 ```csharp
 var report = this.Find(userId)
@@ -115,4 +115,4 @@ Don't serialize results into public API schemas — `Match` into DTOs/ProblemDet
 
 ## Demo
 
-A guided tour lives in the `…Demo` project: `Essentials/` walks the fundamentals in reading order (creating → consuming → kinds → the dual-rail miss → chaining → query syntax → combining → errors and custom kinds); `Advanced/` shows real-world flows (a layered registration boundary, an any-side `partial` import, error triage, JSON transport). Run it with `dotnet run --project Rumrunner0.BackToReality.Suspicious.Demo`.
+A guided tour lives in the `…Demo` project: `Essentials/` walks the fundamentals in reading order (creating → consuming → kinds → the dual-rail miss → chaining → query syntax → combining → errors and custom kinds); `Advanced/` shows real-world flows (a layered registration boundary, an any-side `partial` import, error triage, JSON transport, and a checkout pipeline chaining both result types in one expression). Run it with `dotnet run --project Rumrunner0.BackToReality.Suspicious.Demo`.

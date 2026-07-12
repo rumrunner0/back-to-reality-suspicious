@@ -17,6 +17,7 @@ Run("Advanced 1. User registration", UserRegistration.Run);
 Run("Advanced 2. Partial import", PartialImport.Run);
 Run("Advanced 3. Error triage", ErrorTriage.Run);
 Run("Advanced 4. JSON transport", JsonTransport.Run);
+Run("Advanced 5. Order checkout", OrderCheckout.Run);
 
 return;
 
