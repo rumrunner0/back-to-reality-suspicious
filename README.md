@@ -2,6 +2,12 @@
 
 An outcome-first result monad for .NET — `Suspicious` (unit) and `Suspicious<TValue>`. A replacement for exception-driven control flow, `Try*` methods, and union-type workarounds.
 
+```shell
+dotnet add package Rumrunner0.BackToReality.Suspicious
+```
+
+Targets .NET 9; strong-named; ships with source and symbols.
+
 Every result carries an **outcome** — a domain identity like HTTP codes, but for your domain: `ok`, `no_value`, `invalid`, `conflict`, `failure`, `unavailable`, `unexpected`, or your own via `OutcomeKind.Custom(name, code, side)`. Success is a per-instance fact: a result is a success if and only if no `Error` is attached. That lets the *same* outcome ride either rail — a repository miss can be a normal success without a value, or a failure, depending on what the producer means:
 
 ```csharp
@@ -42,9 +48,11 @@ var summary =
 	select $"{user.Name}: {orders.Count} order(s)";
 ```
 
-`Value` throws on a valueless result — a contract guard, not control flow (the safe paths are `TryGetValue`, `GetValueOr`, `Match`). Expected outcomes never throw; API misuse throws immediately.
+`Value` throws on a valueless result — a contract guard, not control flow (the never-throwing paths are `TryGetValue`, `GetValueOr`, and the three-way `Match`/`Switch`). Expected outcomes never throw; API misuse throws immediately.
 
 Picking a consumption path: `Match`/`Switch` at boundaries where every rail must be handled; `GetValueOr` when a genuine fallback exists and the error can be discarded; `TryGetValue` for imperative glue (loops, early returns). All are first-class — they answer different questions.
+
+Two more axes: `MapError` rewrites or enriches the failure side (wrap with a `cause:` at a layer boundary) while successes pass through untouched; `AsUnit()` drops the value axis when only the outcome matters.
 
 ## Errors
 
@@ -73,6 +81,8 @@ return new Report(user.Value, quota.Value); // read-back — see the caveat belo
 The read-back on the last line is safe only when those producers can't return a valueless success: `no_value` passes `Combine` as a *success* but carries no value, so `.Value` would throw — use `TryGetValue` in flows where a miss can occur. A value-keeping, error-accumulating `Combine<T1, T2>` (tuple result) is deliberately not shipped yet: unlike the fail-fast `Then`/query chains it would gather *all* errors and the values together, but its semantics for a valueless success (there is no tuple component to build from it) need deciding first.
 
 The error tree is queryable: `error.Find(kind)` and `error.Contains(kind)` search the `Details` (recursively), then self, then the `Cause` chain — details-first means a query for the kind an aggregate escalated to resolves to the concrete child, not the synthetic aggregate. Both throw on a kind whose side can't ride the failure rail (e.g. `ok`) — such a kind can never appear in an error, so searching for it is API misuse, mirroring the `Error` constructor's own guard.
+
+Kinds are ordered by severity, and the comparison operators make policies one-liners — `if (run.Error.Kind >= OutcomeKind.Unavailable) PageOnCall();` — with aggregates already escalated to their most critical child.
 
 ## Custom kinds
 

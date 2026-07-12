@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - Build: `dotnet build`
 - Test: `dotnet test` (single test: `dotnet test --filter "FullyQualifiedName~SuspiciousOfTValueTests.Ok_CreatesSuccessWithValue"`)
-- Demo smoke test: `dotnet run --project Rumrunner0.BackToReality.Suspicious.Demo`
+- Demo gallery (doubles as a smoke test): `dotnet run --project Rumrunner0.BackToReality.Suspicious.Demo`
 - Pack: `Nuget/pack.zsh` (runs `dotnet pack --configuration Release`)
 - Publish to nuget.org: `Nuget/push.zsh` (requires the `NUGET_ORG_API_KEY` env var)
 
@@ -38,7 +38,7 @@ Match the existing source exactly; it deliberately differs from common C# defaul
 
 ## Gotchas
 
-- Inside any `Rumrunner0.BackToReality.*` namespace, the simple name `Suspicious` resolves to the *namespace*, shadowing the non-generic monad type (`Suspicious<TValue>` is immune — arity-1 lookup skips namespaces). The fix is to place the `using` directives AFTER the file-scoped namespace declaration — usings inside the namespace body win over the parent-namespace walk; the test project, the `Serialization/` converters and the Demo example files do this. Top-level statements (Demo's `Program.cs`) are unaffected.
+- Inside any `Rumrunner0.BackToReality.*` namespace, the simple name `Suspicious` resolves to the *namespace*, shadowing the non-generic monad type (`Suspicious<TValue>` is immune — arity-1 lookup skips namespaces). The fix is to place the `using` directives AFTER the file-scoped namespace declaration — usings inside the namespace body win over the parent-namespace walk; the test project, the `Serialization/` converters and the Demo example files do this. Top-level statements (Demo's `Program.cs`) are unaffected. The same shadow hits doc comments: `<see cref="Suspicious" />` binds to the namespace — write `<c>Suspicious</c>` instead (the tests do).
 - `Suspicious<TValue>.Value` THROWS on a valueless result (contract guard — no more silent `default(int)`); the never-throwing paths are `TryGetValue`, `GetValueOr`, and the three-way `Match`/`Switch`. The two-way `Match`/`Switch` also throw if a success-without-value shows up. Philosophy: expected outcomes → values, never throw; API misuse → throw, never catch.
 - Don't serialize results into public API schemas — `Match` into DTOs at the boundary. The JSON converters (`Serialization/`) exist for internal transport, persistence, and logging.
 - `OutcomeKind.Custom` codes are restricted to `[100, 900) ∪ [1100, 1900)` — no custom kind can outrank `unexpected (1999)` or underrank `ok (0)`; preset codes live outside the custom ranges.
