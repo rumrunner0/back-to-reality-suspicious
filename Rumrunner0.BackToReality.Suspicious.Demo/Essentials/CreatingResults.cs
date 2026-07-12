@@ -19,7 +19,7 @@ internal static class CreatingResults
 		Suspicious<int> converted = 42;
 		Console.WriteLine(converted);
 
-		// A failure carries exactly one error; every failure kind has a shorthand.
+		// A failure carries exactly one error; every built-in failure kind has a shorthand.
 		Console.WriteLine(Suspicious.Invalid<int>("Age must be positive"));
 
 		// The general form takes any error explicitly...

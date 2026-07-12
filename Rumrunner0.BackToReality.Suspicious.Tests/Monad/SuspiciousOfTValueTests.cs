@@ -144,14 +144,16 @@ public sealed class SuspiciousOfTValueTests
 		Assert.False(Suspicious.Failure<int>().TryGetValue(out _));
 	}
 
-	/// <summary>Ensures that <c>GetValueOr</c> falls back only on valueless results.</summary>
+	/// <summary>Ensures that <c>GetValueOr</c> falls back only on valueless results, and rejects a null fallback — eager or produced by the factory.</summary>
 	[Fact]
 	public void GetValueOr_FallsBackOnlyOnValuelessResults()
 	{
 		Assert.Equal(42, Suspicious.Ok(42).GetValueOr(0));
 		Assert.Equal(7, Suspicious.NoValue<int>().GetValueOr(7));
 		Assert.Equal(7, Suspicious.Failure<int>().GetValueOr(static () => 7));
+		Assert.Equal("value", Suspicious.Ok("value").GetValueOr(static () => null!));
 		Assert.Throws<ArgumentNullException>(() => Suspicious.NoValue<string>().GetValueOr(fallback: null!));
+		Assert.Throws<ArgumentNullException>(() => Suspicious.NoValue<string>().GetValueOr(static () => null!));
 	}
 
 	#endregion
@@ -305,6 +307,21 @@ public sealed class SuspiciousOfTValueTests
 
 		Assert.True(fromFailure.IsFailure);
 		Assert.Same(error, fromFailure.Error);
+	}
+
+	/// <summary>Ensures that <c>AsFailure</c> re-types a failure, and throws on any success — valued or not.</summary>
+	[Fact]
+	public void AsFailure_RetypesFailure_AndThrowsOnSuccess()
+	{
+		var failure = Suspicious.Invalid<int>("Value is out of range");
+		var converted = failure.AsFailure<string>();
+
+		Assert.True(converted.IsFailure);
+		Assert.Same(failure.Error, converted.Error);
+		Assert.Equal(OutcomeKind.Invalid, converted.Outcome);
+
+		Assert.Throws<InvalidOperationException>(static () => Suspicious.Ok(42).AsFailure<string>());
+		Assert.Throws<InvalidOperationException>(static () => Suspicious.NoValue<int>().AsFailure<string>());
 	}
 
 	#endregion

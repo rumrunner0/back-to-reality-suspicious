@@ -102,6 +102,17 @@ public sealed class Suspicious
 		return this._error is not null ? Fail(mapper(this._error)) : this;
 	}
 
+	/// <summary>Reinterprets this failed <see cref="Suspicious" /> as a failed <see cref="Suspicious{TValue}" /> (the <see cref="Error" /> is carried over).</summary>
+	/// <typeparam name="TValue">The value type.</typeparam>
+	/// <returns>A new failed <see cref="Suspicious{TValue}" /> with the same <see cref="Error" />.</returns>
+	/// <remarks>Total on the failure rail only (a success has no value to lift); the guard-style call site is <c>if (result.IsFailure) return result.AsFailure&lt;TValue&gt;();</c>.</remarks>
+	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious" /> is a success (converting a success is a contract violation).</exception>
+	public Suspicious<TValue> AsFailure<TValue>() where TValue : notnull
+	{
+		if (this._error is null) throw new InvalidOperationException($"The {nameof(Suspicious)} is a success; {nameof(this.AsFailure)} requires a failure");
+		return Suspicious<TValue>.CreateFailure(this._error);
+	}
+
 	#endregion
 
 	#region Display

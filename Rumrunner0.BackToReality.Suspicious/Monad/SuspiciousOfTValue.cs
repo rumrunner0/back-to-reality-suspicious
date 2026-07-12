@@ -127,13 +127,19 @@ public sealed class Suspicious<TValue> where TValue : notnull
 	}
 
 	/// <summary>Gets the value, or the result of the provided <paramref name="fallbackFactory" /> if no value is present.</summary>
-	/// <param name="fallbackFactory">The fallback factory.</param>
+	/// <param name="fallbackFactory">The fallback factory; invoked only when no value is present, and must not produce <c>null</c>.</param>
 	/// <returns>The value or the result of the <paramref name="fallbackFactory" />.</returns>
 	/// <remarks>For flows with a genuine fallback — the <see cref="Error" /> is deliberately discarded. At boundaries where every rail must be handled, prefer <see cref="Match{TResult}(Func{TValue, TResult}, Func{TResult}, Func{Monad.Error, TResult})" /> or <see cref="Switch(Action{TValue}, Action, Action{Monad.Error})" />.</remarks>
+	/// <exception cref="ArgumentNullException">Thrown if the <paramref name="fallbackFactory" /> is <c>null</c>, or if it produces <c>null</c>.</exception>
 	public TValue GetValueOr(Func<TValue> fallbackFactory)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(fallbackFactory);
-		return this._hasValue ? this._value : fallbackFactory();
+		if (this._hasValue) return this._value;
+
+		var fallback = fallbackFactory();
+		if (_valueCanBeNull && fallback is null) throw new ArgumentNullException(nameof(fallbackFactory), "The fallback factory produced null");
+
+		return fallback;
 	}
 
 	/// <summary>Matches this <see cref="Suspicious{TValue}" /> into a <typeparamref name="TResult" />.</summary>
@@ -168,7 +174,6 @@ public sealed class Suspicious<TValue> where TValue : notnull
 
 		if (this._hasValue) return onValue(this._value);
 		if (this._error is not null) return onError(this._error);
-
 		return onNoValue();
 	}
 
@@ -213,7 +218,6 @@ public sealed class Suspicious<TValue> where TValue : notnull
 
 		if (this._hasValue) return Suspicious<TResult>.CreateSuccess(this._outcome, mapper(this._value));
 		if (this._error is not null) return Suspicious<TResult>.CreateFailure(this._error);
-
 		return Suspicious<TResult>.CreateSuccess(this._outcome);
 	}
 
@@ -228,7 +232,6 @@ public sealed class Suspicious<TValue> where TValue : notnull
 
 		if (this._hasValue) return binder(this._value);
 		if (this._error is not null) return Suspicious<TResult>.CreateFailure(this._error);
-
 		return Suspicious<TResult>.CreateSuccess(this._outcome);
 	}
 
@@ -246,6 +249,17 @@ public sealed class Suspicious<TValue> where TValue : notnull
 	public Suspicious AsUnit()
 	{
 		return this._error is not null ? Suspicious.Fail(this._error) : Suspicious.Success(this._outcome);
+	}
+
+	/// <summary>Reinterprets this failed <see cref="Suspicious{TValue}" /> as a failed <see cref="Suspicious{TResult}" /> (the <see cref="Error" /> is carried over).</summary>
+	/// <typeparam name="TResult">The result value type.</typeparam>
+	/// <returns>A new failed <see cref="Suspicious{TResult}" /> with the same <see cref="Error" />.</returns>
+	/// <remarks>Total on the failure rail only (a success has no value to lift); the guard-style call site is <c>if (result.IsFailure) return result.AsFailure&lt;TResult&gt;();</c>.</remarks>
+	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TValue}" /> is a success (converting a success is a contract violation).</exception>
+	public Suspicious<TResult> AsFailure<TResult>() where TResult : notnull
+	{
+		if (this._error is null) throw new InvalidOperationException($"The {nameof(Suspicious<TValue>)} is a success; {nameof(this.AsFailure)} requires a failure");
+		return Suspicious<TResult>.CreateFailure(this._error);
 	}
 
 	#endregion

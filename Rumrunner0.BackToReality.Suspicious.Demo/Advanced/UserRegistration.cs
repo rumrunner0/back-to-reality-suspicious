@@ -36,7 +36,7 @@ internal static class UserRegistration
 			int.TryParse(ageText, out var age) && age is >= 0 and <= 150 ? Suspicious.Ok() : Suspicious.Invalid($"Age '{ageText}' is out of range")
 		);
 
-		if (validation.IsFailure) return Suspicious.Fail<User>(validation.Error);
+		if (validation.IsFailure) return validation.AsFailure<User>();
 
 		// Dependent checks run sequentially and fail fast.
 		if (_emails.Contains(email)) return Suspicious.Conflict<User>($"Email '{email}' is already registered");
@@ -58,7 +58,7 @@ internal static class UserRegistration
 		}
 		catch (InvalidOperationException e)
 		{
-			return Suspicious.Unexpected<User>(e, "User couldn't be persisted");
+			return Error.Unexpected(e, "User couldn't be persisted");
 		}
 	}
 

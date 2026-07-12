@@ -144,6 +144,20 @@ public sealed class SuspiciousTests
 		Assert.Same(failure.Error, mapped.Error!.Cause);
 	}
 
+	/// <summary>Ensures that <c>AsFailure</c> carries the error into a failed generic result, and throws on a success.</summary>
+	[Fact]
+	public void AsFailure_CarriesError_AndThrowsOnSuccess()
+	{
+		var failure = Suspicious.Conflict("Entity already exists");
+		var converted = failure.AsFailure<int>();
+
+		Assert.True(converted.IsFailure);
+		Assert.Same(failure.Error, converted.Error);
+		Assert.Equal(OutcomeKind.Conflict, converted.Outcome);
+
+		Assert.Throws<InvalidOperationException>(static () => Suspicious.Ok().AsFailure<int>());
+	}
+
 	#endregion
 
 	#region Aggregation

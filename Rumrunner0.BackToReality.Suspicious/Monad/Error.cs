@@ -123,7 +123,10 @@ public sealed record class Error : IEquatable<Error>
 	/// <param name="kind">The kind; its <see cref="OutcomeKind.Side" /> must allow the failure side.</param>
 	/// <returns><c>true</c>, if an <see cref="Error" /> exists; <c>false</c>, otherwise.</returns>
 	/// <exception cref="ArgumentException">Thrown if the <paramref name="kind" /> can never appear in an <see cref="Error" />.</exception>
-	public bool Contains(OutcomeKind kind) => this.Find(kind) is not null;
+	public bool Contains(OutcomeKind kind)
+	{
+		return this.Find(kind) is not null;
+	}
 
 	#endregion
 

@@ -16,7 +16,7 @@ internal static class ConsumingResults
 		Console.WriteLine(Describe(found));
 		Console.WriteLine(Describe(failed));
 
-		// Switch is its side-effect twin.
+		// Switch is its side effect twin.
 		failed.Switch
 		(
 			onValue: static name => Console.WriteLine($"Hello, {name}!"),
