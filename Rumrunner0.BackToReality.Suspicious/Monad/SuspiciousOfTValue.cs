@@ -248,6 +248,45 @@ public sealed class Suspicious<TValue> where TValue : notnull
 		return Suspicious.Success(this._outcome);
 	}
 
+	/// <summary>Runs an <paramref name="effect" /> against the value; this <see cref="Suspicious{TValue}" /> flows through unchanged.</summary>
+	/// <param name="effect">The effect.</param>
+	/// <returns>This <see cref="Suspicious{TValue}" />.</returns>
+	/// <remarks>The <paramref name="effect" /> runs ONLY when a value is present; a valueless success and a failure skip it.</remarks>
+	public Suspicious<TValue> Tap(Action<TValue> effect)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(effect);
+		if (this._hasValue) effect(this._value);
+
+		return this;
+	}
+
+	/// <summary>Runs a result-returning <paramref name="effect" /> against the value; its failure REPLACES this result, its success is discarded.</summary>
+	/// <param name="effect">The effect; must not produce <c>null</c>.</param>
+	/// <returns>A failed <see cref="Suspicious{TValue}" /> carrying the effect's <see cref="Error" />, or this <see cref="Suspicious{TValue}" /> unchanged.</returns>
+	/// <remarks>The <paramref name="effect" /> runs ONLY when a value is present; only its failure rail matters — on its success this instance flows through, so the success kind is PRESERVED (unlike <c>Then</c>, which normalizes it).</remarks>
+	/// <exception cref="ArgumentNullException">Thrown if the <paramref name="effect" /> is <c>null</c>, or if it produces <c>null</c>.</exception>
+	public Suspicious<TValue> Tap(Func<TValue, Suspicious> effect)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(effect);
+		if (!this._hasValue) return this;
+
+		var result = effect(this._value);
+		if (result is null) throw new ArgumentNullException(nameof(effect), "The effect produced null");
+
+		return result.IsFailure ? result.AsFailure<TValue>() : this;
+	}
+
+	/// <summary>Runs an <paramref name="effect" /> against the <see cref="Error" /> of a failure; this <see cref="Suspicious{TValue}" /> flows through unchanged.</summary>
+	/// <param name="effect">The effect.</param>
+	/// <returns>This <see cref="Suspicious{TValue}" />.</returns>
+	public Suspicious<TValue> TapError(Action<Error> effect)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(effect);
+		if (this._error is not null) effect(this._error);
+
+		return this;
+	}
+
 	/// <summary>Maps the <see cref="Error" /> of a failure; a success is returned unchanged.</summary>
 	/// <param name="mapper">The mapper.</param>
 	/// <returns>A new <see cref="Suspicious{TValue}" /> with the mapped <see cref="Error" />, or this instance if it is a success.</returns>

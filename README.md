@@ -54,6 +54,8 @@ Picking a consumption path: `Match`/`Switch` at boundaries where every rail must
 
 Two more axes: `MapError` rewrites or enriches the failure side (wrap with a `cause:` at a layer boundary) while successes pass through untouched; `AsUnit()` drops the value axis when only the outcome matters. The reverse re-typing exists for failures only — `AsFailure<T>()` carries the `Error` into a differently-typed result (`if (validation.IsFailure) return validation.AsFailure<User>();`); a success has no value to lift, so there it throws.
 
+`Tap`/`TapError` observe without touching — the instance flows through by reference (logging, metrics, audit mid-chain). The result-returning `Tap` overload is the veto flavor: the effect's failure replaces the result, its success is discarded, and the original — success kind included — flows on (`.Tap(invoice => Charge(invoice, balance))` runs a void-like step without losing the invoice). Overload resolution sends result-returning effects to the veto flavor deliberately: a result you'd ignore is a result that should count.
+
 ## Errors
 
 A failure carries exactly ONE immutable `Error`: an `OutcomeKind`, a pure-text `Description`, a structured `CallSite` (captured automatically), an optional `Exception`, and a single `Cause` chain (like `InnerException`). Aggregation is explicit — `Suspicious.Combine(...)` gathers independent checks (validation) into one aggregate error whose children live in `Details`, escalated to the most critical child kind:

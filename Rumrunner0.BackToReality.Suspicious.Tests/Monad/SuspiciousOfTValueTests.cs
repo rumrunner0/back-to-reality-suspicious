@@ -293,6 +293,52 @@ public sealed class SuspiciousOfTValueTests
 		Assert.Same(error, failure.Error);
 	}
 
+	/// <summary>Ensures that <c>Tap</c> observes only a value, lets a result-returning effect veto, and skips valueless results by reference.</summary>
+	[Fact]
+	public void Tap_ObservesValue_VetoesOnEffectFailure_AndSkipsValuelessResults()
+	{
+		var observed = 0;
+		var ok = Suspicious.Ok(42);
+
+		Assert.Same(ok, ok.Tap(_ => observed++));
+		Assert.Equal(1, observed);
+
+		var vetoed = ok.Tap(static _ => Suspicious.Unavailable("Storage is down"));
+
+		Assert.Equal(OutcomeKind.Unavailable, vetoed.Outcome);
+		Assert.Same(ok, ok.Tap(static _ => Suspicious.Ok()));
+		Assert.Throws<ArgumentNullException>(() => ok.Tap(static _ => (Suspicious)null!));
+
+		var partial = OutcomeKind.Custom("partial", 150, OutcomeSide.Any);
+		var kept = Suspicious.Success(partial, 7).Tap(static _ => Suspicious.Ok());
+
+		Assert.Equal(partial, kept.Outcome);
+
+		var miss = Suspicious.NoValue<int>();
+		var failure = Suspicious.Invalid<int>("Value is out of range");
+
+		Assert.Same(miss, miss.Tap(_ => observed++));
+		Assert.Same(miss, miss.Tap(static _ => Suspicious.Invalid("Never runs")));
+		Assert.Same(failure, failure.Tap(_ => observed++));
+		Assert.Equal(1, observed);
+	}
+
+	/// <summary>Ensures that <c>TapError</c> observes only a failure and flows the instance through.</summary>
+	[Fact]
+	public void TapError_ObservesOnlyFailure()
+	{
+		var observed = default(Error);
+		var failure = Suspicious.Invalid<int>("Value is out of range");
+
+		Assert.Same(failure, failure.TapError(e => observed = e));
+		Assert.Same(failure.Error, observed);
+
+		var ok = Suspicious.Ok(42);
+
+		Assert.Same(ok, ok.TapError(e => observed = null));
+		Assert.NotNull(observed);
+	}
+
 	/// <summary>Ensures that <c>MapError</c> maps only a failure and returns a success unchanged.</summary>
 	[Fact]
 	public void MapError_MapsOnlyFailure()

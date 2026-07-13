@@ -175,6 +175,47 @@ public sealed class SuspiciousTests
 		Assert.Same(failure.Error, failure.Then(static () => Suspicious.Ok(42)).Error);
 	}
 
+	/// <summary>Ensures that <c>Tap</c> observes any success, lets a result-returning effect veto, and skips a failure by reference.</summary>
+	[Fact]
+	public void Tap_ObservesAnySuccess_VetoesOnEffectFailure_AndSkipsFailure()
+	{
+		var observed = 0;
+		var ok = Suspicious.Ok();
+
+		Assert.Same(ok, ok.Tap(() => observed++));
+		Assert.Equal(1, observed);
+
+		var vetoed = ok.Tap(static () => Suspicious.Conflict("Entity already exists"));
+
+		Assert.Equal(OutcomeKind.Conflict, vetoed.Outcome);
+		Assert.Same(ok, ok.Tap(Suspicious.Ok));
+
+		var partial = OutcomeKind.Custom("partial", 150, OutcomeSide.Any);
+
+		Assert.Same(ok, ok.Tap(() => Suspicious.Success(partial)));
+		Assert.Throws<ArgumentNullException>(() => ok.Tap(static () => (Suspicious)null!));
+
+		var failure = Suspicious.Invalid("Name is required");
+
+		Assert.Same(failure, failure.Tap(() => observed++));
+		Assert.Same(failure, failure.Tap(Suspicious.Ok));
+		Assert.Equal(1, observed);
+	}
+
+	/// <summary>Ensures that <c>TapError</c> observes only a failure and flows the instance through.</summary>
+	[Fact]
+	public void TapError_ObservesOnlyFailure()
+	{
+		var observed = default(Error);
+		var failure = Suspicious.Invalid("Name is required");
+
+		Assert.Same(failure, failure.TapError(e => observed = e));
+		Assert.Same(failure.Error, observed);
+
+		Assert.Same(Suspicious.Ok(), Suspicious.Ok().TapError(e => observed = null));
+		Assert.NotNull(observed);
+	}
+
 	#endregion
 
 	#region Aggregation

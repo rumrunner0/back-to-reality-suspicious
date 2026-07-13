@@ -96,7 +96,7 @@ public sealed class Suspicious
 	/// <summary>Chains a <paramref name="binder" /> that itself returns a <see cref="Suspicious" />; a failure short-circuits.</summary>
 	/// <param name="binder">The binder.</param>
 	/// <returns>The result of the <paramref name="binder" />, or this failed <see cref="Suspicious" /> unchanged.</returns>
-	/// <remarks>The <paramref name="binder" /> runs on ANY success — rails gate execution, kinds never do; a non-<c>ok</c> success kind is consumed (the binder's outcome wins).</remarks>
+	/// <remarks>The <paramref name="binder" /> runs on ANY success; a non-<c>ok</c> success kind is consumed (the binder's outcome wins).</remarks>
 	public Suspicious Then(Func<Suspicious> binder)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(binder);
@@ -107,11 +107,50 @@ public sealed class Suspicious
 	/// <param name="binder">The binder.</param>
 	/// <typeparam name="TValue">The value type.</typeparam>
 	/// <returns>The result of the <paramref name="binder" />, or a failed <see cref="Suspicious{TValue}" /> carrying this <see cref="Error" />.</returns>
-	/// <remarks>The <paramref name="binder" /> runs on ANY success — rails gate execution, kinds never do; a non-<c>ok</c> success kind is consumed (the binder's outcome wins).</remarks>
+	/// <remarks>The <paramref name="binder" /> runs on ANY success; a non-<c>ok</c> success kind is consumed (the binder's outcome wins).</remarks>
 	public Suspicious<TValue> Then<TValue>(Func<Suspicious<TValue>> binder) where TValue : notnull
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(binder);
 		return this._error is not null ? Suspicious<TValue>.CreateFailure(this._error) : binder();
+	}
+
+	/// <summary>Runs an <paramref name="effect" /> against a success; this <see cref="Suspicious" /> flows through unchanged.</summary>
+	/// <param name="effect">The effect.</param>
+	/// <returns>This <see cref="Suspicious" />.</returns>
+	/// <remarks>The <paramref name="effect" /> runs on ANY success.</remarks>
+	public Suspicious Tap(Action effect)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(effect);
+		if (this._error is null) effect();
+
+		return this;
+	}
+
+	/// <summary>Runs a result-returning <paramref name="effect" /> against a success; its failure REPLACES this result, its success is discarded.</summary>
+	/// <param name="effect">The effect; must not produce <c>null</c>.</param>
+	/// <returns>The failed result of the <paramref name="effect" />, or this <see cref="Suspicious" /> unchanged.</returns>
+	/// <remarks>The <paramref name="effect" /> runs on ANY success; only its failure rail matters — the kind of its success is discarded and this instance flows through, so the original success kind is PRESERVED.</remarks>
+	/// <exception cref="ArgumentNullException">Thrown if the <paramref name="effect" /> is <c>null</c>, or if it produces <c>null</c>.</exception>
+	public Suspicious Tap(Func<Suspicious> effect)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(effect);
+		if (this._error is not null) return this;
+
+		var result = effect();
+		if (result is null) throw new ArgumentNullException(nameof(effect), "The effect produced null");
+
+		return result.IsFailure ? result : this;
+	}
+
+	/// <summary>Runs an <paramref name="effect" /> against the <see cref="Error" /> of a failure; this <see cref="Suspicious" /> flows through unchanged.</summary>
+	/// <param name="effect">The effect.</param>
+	/// <returns>This <see cref="Suspicious" />.</returns>
+	public Suspicious TapError(Action<Error> effect)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(effect);
+		if (this._error is not null) effect(this._error);
+
+		return this;
 	}
 
 	/// <summary>Maps the <see cref="Error" /> of a failure; a success is returned unchanged.</summary>

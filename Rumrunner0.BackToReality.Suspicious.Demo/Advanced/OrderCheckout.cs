@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>A checkout pipeline — one expression weaving unit and generic binds, a map and error enrichment.</summary>
-/// <remarks>Inventory (unit precondition) → reservation (unit→generic) → pricing (generic→generic) → discount (map) → charge (generic→unit→generic, keeping the value) → enrichment → boundary.</remarks>
+/// <summary>A checkout pipeline — one expression weaving unit and generic binds, a map, taps and error enrichment.</summary>
+/// <remarks>Inventory (unit precondition) → reservation (unit→generic) → pricing (generic→generic) → discount (map) → charge (tap — a void-like step that can veto) → telemetry (tap-error) → enrichment → boundary.</remarks>
 internal static class OrderCheckout
 {
 	/// <summary>Stock by SKU.</summary>
@@ -42,12 +42,15 @@ internal static class OrderCheckout
 			// map — transforms the value (a bulk discount); the rails stay untouched
 			.Map(static invoice => invoice.Total > 100m ? invoice with { Total = invoice.Total * 0.95m } : invoice)
 
-			// generic → unit → generic: Charge is void-like — its success carries nothing,
-			// so chaining it directly would end the pipeline as a unit result and the
-			// receipt would have no invoice. Inside the binder the invoice is still a local,
-			// so the inner chain runs the charge and, on its success, lifts the invoice back
-			// onto the value rail; a failed charge short-circuits out with its error instead.
-			.Then(invoice => Charge(invoice, balance).Then(() => Suspicious.Ok(invoice)))
+			// tap (the veto flavor): Charge is void-like — its success carries nothing, but
+			// the receipt still needs the invoice. Tap runs the effect and, on its success,
+			// lets the ORIGINAL result flow through; a failed charge replaces it instead.
+			// (Hand-rolled, this is .Then(i => Charge(i, balance).Then(() => Suspicious.Ok(i))).)
+			.Tap(invoice => Charge(invoice, balance))
+
+			// tap-error: observes the failure rail without touching it — telemetry mid-chain,
+			// BEFORE enrichment, so the raw kind is what gets logged.
+			.TapError(static e => Console.WriteLine($"(TapError logs: {e.Kind})"))
 
 			// enriches the failure side once, at the layer boundary
 			.MapError(static e => Error.Failure("Checkout failed", cause: e))
