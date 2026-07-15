@@ -282,5 +282,52 @@ public sealed class SuspiciousOfTValueAsyncExtensionsTests
 		await Assert.ThrowsAsync<ArgumentNullException>(() => ok.Tap(static _ => (Task)null!));
 	}
 
+	/// <summary>Ensures that every async member validates its arguments at the call — synchronously, before any task exists.</summary>
+	[Fact]
+	public void Guards_AreEager_AcrossFamilies()
+	{
+		var ok = Suspicious.Ok(42);
+		var okTask = Task.FromResult(Suspicious.Ok(42));
+
+		// Plain-source members: the guards run before the async Core is entered.
+		Assert.ThrowsAny<ArgumentException>(() => { _ = ok.Map((Func<int, Task<string>>)null!); });
+		Assert.ThrowsAny<ArgumentException>(() => { _ = ok.Map((Func<int, Task<string>>)null!, CancellationToken.None); });
+		Assert.ThrowsAny<ArgumentException>(() => { _ = ok.MapError((Func<Error, Task<Error>>)null!); });
+		Assert.ThrowsAny<ArgumentException>(() => { _ = ok.Tap((Func<int, Task>)null!); });
+		Assert.ThrowsAny<ArgumentException>(() => { _ = ok.TapError((Func<Error, Task>)null!); });
+		Assert.ThrowsAny<ArgumentException>(() => { _ = ok.Match((Func<int, Task<string>>)null!, static _ => Task.FromResult("error")); });
+
+		// Task-source members validate before awaiting the source.
+		Assert.ThrowsAny<ArgumentException>(() => { _ = okTask.Then((Func<int, Suspicious<string>>)null!); });
+		Assert.ThrowsAny<ArgumentException>(() => { _ = okTask.Map((Func<int, string>)null!); });
+		Assert.ThrowsAny<ArgumentException>(() => { _ = okTask.Select((Func<int, string>)null!); });
+
+		// A null source is misuse too — same synchronous throw.
+		Assert.ThrowsAny<ArgumentException>(() => { _ = ((Task<Suspicious<int>>)null!).AsUnit(); });
+	}
+
+	/// <summary>Ensures that null products fault the task, cancellation cancels it, and short-circuits complete it — none of them throw at the call.</summary>
+	[Fact]
+	public async Task Guards_FaultsAndCancellationLandInTheTask()
+	{
+		var ok = Suspicious.Ok(42);
+		var canceled = new CancellationToken(canceled: true);
+
+		// A null PRODUCT is not call-site misuse: the call returns normally with an already-faulted task.
+		var faulted = ok.Map(static _ => (Task<string>)null!);
+		Assert.True(faulted.IsFaulted);
+		await Assert.ThrowsAsync<ArgumentNullException>(() => faulted);
+
+		// Cancellation is control flow: the call returns normally with a canceled task, never a failed result.
+		var gated = ok.Map(static v => Task.FromResult(v * 2), canceled);
+		Assert.True(gated.IsCanceled);
+		await Assert.ThrowsAnyAsync<OperationCanceledException>(() => gated);
+
+		// A short-circuiting source never reaches the delegate or the token: the task completes successfully.
+		var shortCircuit = Suspicious.Fail<int>(Error.Failure(description: "Something failed")).Map(static _ => (Task<string>)null!, canceled);
+		Assert.True(shortCircuit.IsCompletedSuccessfully);
+		Assert.True((await shortCircuit).IsFailure);
+	}
+
 	#endregion
 }
