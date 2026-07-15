@@ -15,7 +15,7 @@ namespace Rumrunner0.BackToReality.Suspicious.Monad;
 /// <para>* Create instances via the factories on the non-generic <see cref="Suspicious" />.</para>
 /// </remarks>
 [JsonConverter(typeof(SuspiciousJsonConverterFactory))]
-public sealed class Suspicious<TValue> where TValue : notnull
+public sealed partial class Suspicious<TValue> where TValue : notnull
 {
 	#region Instance State
 
@@ -96,17 +96,6 @@ public sealed class Suspicious<TValue> where TValue : notnull
 	/// <summary>Error.</summary>
 	/// <remarks>Non-<c>null</c> if and only if this <see cref="Suspicious{TValue}" /> is a failure.</remarks>
 	public Error? Error => this._error;
-
-	/// <summary>Reinterprets this failed <see cref="Suspicious{TValue}" /> as a failed <see cref="Suspicious{TResult}" /> (the <see cref="Error" /> is carried over).</summary>
-	/// <typeparam name="TResult">The result value type.</typeparam>
-	/// <returns>A new failed <see cref="Suspicious{TResult}" /> with the same <see cref="Error" />.</returns>
-	/// <remarks>Total on the failure rail only (a success has no value to lift); the guard-style call site is <c>if (result.IsFailure) return result.AsFailure&lt;TResult&gt;();</c>.</remarks>
-	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TValue}" /> is a success (converting a success is a contract violation).</exception>
-	public Suspicious<TResult> AsFailure<TResult>() where TResult : notnull
-	{
-		if (this._error is null) throw new InvalidOperationException($"The {nameof(Suspicious<TValue>)} is a success; {nameof(this.AsFailure)} requires a failure");
-		return Suspicious<TResult>.CreateFailure(this._error);
-	}
 
 	#endregion
 

@@ -123,17 +123,6 @@ public sealed class SuspiciousAsyncExtensionsTests
 		Assert.Equal("success", switched);
 	}
 
-	/// <summary>Ensures that the task-wrapped unit <c>AsFailure</c> re-types the awaited failure.</summary>
-	[Fact]
-	public async Task AsFailure_OnTask_RetypesTheFailure()
-	{
-		var error = Error.Conflict("Entity already exists");
-		var retyped = await Task.FromResult(Suspicious.Fail(error)).AsFailure<int>();
-
-		Assert.Same(error, retyped.Error);
-		await Assert.ThrowsAsync<InvalidOperationException>(static () => Task.FromResult(Suspicious.Ok()).AsFailure<int>());
-	}
-
 	#endregion
 
 	#region Combine

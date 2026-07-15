@@ -15,7 +15,7 @@ namespace Rumrunner0.BackToReality.Suspicious.Monad;
 /// <summary>Result monad without a value that represents the outcome of a void-like operation.</summary>
 /// <remarks>Also hosts the static factories for <see cref="Suspicious{TValue}" />. Success is a per-instance fact which means an instance is a success iff no <see cref="Error" /> is attached.</remarks>
 [JsonConverter(typeof(SuspiciousJsonConverter))]
-public sealed class Suspicious
+public sealed partial class Suspicious
 {
 	#region Instance State
 

@@ -210,18 +210,18 @@ public sealed class SuspiciousOfTValueAsyncExtensionsTests
 
 	#region Conversion
 
-	/// <summary>Ensures that the task-wrapped <c>AsUnit</c> and <c>AsFailure</c> project the awaited result.</summary>
+	/// <summary>Ensures that the task-wrapped <c>AsUnit</c> drops the value axis of the awaited result.</summary>
 	[Fact]
-	public async Task AsUnit_AsFailure_OnTask_ProjectTheResult()
+	public async Task AsUnit_OnTask_DropsTheValueAxis()
 	{
 		var unit = await Task.FromResult(Suspicious.Ok(42)).AsUnit();
 
 		Assert.True(unit.IsSuccess);
 
 		var error = Error.Conflict("Entity already exists");
-		var retyped = await Task.FromResult(Suspicious.Fail<int>(error)).AsFailure<int, string>();
+		var failed = await Task.FromResult(Suspicious.Fail<int>(error)).AsUnit();
 
-		Assert.Same(error, retyped.Error);
+		Assert.Same(error, failed.Error);
 	}
 
 	#endregion

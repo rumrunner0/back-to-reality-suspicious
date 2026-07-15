@@ -52,7 +52,7 @@ var summary =
 
 Picking a consumption path: `Match`/`Switch` at boundaries where every rail must be handled; `GetValueOr` when a genuine fallback exists and the error can be discarded; `TryGetValue` for imperative glue (loops, early returns). All are first-class — they answer different questions.
 
-Architecturally, the types create and hold (factories, state, `Combine`, conversions) while every combinator — sync and async — is an extension method grouped in per-family classes; call syntax is unaffected.
+Architecturally, the types create and hold (factories, state, `Combine`, and the `AsUnit`/`AsFailure` conversions) while every other combinator — sync and async — is an extension method grouped in per-family classes; call syntax is unaffected either way.
 
 Two more axes: `MapError` rewrites or enriches the failure side (wrap with a `cause:` at a layer boundary) while successes pass through untouched; `AsUnit()` drops the value axis when only the outcome matters. The reverse re-typing exists for failures only — `AsFailure<T>()` carries the `Error` into a differently-typed result (`if (validation.IsFailure) return validation.AsFailure<User>();`); a success has no value to lift, so there it throws.
 

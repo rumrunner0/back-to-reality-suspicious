@@ -12,7 +12,7 @@ public static class SuspiciousLinqExtensions
 	/// <typeparam name="TValue">The source value type.</typeparam>
 	/// <typeparam name="TResult">The result value type.</typeparam>
 	/// <returns>A new <see cref="Suspicious{TResult}" />.</returns>
-	/// <remarks>LINQ query-syntax alias of <see cref="Suspicious{TValue}.Map{TResult}" />.</remarks>
+	/// <remarks>LINQ query-syntax alias of <see cref="SuspiciousOfTValueMapExtensions.Map{TValue, TResult}(Suspicious{TValue}, Func{TValue, TResult})" />.</remarks>
 	public static Suspicious<TResult> Select<TValue, TResult>
 	(
 		this Suspicious<TValue> source,
@@ -35,7 +35,7 @@ public static class SuspiciousLinqExtensions
 	/// <typeparam name="TIntermediate">The intermediate value type.</typeparam>
 	/// <typeparam name="TResult">The result value type.</typeparam>
 	/// <returns>A new <see cref="Suspicious{TResult}" />.</returns>
-	/// <remarks>LINQ query-syntax form of <see cref="Suspicious{TValue}.Then{TResult}" />.</remarks>
+	/// <remarks>LINQ query-syntax form of <see cref="SuspiciousOfTValueThenExtensions.Then{TValue, TResult}(Suspicious{TValue}, Func{TValue, Suspicious{TResult}})" />.</remarks>
 	public static Suspicious<TResult> SelectMany<TValue, TIntermediate, TResult>
 	(
 		this Suspicious<TValue> source,

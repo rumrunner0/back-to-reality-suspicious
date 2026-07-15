@@ -167,7 +167,7 @@ public sealed class SuspiciousOfTValueTests
 		var error = Error.Failure(description: "Something failed");
 
 		Assert.Equal(84, Suspicious.Ok(42).Match(onValue: static v => v * 2, onError: static _ => 0));
-		Assert.Same(error, Suspicious.Fail<int>(error).Match(onValue: static object (v) => v, onError: static object (e) => e));
+		Assert.Same(error, Suspicious.Fail<int>(error).Match(onValue: static _ => Error.Failure(description: "Unreachable"), onError: static e => e));
 		Assert.Throws<InvalidOperationException>(() => Suspicious.NoValue<int>().Match(onValue: static v => v, onError: static _ => 0));
 	}
 
