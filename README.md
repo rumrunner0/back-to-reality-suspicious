@@ -52,13 +52,13 @@ var summary =
 
 Picking a consumption path: `Match`/`Switch` at boundaries where every rail must be handled; `GetValueOr` when a genuine fallback exists and the error can be discarded; `TryGetValue` for imperative glue (loops, early returns). All are first-class — they answer different questions.
 
-Architecturally, the types create and hold (factories, state, `Combine`, and the `AsUnit`/`AsFailure` conversions) while every other combinator — sync and async — is an extension method grouped in per-family classes; call syntax is unaffected either way.
+Architecturally, the types create and hold (factories, state, `Combine`, and the `AsUnit`/`AsFailure` conversions) while every other combinator — sync and async — is an extension method grouped in per-family classes; call syntax is unaffected either way. Results compare by reference — consume them through the combinators; `Error`, `OutcomeKind`, and `CallSite` are records and compare by value.
 
 Two more axes: `MapError` rewrites or enriches the failure side (wrap with a `cause:` at a layer boundary) while successes pass through untouched; `AsUnit()` drops the value axis when only the outcome matters. The reverse re-typing exists for failures only — `AsFailure<T>()` carries the `Error` into a differently-typed result (`if (validation.IsFailure) return validation.AsFailure<User>();`); a success has no value to lift, so there it throws.
 
 `Tap`/`TapError` observe without touching — the instance flows through by reference (logging, metrics, audit mid-chain). The result-returning `Tap` overload is the veto flavor: the effect's failure replaces the result, its success is discarded, and the original — success kind included — flows on (`.Tap(invoice => Charge(invoice, balance))` runs a void-like step without losing the invoice). Overload resolution sends result-returning effects to the veto flavor deliberately: a result you'd ignore is a result that should count.
 
-The whole surface has a Task-based async mirror under the **same names** — sync and async are overloads, selected by the source type (`Task<Suspicious<T>>` vs plain) and the delegate shape, so chains flow without intermediate awaits:
+The pipeline surface has a Task-based async mirror under the **same names** — sync and async are overloads, selected by the source type (`Task<Suspicious<T>>` vs plain) and the delegate shape, so chains flow without intermediate awaits:
 
 ```csharp
 var line = await this.CheckQuota()                             // Task<Suspicious>
@@ -68,7 +68,7 @@ var line = await this.CheckQuota()                             // Task<Suspiciou
 	.Match(onValue: n => $"Hi, {n}", onError: e => $"No: {e.Description}");
 ```
 
-Every Task-returning member takes a trailing optional `CancellationToken`, checked between steps; async continuations also come in a token-receiving shape (`(v, ct) => …`). `OperationCanceledException` always propagates — cancellation is control flow, never converted into a result — and exceptions from continuations are never caught. The LINQ query syntax works over `Task<Suspicious<T>>` sources too, mixing sync and async `from` clauses; `Suspicious.Combine` accepts task collections (`Task.WhenAll` + the usual aggregation).
+Every Task-returning member takes a trailing optional `CancellationToken`, checked between steps; async continuations also come in a token-receiving shape (`(v, ct) => …`). `OperationCanceledException` always propagates — cancellation is control flow, never converted into a result — and exceptions from continuations are never caught. The LINQ query syntax works over `Task<Suspicious<T>>` sources too, mixing sync and async `from` clauses; `Suspicious.Combine` accepts task collections (`Task.WhenAll` + the usual aggregation), and task-wrapped results offer `AsUnit` for feeding them. The value-access helpers (`Is`, `TryGetValue`, `GetValueOr`) and `AsFailure` are deliberately sync-only — await first, then ask.
 
 ## Errors
 
@@ -94,7 +94,7 @@ if (all.IsFailure) return Suspicious.Fail<Report>(all.Error);
 return new Report(user.Value, quota.Value); // read-back — see the caveat below
 ```
 
-The read-back on the last line is safe only when those producers can't return a valueless success: `no_value` passes `Combine` as a *success* but carries no value, so `.Value` would throw — use `TryGetValue` in flows where a miss can occur. A value-keeping, error-accumulating `Combine<T1, T2>` (tuple result) is deliberately not shipped yet: unlike the fail-fast `Then`/query chains it would gather *all* errors and the values together, but its semantics for a valueless success (there is no tuple component to build from it) need deciding first.
+The read-back on the last line is safe only when those producers can't return a valueless success: `no_value` passes `Combine` as a *success* but carries no value, so `.Value` would throw — use `TryGetValue` in flows where a miss can occur. A value-keeping, error-accumulating `Combine<T1, T2>` (tuple result) is deliberately absent — it would gather *all* errors and values together (unlike the fail-fast `Then`/query chains), but its semantics for a valueless success (there is no tuple component to build from it) are undecided.
 
 The error tree is queryable: `error.Find(kind)` and `error.Contains(kind)` search the `Details` (recursively), then self, then the `Cause` chain — details-first means a query for the kind an aggregate escalated to resolves to the concrete child, not the synthetic aggregate. Both throw on a kind whose side can't ride the failure rail (e.g. `ok`) — such a kind can never appear in an error, so searching for it is API misuse, mirroring the `Error` constructor's own guard.
 
