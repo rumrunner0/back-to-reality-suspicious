@@ -2,6 +2,8 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
 using Rumrunner0.BackToReality.Suspicious.Serialization;
 
@@ -312,6 +314,542 @@ public sealed class Suspicious<TValue> where TValue : notnull
 	{
 		if (this._error is null) throw new InvalidOperationException($"The {nameof(Suspicious<TValue>)} is a success; {nameof(this.AsFailure)} requires a failure");
 		return Suspicious<TResult>.CreateFailure(this._error);
+	}
+
+	#endregion
+
+	#region Common API (Async)
+
+	/// <summary>Chains an async <paramref name="binder" />; valueless results short-circuit.</summary>
+	/// <param name="binder">The binder; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before the <paramref name="binder" /> runs.</param>
+	/// <typeparam name="TResult">The result value type.</typeparam>
+	/// <returns>A task with the result of the <paramref name="binder" />, or a propagated valueless result.</returns>
+	/// <remarks>The <paramref name="binder" /> runs ONLY when a value is present; both a success without a value and a failure are propagated unchanged (fail-fast). <see cref="OperationCanceledException" /> always propagates — cancellation is never converted into a result.</remarks>
+	/// <exception cref="ArgumentNullException">Thrown if the <paramref name="binder" /> is <c>null</c> (synchronously), or if it produces <c>null</c> (in the returned task).</exception>
+	public Task<Suspicious<TResult>> Then<TResult>
+	(
+		Func<TValue, Task<Suspicious<TResult>>> binder,
+		CancellationToken cancellationToken = default
+	)
+	where TResult : notnull
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(binder);
+
+		if (!this._hasValue) return Task.FromResult(this._error is not null ? Suspicious<TResult>.CreateFailure(this._error) : Suspicious<TResult>.CreateSuccess(this._outcome));
+		return Core(this, binder, cancellationToken);
+
+		static async Task<Suspicious<TResult>> Core(Suspicious<TValue> source, Func<TValue, Task<Suspicious<TResult>>> binder, CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+
+			var task = binder(source._value);
+			if (task is null) throw new ArgumentNullException(nameof(binder), "The binder produced null");
+
+			var result = await task.ConfigureAwait(false);
+			if (result is null) throw new ArgumentNullException(nameof(binder), "The binder produced null");
+
+			return result;
+		}
+	}
+
+	/// <summary>Chains an async token-receiving <paramref name="binder" />; valueless results short-circuit.</summary>
+	/// <param name="binder">The binder; receives the <paramref name="cancellationToken" />; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before the <paramref name="binder" /> runs and passed into it.</param>
+	/// <typeparam name="TResult">The result value type.</typeparam>
+	/// <returns>A task with the result of the <paramref name="binder" />, or a propagated valueless result.</returns>
+	public Task<Suspicious<TResult>> Then<TResult>
+	(
+		Func<TValue, CancellationToken, Task<Suspicious<TResult>>> binder,
+		CancellationToken cancellationToken = default
+	)
+	where TResult : notnull
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(binder);
+		return this.Then(value => binder(value, cancellationToken), cancellationToken);
+	}
+
+	/// <summary>Chains an async <paramref name="binder" /> that returns a unit result; valueless results short-circuit.</summary>
+	/// <param name="binder">The binder; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before the <paramref name="binder" /> runs.</param>
+	/// <returns>A task with the result of the <paramref name="binder" />, or a propagated valueless result.</returns>
+	/// <remarks>The <paramref name="binder" /> runs ONLY when a value is present; both a success without a value and a failure are propagated unchanged (fail-fast).</remarks>
+	/// <exception cref="ArgumentNullException">Thrown if the <paramref name="binder" /> is <c>null</c> (synchronously), or if it produces <c>null</c> (in the returned task).</exception>
+	public Task<Suspicious> Then
+	(
+		Func<TValue, Task<Suspicious>> binder,
+		CancellationToken cancellationToken = default
+	)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(binder);
+
+		if (!this._hasValue) return Task.FromResult(this._error is not null ? Suspicious.Fail(this._error) : Suspicious.Success(this._outcome));
+		return Core(this, binder, cancellationToken);
+
+		static async Task<Suspicious> Core(Suspicious<TValue> source, Func<TValue, Task<Suspicious>> binder, CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+
+			var task = binder(source._value);
+			if (task is null) throw new ArgumentNullException(nameof(binder), "The binder produced null");
+
+			var result = await task.ConfigureAwait(false);
+			if (result is null) throw new ArgumentNullException(nameof(binder), "The binder produced null");
+
+			return result;
+		}
+	}
+
+	/// <summary>Chains an async token-receiving <paramref name="binder" /> that returns a unit result; valueless results short-circuit.</summary>
+	/// <param name="binder">The binder; receives the <paramref name="cancellationToken" />; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before the <paramref name="binder" /> runs and passed into it.</param>
+	/// <returns>A task with the result of the <paramref name="binder" />, or a propagated valueless result.</returns>
+	public Task<Suspicious> Then
+	(
+		Func<TValue, CancellationToken, Task<Suspicious>> binder,
+		CancellationToken cancellationToken = default
+	)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(binder);
+		return this.Then(value => binder(value, cancellationToken), cancellationToken);
+	}
+
+	/// <summary>Maps the value with an async <paramref name="mapper" />; valueless results are propagated unchanged.</summary>
+	/// <param name="mapper">The mapper; must not produce <c>null</c>.</param>
+	/// <typeparam name="TResult">The result value type.</typeparam>
+	/// <returns>A task with a new <see cref="Suspicious{TResult}" />.</returns>
+	/// <remarks>A success with a value keeps its outcome (custom success kinds are preserved); a success without a value and a failure short-circuit. The token-less and token-taking forms are separate overloads (not one optional parameter) so that overload resolution prefers this async member over the sync <c>Map</c> for task-returning mappers.</remarks>
+	/// <exception cref="ArgumentNullException">Thrown if the <paramref name="mapper" /> is <c>null</c> (synchronously), or if it produces <c>null</c> (in the returned task).</exception>
+	public Task<Suspicious<TResult>> Map<TResult>(Func<TValue, Task<TResult>> mapper) where TResult : notnull
+	{
+		return this.Map(mapper, CancellationToken.None);
+	}
+
+	/// <summary>Maps the value with an async <paramref name="mapper" />; valueless results are propagated unchanged.</summary>
+	/// <param name="mapper">The mapper; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before the <paramref name="mapper" /> runs.</param>
+	/// <typeparam name="TResult">The result value type.</typeparam>
+	/// <returns>A task with a new <see cref="Suspicious{TResult}" />.</returns>
+	/// <remarks>A success with a value keeps its outcome (custom success kinds are preserved); a success without a value and a failure short-circuit.</remarks>
+	/// <exception cref="ArgumentNullException">Thrown if the <paramref name="mapper" /> is <c>null</c> (synchronously), or if it produces <c>null</c> (in the returned task).</exception>
+	public Task<Suspicious<TResult>> Map<TResult>
+	(
+		Func<TValue, Task<TResult>> mapper,
+		CancellationToken cancellationToken
+	)
+	where TResult : notnull
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(mapper);
+
+		if (!this._hasValue) return Task.FromResult(this._error is not null ? Suspicious<TResult>.CreateFailure(this._error) : Suspicious<TResult>.CreateSuccess(this._outcome));
+		return Core(this, mapper, cancellationToken);
+
+		static async Task<Suspicious<TResult>> Core(Suspicious<TValue> source, Func<TValue, Task<TResult>> mapper, CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+
+			var task = mapper(source._value);
+			if (task is null) throw new ArgumentNullException(nameof(mapper), "The mapper produced null");
+
+			var mapped = await task.ConfigureAwait(false);
+			return source.Map(_ => mapped);
+		}
+	}
+
+	/// <summary>Maps the value with an async token-receiving <paramref name="mapper" />; valueless results are propagated unchanged.</summary>
+	/// <param name="mapper">The mapper; receives the <paramref name="cancellationToken" />; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before the <paramref name="mapper" /> runs and passed into it.</param>
+	/// <typeparam name="TResult">The result value type.</typeparam>
+	/// <returns>A task with a new <see cref="Suspicious{TResult}" />.</returns>
+	public Task<Suspicious<TResult>> Map<TResult>
+	(
+		Func<TValue, CancellationToken, Task<TResult>> mapper,
+		CancellationToken cancellationToken = default
+	)
+	where TResult : notnull
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(mapper);
+		return this.Map(value => mapper(value, cancellationToken), cancellationToken);
+	}
+
+	/// <summary>Maps the error of a failure with an async <paramref name="mapper" />; a success is returned unchanged.</summary>
+	/// <param name="mapper">The mapper; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before the <paramref name="mapper" /> runs.</param>
+	/// <returns>A task with a new <see cref="Suspicious{TValue}" /> carrying the mapped error, or this unchanged success.</returns>
+	/// <exception cref="ArgumentNullException">Thrown if the <paramref name="mapper" /> is <c>null</c> (synchronously), or if it produces <c>null</c> (in the returned task).</exception>
+	public Task<Suspicious<TValue>> MapError
+	(
+		Func<Monad.Error, Task<Monad.Error>> mapper,
+		CancellationToken cancellationToken = default
+	)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(mapper);
+
+		if (this._error is null) return Task.FromResult(this);
+		return Core(this, this._error, mapper, cancellationToken);
+
+		static async Task<Suspicious<TValue>> Core(Suspicious<TValue> source, Error error, Func<Monad.Error, Task<Monad.Error>> mapper, CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+
+			var task = mapper(error);
+			if (task is null) throw new ArgumentNullException(nameof(mapper), "The mapper produced null");
+
+			var mapped = await task.ConfigureAwait(false);
+			return source.MapError(_ => mapped);
+		}
+	}
+
+	/// <summary>Maps the error of a failure with an async token-receiving <paramref name="mapper" />; a success is returned unchanged.</summary>
+	/// <param name="mapper">The mapper; receives the <paramref name="cancellationToken" />; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before the <paramref name="mapper" /> runs and passed into it.</param>
+	/// <returns>A task with a new <see cref="Suspicious{TValue}" /> carrying the mapped error, or this unchanged success.</returns>
+	public Task<Suspicious<TValue>> MapError
+	(
+		Func<Monad.Error, CancellationToken, Task<Monad.Error>> mapper,
+		CancellationToken cancellationToken = default
+	)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(mapper);
+		return this.MapError(error => mapper(error, cancellationToken), cancellationToken);
+	}
+
+	/// <summary>Runs an async <paramref name="effect" /> against the value; this <see cref="Suspicious{TValue}" /> flows through unchanged.</summary>
+	/// <param name="effect">The effect; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before the <paramref name="effect" /> runs.</param>
+	/// <returns>A task with this <see cref="Suspicious{TValue}" />.</returns>
+	/// <remarks>The <paramref name="effect" /> runs ONLY when a value is present; a valueless success and a failure skip it.</remarks>
+	/// <exception cref="ArgumentNullException">Thrown if the <paramref name="effect" /> is <c>null</c> (synchronously), or if it produces <c>null</c> (in the returned task).</exception>
+	public Task<Suspicious<TValue>> Tap
+	(
+		Func<TValue, Task> effect,
+		CancellationToken cancellationToken = default
+	)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(effect);
+
+		if (!this._hasValue) return Task.FromResult(this);
+		return Core(this, effect, cancellationToken);
+
+		static async Task<Suspicious<TValue>> Core(Suspicious<TValue> source, Func<TValue, Task> effect, CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+
+			var task = effect(source._value);
+			if (task is null) throw new ArgumentNullException(nameof(effect), "The effect produced null");
+
+			await task.ConfigureAwait(false);
+			return source;
+		}
+	}
+
+	/// <summary>Runs an async token-receiving <paramref name="effect" /> against the value; this <see cref="Suspicious{TValue}" /> flows through unchanged.</summary>
+	/// <param name="effect">The effect; receives the <paramref name="cancellationToken" />; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before the <paramref name="effect" /> runs and passed into it.</param>
+	/// <returns>A task with this <see cref="Suspicious{TValue}" />.</returns>
+	public Task<Suspicious<TValue>> Tap
+	(
+		Func<TValue, CancellationToken, Task> effect,
+		CancellationToken cancellationToken = default
+	)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(effect);
+		return this.Tap(value => effect(value, cancellationToken), cancellationToken);
+	}
+
+	/// <summary>Runs an async result-returning <paramref name="effect" /> against the value; its failure REPLACES this result, its success is discarded.</summary>
+	/// <param name="effect">The effect; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before the <paramref name="effect" /> runs.</param>
+	/// <returns>A task with a failed <see cref="Suspicious{TValue}" /> carrying the effect's error, or this <see cref="Suspicious{TValue}" /> unchanged.</returns>
+	/// <remarks>The <paramref name="effect" /> runs ONLY when a value is present; on its success this instance flows through, so the success kind is PRESERVED (unlike <c>Then</c>, which normalizes it).</remarks>
+	/// <exception cref="ArgumentNullException">Thrown if the <paramref name="effect" /> is <c>null</c> (synchronously), or if it produces <c>null</c> (in the returned task).</exception>
+	public Task<Suspicious<TValue>> Tap
+	(
+		Func<TValue, Task<Suspicious>> effect,
+		CancellationToken cancellationToken = default
+	)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(effect);
+
+		if (!this._hasValue) return Task.FromResult(this);
+		return Core(this, effect, cancellationToken);
+
+		static async Task<Suspicious<TValue>> Core(Suspicious<TValue> source, Func<TValue, Task<Suspicious>> effect, CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+
+			var task = effect(source._value);
+			if (task is null) throw new ArgumentNullException(nameof(effect), "The effect produced null");
+
+			var result = await task.ConfigureAwait(false);
+			if (result is null) throw new ArgumentNullException(nameof(effect), "The effect produced null");
+
+			return result.IsFailure ? result.AsFailure<TValue>() : source;
+		}
+	}
+
+	/// <summary>Runs an async token-receiving result-returning <paramref name="effect" /> against the value; its failure REPLACES this result, its success is discarded.</summary>
+	/// <param name="effect">The effect; receives the <paramref name="cancellationToken" />; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before the <paramref name="effect" /> runs and passed into it.</param>
+	/// <returns>A task with a failed <see cref="Suspicious{TValue}" /> carrying the effect's error, or this <see cref="Suspicious{TValue}" /> unchanged.</returns>
+	public Task<Suspicious<TValue>> Tap
+	(
+		Func<TValue, CancellationToken, Task<Suspicious>> effect,
+		CancellationToken cancellationToken = default
+	)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(effect);
+		return this.Tap(value => effect(value, cancellationToken), cancellationToken);
+	}
+
+	/// <summary>Runs an async <paramref name="effect" /> against the <see cref="Error" /> of a failure; this <see cref="Suspicious{TValue}" /> flows through unchanged.</summary>
+	/// <param name="effect">The effect; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before the <paramref name="effect" /> runs.</param>
+	/// <returns>A task with this <see cref="Suspicious{TValue}" />.</returns>
+	/// <exception cref="ArgumentNullException">Thrown if the <paramref name="effect" /> is <c>null</c> (synchronously), or if it produces <c>null</c> (in the returned task).</exception>
+	public Task<Suspicious<TValue>> TapError
+	(
+		Func<Monad.Error, Task> effect,
+		CancellationToken cancellationToken = default
+	)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(effect);
+
+		if (this._error is null) return Task.FromResult(this);
+		return Core(this, this._error, effect, cancellationToken);
+
+		static async Task<Suspicious<TValue>> Core(Suspicious<TValue> source, Error error, Func<Monad.Error, Task> effect, CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+
+			var task = effect(error);
+			if (task is null) throw new ArgumentNullException(nameof(effect), "The effect produced null");
+
+			await task.ConfigureAwait(false);
+			return source;
+		}
+	}
+
+	/// <summary>Runs an async token-receiving <paramref name="effect" /> against the <see cref="Error" /> of a failure; this <see cref="Suspicious{TValue}" /> flows through unchanged.</summary>
+	/// <param name="effect">The effect; receives the <paramref name="cancellationToken" />; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before the <paramref name="effect" /> runs and passed into it.</param>
+	/// <returns>A task with this <see cref="Suspicious{TValue}" />.</returns>
+	public Task<Suspicious<TValue>> TapError
+	(
+		Func<Monad.Error, CancellationToken, Task> effect,
+		CancellationToken cancellationToken = default
+	)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(effect);
+		return this.TapError(error => effect(error, cancellationToken), cancellationToken);
+	}
+
+	/// <summary>Matches this <see cref="Suspicious{TValue}" /> into a <typeparamref name="TResult" /> with async handlers.</summary>
+	/// <param name="onValue">The handler for a success with a value; must not produce <c>null</c>.</param>
+	/// <param name="onError">The handler for the failure rail; must not produce <c>null</c>.</param>
+	/// <typeparam name="TResult">The result type.</typeparam>
+	/// <returns>A task with the result of the invoked handler.</returns>
+	/// <remarks>Use this overload only in flows where a success without a value can't occur; otherwise use the overload with an <c>onNoValue</c> handler.</remarks>
+	/// <exception cref="InvalidOperationException">Thrown (in the returned task) if this <see cref="Suspicious{TValue}" /> is a success without a value — a contract violation of this overload.</exception>
+	public Task<TResult> Match<TResult>
+	(
+		Func<TValue, Task<TResult>> onValue,
+		Func<Monad.Error, Task<TResult>> onError
+	)
+	{
+		return this.Match(onValue, onError, CancellationToken.None);
+	}
+
+	/// <summary>Matches this <see cref="Suspicious{TValue}" /> into a <typeparamref name="TResult" /> with async handlers.</summary>
+	/// <param name="onValue">The handler for a success with a value; must not produce <c>null</c>.</param>
+	/// <param name="onError">The handler for the failure rail; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before a handler runs.</param>
+	/// <typeparam name="TResult">The result type.</typeparam>
+	/// <returns>A task with the result of the invoked handler.</returns>
+	/// <remarks>Use this overload only in flows where a success without a value can't occur; otherwise use the overload with an <c>onNoValue</c> handler.</remarks>
+	/// <exception cref="InvalidOperationException">Thrown (in the returned task) if this <see cref="Suspicious{TValue}" /> is a success without a value — a contract violation of this overload.</exception>
+	public Task<TResult> Match<TResult>
+	(
+		Func<TValue, Task<TResult>> onValue,
+		Func<Monad.Error, Task<TResult>> onError,
+		CancellationToken cancellationToken
+	)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(onValue);
+		ArgumentExceptionExtensions.ThrowIfNull(onError);
+
+		return Core(this, onValue, onError, cancellationToken);
+
+		static async Task<TResult> Core(Suspicious<TValue> source, Func<TValue, Task<TResult>> onValue, Func<Monad.Error, Task<TResult>> onError, CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+
+			if (source._hasValue)
+			{
+				var task = onValue(source._value);
+				if (task is null) throw new ArgumentNullException(nameof(onValue), "The handler produced null");
+				return await task.ConfigureAwait(false);
+			}
+
+			if (source._error is { } error)
+			{
+				var task = onError(error);
+				if (task is null) throw new ArgumentNullException(nameof(onError), "The handler produced null");
+				return await task.ConfigureAwait(false);
+			}
+
+			throw new InvalidOperationException($"The {nameof(Suspicious<TValue>)} is a success without a value; use the {nameof(Match)} overload with an 'onNoValue' handler");
+		}
+	}
+
+	/// <summary>Matches this <see cref="Suspicious{TValue}" /> into a <typeparamref name="TResult" /> with async handlers.</summary>
+	/// <param name="onValue">The handler for a success with a value; must not produce <c>null</c>.</param>
+	/// <param name="onNoValue">The handler for a success without a value; must not produce <c>null</c>.</param>
+	/// <param name="onError">The handler for the failure rail; must not produce <c>null</c>.</param>
+	/// <typeparam name="TResult">The result type.</typeparam>
+	/// <returns>A task with the result of the invoked handler.</returns>
+	public Task<TResult> Match<TResult>
+	(
+		Func<TValue, Task<TResult>> onValue,
+		Func<Task<TResult>> onNoValue,
+		Func<Monad.Error, Task<TResult>> onError
+	)
+	{
+		return this.Match(onValue, onNoValue, onError, CancellationToken.None);
+	}
+
+	/// <summary>Matches this <see cref="Suspicious{TValue}" /> into a <typeparamref name="TResult" /> with async handlers.</summary>
+	/// <param name="onValue">The handler for a success with a value; must not produce <c>null</c>.</param>
+	/// <param name="onNoValue">The handler for a success without a value; must not produce <c>null</c>.</param>
+	/// <param name="onError">The handler for the failure rail; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before a handler runs.</param>
+	/// <typeparam name="TResult">The result type.</typeparam>
+	/// <returns>A task with the result of the invoked handler.</returns>
+	public Task<TResult> Match<TResult>
+	(
+		Func<TValue, Task<TResult>> onValue,
+		Func<Task<TResult>> onNoValue,
+		Func<Monad.Error, Task<TResult>> onError,
+		CancellationToken cancellationToken
+	)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(onValue);
+		ArgumentExceptionExtensions.ThrowIfNull(onNoValue);
+		ArgumentExceptionExtensions.ThrowIfNull(onError);
+
+		return Core(this, onValue, onNoValue, onError, cancellationToken);
+
+		static async Task<TResult> Core(Suspicious<TValue> source, Func<TValue, Task<TResult>> onValue, Func<Task<TResult>> onNoValue, Func<Monad.Error, Task<TResult>> onError, CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+
+			if (source._hasValue)
+			{
+				var task = onValue(source._value);
+				if (task is null) throw new ArgumentNullException(nameof(onValue), "The handler produced null");
+				return await task.ConfigureAwait(false);
+			}
+
+			if (source._error is { } error)
+			{
+				var task = onError(error);
+				if (task is null) throw new ArgumentNullException(nameof(onError), "The handler produced null");
+				return await task.ConfigureAwait(false);
+			}
+
+			var noValueTask = onNoValue();
+			if (noValueTask is null) throw new ArgumentNullException(nameof(onNoValue), "The handler produced null");
+			return await noValueTask.ConfigureAwait(false);
+		}
+	}
+
+	/// <summary>Switches on this <see cref="Suspicious{TValue}" /> with async handlers.</summary>
+	/// <param name="onValue">The handler for a success with a value; must not produce <c>null</c>.</param>
+	/// <param name="onError">The handler for the failure rail; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before a handler runs.</param>
+	/// <returns>A task that completes when the invoked handler completes.</returns>
+	/// <remarks>Use this overload only in flows where a success without a value can't occur; otherwise use the overload with an <c>onNoValue</c> handler.</remarks>
+	/// <exception cref="InvalidOperationException">Thrown (in the returned task) if this <see cref="Suspicious{TValue}" /> is a success without a value — a contract violation of this overload.</exception>
+	public Task Switch
+	(
+		Func<TValue, Task> onValue,
+		Func<Monad.Error, Task> onError,
+		CancellationToken cancellationToken = default
+	)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(onValue);
+		ArgumentExceptionExtensions.ThrowIfNull(onError);
+
+		return Core(this, onValue, onError, cancellationToken);
+
+		static async Task Core(Suspicious<TValue> source, Func<TValue, Task> onValue, Func<Monad.Error, Task> onError, CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+
+			if (source._hasValue)
+			{
+				var task = onValue(source._value);
+				if (task is null) throw new ArgumentNullException(nameof(onValue), "The handler produced null");
+				await task.ConfigureAwait(false);
+				return;
+			}
+
+			if (source._error is { } error)
+			{
+				var task = onError(error);
+				if (task is null) throw new ArgumentNullException(nameof(onError), "The handler produced null");
+				await task.ConfigureAwait(false);
+				return;
+			}
+
+			throw new InvalidOperationException($"The {nameof(Suspicious<TValue>)} is a success without a value; use the {nameof(Switch)} overload with an 'onNoValue' handler");
+		}
+	}
+
+	/// <summary>Switches on this <see cref="Suspicious{TValue}" /> with async handlers.</summary>
+	/// <param name="onValue">The handler for a success with a value; must not produce <c>null</c>.</param>
+	/// <param name="onNoValue">The handler for a success without a value; must not produce <c>null</c>.</param>
+	/// <param name="onError">The handler for the failure rail; must not produce <c>null</c>.</param>
+	/// <param name="cancellationToken">The cancellation token; checked before a handler runs.</param>
+	/// <returns>A task that completes when the invoked handler completes.</returns>
+	public Task Switch
+	(
+		Func<TValue, Task> onValue,
+		Func<Task> onNoValue,
+		Func<Monad.Error, Task> onError,
+		CancellationToken cancellationToken = default
+	)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(onValue);
+		ArgumentExceptionExtensions.ThrowIfNull(onNoValue);
+		ArgumentExceptionExtensions.ThrowIfNull(onError);
+
+		return Core(this, onValue, onNoValue, onError, cancellationToken);
+
+		static async Task Core(Suspicious<TValue> source, Func<TValue, Task> onValue, Func<Task> onNoValue, Func<Monad.Error, Task> onError, CancellationToken cancellationToken)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+
+			if (source._hasValue)
+			{
+				var task = onValue(source._value);
+				if (task is null) throw new ArgumentNullException(nameof(onValue), "The handler produced null");
+				await task.ConfigureAwait(false);
+				return;
+			}
+
+			if (source._error is { } error)
+			{
+				var task = onError(error);
+				if (task is null) throw new ArgumentNullException(nameof(onError), "The handler produced null");
+				await task.ConfigureAwait(false);
+				return;
+			}
+
+			var noValueTask = onNoValue();
+			if (noValueTask is null) throw new ArgumentNullException(nameof(onNoValue), "The handler produced null");
+			await noValueTask.ConfigureAwait(false);
+		}
 	}
 
 	#endregion

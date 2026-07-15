@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Rumrunner0.BackToReality.Suspicious.Demo.Advanced;
 using Rumrunner0.BackToReality.Suspicious.Demo.Essentials;
 
@@ -18,6 +19,7 @@ Run("Advanced 2. Partial import", PartialImport.Run);
 Run("Advanced 3. Error triage", ErrorTriage.Run);
 Run("Advanced 4. JSON transport", JsonTransport.Run);
 Run("Advanced 5. Order checkout", OrderCheckout.Run);
+await RunAsync("Advanced 6. Async pipeline", AsyncPipeline.Run);
 
 return;
 
@@ -27,4 +29,12 @@ static void Run(string title, Action example)
 	Console.WriteLine($"--- {title} ---");
 	Console.WriteLine();
 	example();
+}
+
+static async Task RunAsync(string title, Func<Task> example)
+{
+	Console.WriteLine();
+	Console.WriteLine($"--- {title} ---");
+	Console.WriteLine();
+	await example();
 }

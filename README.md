@@ -56,6 +56,18 @@ Two more axes: `MapError` rewrites or enriches the failure side (wrap with a `ca
 
 `Tap`/`TapError` observe without touching — the instance flows through by reference (logging, metrics, audit mid-chain). The result-returning `Tap` overload is the veto flavor: the effect's failure replaces the result, its success is discarded, and the original — success kind included — flows on (`.Tap(invoice => Charge(invoice, balance))` runs a void-like step without losing the invoice). Overload resolution sends result-returning effects to the veto flavor deliberately: a result you'd ignore is a result that should count.
 
+The whole surface has a Task-based async mirror under the **same names** — sync and async are overloads, selected by the source type (`Task<Suspicious<T>>` vs plain) and the delegate shape, so chains flow without intermediate awaits:
+
+```csharp
+var line = await this.CheckQuota()                             // Task<Suspicious>
+	.Then(() => this.LoadProfile(id))                          // async binder — no await needed between steps
+	.Map(profile => profile.Name)                              // sync mapper on a task source
+	.Tap((p, ct) => this.Audit(p, ct), cancellationToken)      // the token flows into the effect
+	.Match(onValue: n => $"Hi, {n}", onError: e => $"No: {e.Description}");
+```
+
+Every Task-returning member takes a trailing optional `CancellationToken`, checked between steps; async continuations also come in a token-receiving shape (`(v, ct) => …`). `OperationCanceledException` always propagates — cancellation is control flow, never converted into a result — and exceptions from continuations are never caught. The LINQ query syntax works over `Task<Suspicious<T>>` sources too, mixing sync and async `from` clauses; `Suspicious.Combine` accepts task collections (`Task.WhenAll` + the usual aggregation).
+
 ## Errors
 
 A failure carries exactly ONE immutable `Error`: an `OutcomeKind`, a pure-text `Description`, a structured `CallSite` (captured automatically), an optional `Exception`, and a single `Cause` chain (like `InnerException`). Aggregation is explicit — `Suspicious.Combine(...)` gathers independent checks (validation) into one aggregate error whose children live in `Details`, escalated to the most critical child kind:
@@ -117,4 +129,4 @@ Don't serialize results into public API schemas — `Match` into DTOs/ProblemDet
 
 ## Demo
 
-A guided tour lives in the `…Demo` project: `Essentials/` walks the fundamentals in reading order (creating → consuming → kinds → the dual-rail miss → chaining → query syntax → combining → errors and custom kinds); `Advanced/` shows real-world flows (a layered registration boundary, an any-side `partial` import, error triage, JSON transport, and a checkout pipeline chaining both result types in one expression). Run it with `dotnet run --project Rumrunner0.BackToReality.Suspicious.Demo`.
+A guided tour lives in the `…Demo` project: `Essentials/` walks the fundamentals in reading order (creating → consuming → kinds → the dual-rail miss → chaining → query syntax → combining → errors and custom kinds); `Advanced/` shows real-world flows (a layered registration boundary, an any-side `partial` import, error triage, JSON transport, a checkout pipeline chaining both result types in one expression, and an async pipeline with cancellation plumbing). Run it with `dotnet run --project Rumrunner0.BackToReality.Suspicious.Demo`.
