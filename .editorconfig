@@ -1,0 +1,57 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = tab
+trim_trailing_whitespace = true
+insert_final_newline = false
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[*.cs]
+# Namespaces
+csharp_style_namespace_declarations = file_scoped:warning
+
+# `this.` qualification is mandatory
+dotnet_style_qualification_for_field = true:warning
+dotnet_style_qualification_for_property = true:warning
+dotnet_style_qualification_for_method = true:warning
+dotnet_style_qualification_for_event = true:warning
+
+# `var` for initialized locals
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = true:suggestion
+
+# Braces: Allman; single-statement bodies may stay inline without braces
+csharp_new_line_before_open_brace = all
+csharp_prefer_braces = when_multiline:suggestion
+
+# Expression-bodied members for one-liners
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = when_on_single_line:suggestion
+csharp_style_expression_bodied_operators = when_on_single_line:suggestion
+csharp_style_expression_bodied_accessors = when_on_single_line:suggestion
+
+# Usings: System first; placement varies deliberately (inside the namespace where the Suspicious type must win over the namespace)
+dotnet_sort_system_directives_first = true
+
+# Private fields: _camelCase
+dotnet_naming_rule.private_fields_underscore_camel_case.severity = warning
+dotnet_naming_rule.private_fields_underscore_camel_case.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore_camel_case.style = underscore_camel_case
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_style.underscore_camel_case.required_prefix = _
+dotnet_naming_style.underscore_camel_case.capitalization = camel_case
+
+# Folders group files for navigation; the extension surface stays in ONE namespace (single-using discoverability)
+dotnet_style_namespace_match_folder = false
+dotnet_diagnostic.IDE0130.severity = none
+resharper_check_namespace_highlighting = none

@@ -1,177 +1,71 @@
-﻿using System;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
+using Rumrunner0.BackToReality.SharedExtensions.Collections;
 using Rumrunner0.BackToReality.SharedExtensions.Exceptions;
+using Rumrunner0.BackToReality.Suspicious.Serialization;
 
 namespace Rumrunner0.BackToReality.Suspicious.Monad;
 
-/// <summary>Result monad that wraps either an actual value or a set of errors.</summary>
-/// <typeparam name="TValue">The value type.</typeparam>
-public sealed class Suspicious<TValue> where TValue : notnull
+/// <summary>Result monad without a value that represents the outcome of a void-like operation.</summary>
+/// <remarks>
+/// <para>* Hosts the static factories for <see cref="Suspicious{TValue}" />.</para>
+/// <para>* Success is a per-instance fact which means an instance is a success iff no <see cref="Error" /> is attached.</para>
+/// </remarks>
+[JsonConverter(typeof(SuspiciousJsonConverter))]
+public sealed partial class Suspicious
 {
 	#region Instance State
 
-	/// <summary>Value.</summary>
-	private readonly TValue _value;
+	/// <summary>Outcome.</summary>
+	private readonly OutcomeKind _outcome;
 
-	/// <summary>Error set.</summary>
-	private readonly ErrorSet? _errorSet;
+	/// <summary>Error.</summary>
+	private readonly Error? _error;
 
-	/// <summary>State.</summary>
-	private readonly SuspiciousState _state;
-
-	/// <inheritdoc cref="Suspicious{TValue}" />
-	private Suspicious(TValue value)
+	/// <inheritdoc cref="Suspicious" />
+	private Suspicious(OutcomeKind outcome)
 	{
-		// Consider trade-offs for more comprehensive type-parameter checking.
-		// if (_valueIsOfReferenceType && value is null)
-		// {
-		// 	throw new ArgumentNullException(nameof(value));
-		// }
-		//
-		// if (_valueIsOfNullableValueType && EqualityComparer<TValue>.Default.Equals(value, default!))
-		// {
-		// 	throw new ArgumentNullException(nameof(value));
-		// }
+		ArgumentExceptionExtensions.ThrowIfNull(outcome);
+		if (!outcome.Side.AllowsSuccess) ArgumentExceptionExtensions.Throw($"The kind {outcome} doesn't allow the success side", nameof(outcome));
 
-		if (_valueCanBeNull && value is null) throw new ArgumentNullException(nameof(value));
-
-		this._value = value;
-		this._errorSet = null;
-		this._state = SuspiciousState.Value;
+		this._outcome = outcome;
+		this._error = null;
 	}
 
-	/// <inheritdoc cref="Suspicious{TValue}" />
-	private Suspicious(ErrorSet errorSet)
+	/// <inheritdoc cref="Suspicious" />
+	private Suspicious(Error error)
 	{
-		ArgumentExceptionExtensions.ThrowIfNull(errorSet);
+		ArgumentExceptionExtensions.ThrowIfNull(error);
 
-		this._value = default!;
-		this._errorSet = errorSet;
-		this._state = SuspiciousState.Error;
+		this._outcome = error.Kind;
+		this._error = error;
 	}
 
 	#endregion
 
-	#region Instance API
+	#region Common API
 
-	/// <summary>State.</summary>
-	public SuspiciousState State => this._state;
+	/// <summary>Outcome.</summary>
+	public OutcomeKind Outcome => this._outcome;
 
-	/// <summary>Flag that indicates whether this <see cref="Suspicious{TValue}" /> was created from a value.</summary>
-	[MemberNotNullWhen(true, nameof(_value))]
-	[MemberNotNullWhen(true, nameof(Value))]
-	[MemberNotNullWhen(false, nameof(_errorSet))]
-	[MemberNotNullWhen(false, nameof(ErrorSet))]
-	public bool FromValue => this._state == SuspiciousState.Value;
+	/// <summary>Error.</summary>
+	/// <remarks>Non-<c>null</c> iff this <see cref="Suspicious" /> is a failure.</remarks>
+	public Error? Error => this._error;
 
-	/// <summary>Flag that indicates whether this <see cref="Suspicious{TValue}" /> was created from an error.</summary>
-	[MemberNotNullWhen(false, nameof(_value))]
-	[MemberNotNullWhen(false, nameof(Value))]
-	[MemberNotNullWhen(true, nameof(_errorSet))]
-	[MemberNotNullWhen(true, nameof(ErrorSet))]
-	public bool FromError => this._state == SuspiciousState.Error;
+	/// <summary>Flag that indicates whether this <see cref="Suspicious" /> is a success (no <see cref="Error" /> is attached).</summary>
+	[MemberNotNullWhen(false, nameof(_error))]
+	[MemberNotNullWhen(false, nameof(Error))]
+	public bool IsSuccess => this._error is null;
 
-	// TODO: Rework Success to contain different Success values. NoValue can be success or error. Those must not be named Errors but something neutral.
-	/// <summary>EXPERIMENTAL! Flag that indicates whether this <see cref="Suspicious{TValue}" /> represents a success.</summary>
-	/// <remarks>Will be <c>true</c> if this <see cref="Suspicious{TValue}" /> was created from a value or contains <see cref="Error.NoValue" /> as the most critical error.</remarks>
-	public bool Success => this.FromValue || this.FindMostCriticalErrorDeep()?.Kind == ErrorKind.NoValue;
-
-	/// <summary>Value.</summary>
-	/// <remarks>Will be <c>default</c> of <typeparamref name="TValue" />, if this <see cref="Suspicious{TValue}" /> wasn't created from a value.</remarks>
-	public TValue Value => this.FromValue ? this._value : default!;
-
-	/// <summary>Error set.</summary>
-	/// <remarks>Will be <c>null</c>, if this <see cref="Suspicious{TValue}" /> wasn't created from an error.</remarks>
-	public ErrorSet ErrorSet => this.FromError ? this._errorSet : null!;
-
-	/// <summary>Adds an <see cref="Error" /> to the <see cref="ErrorSet" />.</summary>
-	/// <param name="error">The error.</param>
-	/// <returns>This <see cref="Suspicious{TValue}" />.</returns>
-	/// <remarks>To use this method, this <see cref="Suspicious{TValue}" /> must have been created from an error.</remarks>
-	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TValue}" /> wasn't created from an error.</exception>
-	public Suspicious<TValue> AddError(Error error)
-	{
-		this.EnsureCreatedFromError();
-		this._errorSet!.AddError(error);
-		// this._errorSet!.TryAddError(error);
-		return this;
-	}
-
-	/// <summary>
-	/// Sets the <see cref="ErrorSet" /> of an <paramref name="other" /> <see cref="Suspicious{TValue}" />
-	/// as the inner <see cref="ErrorSet" /> of this, indicating that this result was caused by <paramref name="other" />.
-	/// </summary>
-	/// <param name="other">The <see cref="Suspicious{TValue}" /> whose <see cref="ErrorSet" /> will be used as the inner.</param>
-	/// <typeparam name="TOtherValue">The type of the <paramref name="other" /> <see cref="Suspicious{TValue}" />.</typeparam>
-	/// <returns>This <see cref="Suspicious{TValue}" />.</returns>
-	/// <exception cref="InvalidOperationException">Thrown if either this instance or <paramref name="other" /> was not created from an error.</exception>
-	public Suspicious<TValue> SetCause<TOtherValue>(Suspicious<TOtherValue> other) where TOtherValue : notnull
-	{
-		this.EnsureCreatedFromError();
-		other.EnsureCreatedFromError();
-		this._errorSet!.SetCause(other._errorSet!);
-		return this;
-	}
-
-	/// <summary>Searches for the first <see cref="Error" /> with the provided <paramref name="kind" /> among errors only in the current <see cref="ErrorSet" />.</summary>
-	/// <param name="kind">The kind.</param>
-	/// <returns>An <see cref="Error" /> or <c>null</c>.</returns>
-	public Error? FindError(ErrorKind kind)
-	{
-		this.EnsureCreatedFromError();
-		return this._errorSet!.FindError(kind);
-	}
-
-	/// <summary>Searches for the first <see cref="Error" /> with the provided <paramref name="kind" /> among all errors in the cause chain, including self.</summary>
-	/// <param name="kind">The kind.</param>
-	/// <returns>An <see cref="Error" /> or <c>null</c>.</returns>
-	public Error? FindErrorDeep(ErrorKind kind)
-	{
-		this.EnsureCreatedFromError();
-		return this._errorSet!.FindErrorDeep(kind);
-	}
-
-	/// <summary>Searches for the most critical <see cref="Error" /> among all errors in the cause chain, including self.</summary>
-	/// <returns>An <see cref="Error" /> or <c>null</c>.</returns>
-	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TValue}" /> doesn't contain any errors.</exception>
-	public Error? FindMostCriticalErrorDeep()
-	{
-		this.EnsureCreatedFromError();
-		return this._errorSet!.FindMostCriticalErrorDeep();
-	}
-
-	/// <summary>Determines whether an <see cref="Error" /> with the provided <paramref name="kind" /> exists among errors only in the current <see cref="ErrorSet" />.</summary>
-	/// <param name="kind">The kind.</param>
-	/// <returns><c>true</c>, if an <see cref="Error" /> exists; <c>false</c>, otherwise.</returns>
-	public bool ContainsError(ErrorKind kind) => this.FindError(kind) is not null;
-
-	/// <summary>Determines whether an <see cref="Error" /> with the provided <paramref name="kind" /> exists among all errors in the cause chain, including self.</summary>
-	/// <param name="kind">The kind.</param>
-	/// <returns><c>true</c>, if an <see cref="Error" /> exists; <c>false</c>, otherwise.</returns>
-	public bool ContainsErrorDeep(ErrorKind kind) => this.FindErrorDeep(kind) is not null;
-
-	#endregion
-
-	#region Instance Utilities
-
-	/// <summary>Ensures that this <see cref="Suspicious{TValue}" /> instance was created from an error and has a valid <see cref="ErrorSet" />.</summary>
-	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TValue}" /> was not created from an error.</exception>
-	/// <exception cref="UnreachableException">Thrown if the internal <see cref="ErrorSet" /> is <c>null</c> despite <see cref="FromError" /> being <c>true</c>.</exception>
-	private void EnsureCreatedFromError()
-	{
-		if (!this.FromError) throw new InvalidOperationException($"The {nameof(Suspicious<TValue>)} wasn't created from an error");
-		if (this._errorSet is null) throw new UnreachableException($"The error set is null but '.{nameof(this.FromError)}' is {this.FromError}");
-	}
-
-	/// <summary>Ensures that this <see cref="Suspicious{TValue}" /> instance was created from an error and contains actual <see cref="Error" />s in its <see cref="ErrorSet" />.</summary>
-	/// <exception cref="InvalidOperationException">Thrown if this <see cref="Suspicious{TValue}" /> was not created from an error, or if its <see cref="ErrorSet" /> doesn't contain any errors.</exception>
-	private void EnsureContainsErrors()
-	{
-		this.EnsureCreatedFromError();
-		if (!this._errorSet!.ContainsErrors) throw new InvalidOperationException("The error set doesn't contain any errors");
-	}
+	/// <summary>Flag that indicates whether this <see cref="Suspicious" /> is a failure (an <see cref="Error" /> is attached).</summary>
+	[MemberNotNullWhen(true, nameof(_error))]
+	[MemberNotNullWhen(true, nameof(Error))]
+	public bool IsFailure => this._error is not null;
 
 	#endregion
 
@@ -182,19 +76,18 @@ public sealed class Suspicious<TValue> where TValue : notnull
 	/// <returns><c>true</c> if members should be printed; <c>false</c> otherwise.</returns>
 	private bool PrintMembers(StringBuilder builder)
 	{
-		if (this.FromValue) builder.Append(this._value.ToString());
-		else if (this.FromError) builder.Append(this._errorSet.ToString());
+		builder.Append($"Outcome = {this._outcome}");
+		if (this._error is not null) builder.Append($", Error = {this._error}");
 
 		return true;
 	}
 
-	/// <summary>Creates a string that represents this instance.</summary>
-	/// <returns>A string that represents this instance.</returns>
+	/// <inheritdoc />
 	public override string ToString()
 	{
 		var builder = new StringBuilder();
 
-		builder.Append($"{nameof(Suspicious<TValue>)} {{ ");
+		builder.Append($"{nameof(Suspicious)} {{ ");
 		if (this.PrintMembers(builder)) builder.Append(' ');
 		builder.Append('}');
 
@@ -203,40 +96,184 @@ public sealed class Suspicious<TValue> where TValue : notnull
 
 	#endregion
 
-	#region Static State
+	#region Creation (Unit)
 
-	/// <summary>Flag that indicates whether <typeparamref name="TValue" /> can be <c>null</c>.</summary>
-	private static readonly bool _valueCanBeNull = default(TValue) is null;
+	/// <summary>Cached <see cref="OutcomeKind.Ok" /> <see cref="Suspicious" />.</summary>
+	private static readonly Suspicious _ok = new (OutcomeKind.Ok);
 
-	// Consider trade-offs for more comprehensive type-parameter checking.
-	// /// <summary>Flag that indicates whether <typeparamref name="TValue" /> is a reference type.</summary>
-	// private static readonly bool _valueIsOfReferenceType = !typeof(TValue).IsValueType;
-	//
-	// /// <summary>Flag that indicates whether <typeparamref name="TValue" /> is a <see cref="Nullable{T}" /> value type.</summary>
-	// private static readonly bool _valueIsOfNullableValueType = Nullable.GetUnderlyingType(typeof(TValue)) is not null;
+	/// <summary>Creates an <see cref="OutcomeKind.Ok" /> <see cref="Suspicious" />.</summary>
+	/// <returns>The cached <see cref="OutcomeKind.Ok" /> <see cref="Suspicious" />.</returns>
+	public static Suspicious Ok() => _ok;
+
+	/// <summary>Creates a successful <see cref="Suspicious" /> with the provided <paramref name="kind" />.</summary>
+	/// <param name="kind">The kind that must allow the success <see cref="OutcomeKind.Side" />.</param>
+	/// <returns>A new successful <see cref="Suspicious" />.</returns>
+	public static Suspicious Success(OutcomeKind kind) => new (kind);
+
+	/// <summary>Creates a failed <see cref="Suspicious" /> from an <paramref name="error" />.</summary>
+	/// <param name="error">The error.</param>
+	/// <returns>A new failed <see cref="Suspicious" /> whose <see cref="Outcome" /> is taken from <paramref name="error" />.</returns>
+	public static Suspicious Fail(Error error) => new (error);
 
 	#endregion
 
-	#region Static API
+	#region Creation (Generic)
 
-	/// <summary>Creates a <see cref="Suspicious{TValue}" /> from a <paramref name="value" />.</summary>
-	/// <param name="value">The <paramref name="value" />.</param>
-	/// <returns>A new <see cref="Suspicious{TValue}" />.</returns>
-	internal static Suspicious<TValue> From(TValue value) => new (value);
+	/// <summary>Creates an <see cref="OutcomeKind.Ok" /> <see cref="Suspicious{TValue}" /> from a <paramref name="value" />.</summary>
+	/// <param name="value">The value.</param>
+	/// <typeparam name="TValue">The value type.</typeparam>
+	/// <returns>A new <see cref="OutcomeKind.Ok" /> <see cref="Suspicious{TValue}" />.</returns>
+	public static Suspicious<TValue> Ok<TValue>(TValue value)
+	where TValue : notnull
+	{
+		return Suspicious<TValue>.CreateSuccess(OutcomeKind.Ok, value);
+	}
 
-	/// <summary>Creates a <see cref="Suspicious{TValue}" /> from an <paramref name="errorSet" />.</summary>
-	/// <param name="errorSet">The <see cref="ErrorSet"/>.</param>
-	/// <returns>A new <see cref="Suspicious{TValue}" />.</returns>
-	internal static Suspicious<TValue> From(ErrorSet errorSet) => new (errorSet);
+	/// <summary>Creates a successful miss <see cref="OutcomeKind.NoValue" /> <see cref="Suspicious{TValue}" />.</summary>
+	/// <typeparam name="TValue">The value type.</typeparam>
+	/// <returns>The cached <see cref="OutcomeKind.NoValue" /> <see cref="Suspicious{TValue}" />.</returns>
+	/// <remarks>The home rail of <see cref="OutcomeKind.NoValue" /> is success (a plain miss). For a miss the producer treats as a failure, use <c>Fail&lt;TValue&gt;(Error.NoValue(…))</c> (the failure rail is the explicit opt-in).</remarks>
+	public static Suspicious<TValue> NoValue<TValue>()
+	where TValue : notnull
+	{
+		return Suspicious<TValue>.NoValue;
+	}
 
-	/// <summary>Implicitly converts a <typeparamref name="TValue" /> to a <see cref="string" />.</summary>
-	/// <param name="source">The <typeparamref name="TValue" />.</param>
-	public static implicit operator Suspicious<TValue>(TValue source) => From(source);
+	/// <summary>Creates a successful <see cref="Suspicious{TValue}" /> with the provided <paramref name="kind" /> and <paramref name="value" />.</summary>
+	/// <param name="kind">The kind that must allow the success <see cref="OutcomeKind.Side" />.</param>
+	/// <param name="value">The value.</param>
+	/// <typeparam name="TValue">The value type.</typeparam>
+	/// <returns>A new successful <see cref="Suspicious{TValue}" />.</returns>
+	public static Suspicious<TValue> Success<TValue>(OutcomeKind kind, TValue value)
+	where TValue : notnull
+	{
+		return Suspicious<TValue>.CreateSuccess(kind, value);
+	}
 
-	/// <summary>EXPERIMENTAL! May break switch-case. Implicitly converts a <see cref="Suspicious{TValue}" /> to a <see cref="bool" /> indicating that this <see cref="Suspicious{TValue}" /> was created from a value.</summary>
-	/// <param name="source">The source.</param>
-	/// <remarks><c>true</c>, only if <see cref="FromValue" /> is <c>true</c>; <c>false</c>, otherwise. Simply, this is a shortcut for <see cref="FromValue" />.</remarks>
-	public static implicit operator bool(Suspicious<TValue> source) => source.FromValue;
+	/// <summary>Creates a successful <see cref="Suspicious{TValue}" /> with the provided <paramref name="kind" /> and no value.</summary>
+	/// <param name="kind">The kind that must allow the success <see cref="OutcomeKind.Side" />.</param>
+	/// <typeparam name="TValue">The value type.</typeparam>
+	/// <returns>A new successful <see cref="Suspicious{TValue}" /> without a value.</returns>
+	public static Suspicious<TValue> Success<TValue>(OutcomeKind kind)
+	where TValue : notnull
+	{
+		return Suspicious<TValue>.CreateSuccess(kind);
+	}
+
+	/// <summary>Creates a failed <see cref="Suspicious{TValue}" /> from an <paramref name="error" />.</summary>
+	/// <param name="error">The error.</param>
+	/// <typeparam name="TValue">The value type.</typeparam>
+	/// <returns>A new failed <see cref="Suspicious{TValue}" /> whose <see cref="Outcome" /> is taken from <paramref name="error" />.</returns>
+	public static Suspicious<TValue> Fail<TValue>(Error error)
+	where TValue : notnull
+	{
+		return Suspicious<TValue>.CreateFailure(error);
+	}
+
+	#endregion
+
+	#region Aggregation
+
+	/// <summary>Combines multiple <see cref="Suspicious" /> into one that indicates whether all of them succeeded.</summary>
+	/// <param name="results">The results that must not be empty.</param>
+	/// <returns><see cref="Ok()" /> if all results are successes; a failed <see cref="Suspicious" /> carrying the single <see cref="Error" /> or an <see cref="Monad.Error.Aggregate" /> of all of them, otherwise.</returns>
+	public static Suspicious Combine(params IEnumerable<Suspicious> results)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(results);
+
+		var errors = new List<Error>();
+		var isEmpty = true;
+
+		foreach (var result in results)
+		{
+			isEmpty = false;
+			if (result.IsFailure) errors.Add(result.Error);
+		}
+
+		if (isEmpty) ArgumentExceptionExtensions.Throw("At least one result is required", nameof(results));
+
+		return errors.Count switch
+		{
+			0 => Ok(),
+			1 => Fail(errors[0]),
+			_ => Fail(Error.Aggregate(errors))
+		};
+	}
+
+	/// <summary>Combines multiple <see cref="Suspicious{TValue}" /> into a unit <see cref="Suspicious" /> that indicates whether all of them succeeded.</summary>
+	/// <param name="results">The results that must not be empty.</param>
+	/// <typeparam name="TValue">The value type.</typeparam>
+	/// <returns><see cref="Ok()" /> if all results are successes; a failed <see cref="Suspicious" /> carrying the single <see cref="Error" /> or an <see cref="Monad.Error.Aggregate" /> of all of them, otherwise.</returns>
+	/// <remarks>Values are discarded.</remarks>
+	public static Suspicious Combine<TValue>(params IEnumerable<Suspicious<TValue>> results) where TValue : notnull
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(results);
+
+		var errors = new List<Error>();
+		var isEmpty = true;
+
+		foreach (var result in results)
+		{
+			isEmpty = false;
+			if (result.IsFailure) errors.Add(result.Error);
+		}
+
+		if (isEmpty) ArgumentExceptionExtensions.Throw("At least one result is required", nameof(results));
+
+		return errors.Count switch
+		{
+			0 => Ok(),
+			1 => Fail(errors[0]),
+			_ => Fail(Error.Aggregate(errors))
+		};
+	}
+
+	/// <summary>Combines multiple <see cref="Suspicious" /> tasks into one that indicates whether all of them succeeded.</summary>
+	/// <param name="results">The result tasks that must not be empty.</param>
+	/// <param name="ct">The cancellation token that cancels the wait (not the underlying tasks).</param>
+	/// <returns>A task with <see cref="Ok()" /> if all results are successes; a failed <see cref="Suspicious" /> carrying the single <see cref="Error" /> or an <see cref="Monad.Error.Aggregate" /> of all of them, otherwise.</returns>
+	/// <remarks>A faulted input task faults the combined task (exceptions are never converted into results).</remarks>
+	public static Task<Suspicious> Combine(IEnumerable<Task<Suspicious>> results, CancellationToken ct = default)
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(results);
+
+		var tasks = results as Task<Suspicious>[] ?? results.ToArray();
+		if (tasks.None()) ArgumentExceptionExtensions.Throw("At least one result is required", nameof(results));
+
+		return Core(tasks, ct);
+
+		static async Task<Suspicious> Core(Task<Suspicious>[] tasks, CancellationToken ct)
+		{
+			var all = Task.WhenAll(tasks);
+			var results = ct.CanBeCanceled ? await all.WaitAsync(ct).ConfigureAwait(false) : await all.ConfigureAwait(false);
+
+			return Combine(results);
+		}
+	}
+
+	/// <summary>Combines multiple <see cref="Suspicious{TValue}" /> tasks into a unit <see cref="Suspicious" /> that indicates whether all of them succeeded.</summary>
+	/// <param name="results">The result tasks that must not be empty.</param>
+	/// <param name="ct">The cancellation token that cancels the wait (not the underlying tasks).</param>
+	/// <typeparam name="TValue">The value type.</typeparam>
+	/// <returns>A task with <see cref="Ok()" /> if all results are successes; a failed <see cref="Suspicious" /> carrying the single <see cref="Error" /> or an <see cref="Monad.Error.Aggregate" /> of all of them, otherwise.</returns>
+	/// <remarks>Values are discarded. A faulted input task faults the combined task (exceptions are never converted into results).</remarks>
+	public static Task<Suspicious> Combine<TValue>(IEnumerable<Task<Suspicious<TValue>>> results, CancellationToken ct = default) where TValue : notnull
+	{
+		ArgumentExceptionExtensions.ThrowIfNull(results);
+
+		var tasks = results as Task<Suspicious<TValue>>[] ?? results.ToArray();
+		if (tasks.None()) ArgumentExceptionExtensions.Throw("At least one result is required", nameof(results));
+
+		return Core(tasks, ct);
+
+		static async Task<Suspicious> Core(Task<Suspicious<TValue>>[] tasks, CancellationToken ct)
+		{
+			var all = Task.WhenAll(tasks);
+			var results = ct.CanBeCanceled ? await all.WaitAsync(ct).ConfigureAwait(false) : await all.ConfigureAwait(false);
+
+			return Combine(results);
+		}
+	}
 
 	#endregion
 }

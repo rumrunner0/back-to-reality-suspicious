@@ -1,0 +1,317 @@
+namespace Rumrunner0.BackToReality.Suspicious.Tests.Monad;
+
+using System;
+using System.Collections.Generic;
+using Rumrunner0.BackToReality.Suspicious.Monad;
+using Xunit;
+
+/// <summary>Tests for the unit <c>Suspicious</c>.</summary>
+public sealed class SuspiciousTests
+{
+	#region Creation
+
+	/// <summary>Ensures that <c>Ok</c> is a cached success without an error.</summary>
+	[Fact]
+	public void Ok_IsCachedSuccess()
+	{
+		var result = Suspicious.Ok();
+
+		Assert.Same(Suspicious.Ok(), result);
+		Assert.True(result.IsSuccess);
+		Assert.False(result.IsFailure);
+		Assert.Equal(OutcomeKind.Ok, result.Outcome);
+		Assert.Null(result.Error);
+	}
+
+	/// <summary>Ensures that <c>Success</c> creates a success with a custom success-side kind.</summary>
+	[Fact]
+	public void Success_WithCustomSuccessKind_CreatesSuccess()
+	{
+		var kind = OutcomeKind.Custom("warmed_up", 200, OutcomeSide.Success);
+		var result = Suspicious.Success(kind);
+
+		Assert.True(result.IsSuccess);
+		Assert.Equal(kind, result.Outcome);
+	}
+
+	/// <summary>Ensures that <c>Success</c> accepts an any-side kind.</summary>
+	[Fact]
+	public void Success_WithAnySideKind_CreatesSuccess()
+	{
+		Assert.True(Suspicious.Success(OutcomeKind.NoValue).IsSuccess);
+	}
+
+	/// <summary>Ensures that <c>Success</c> rejects a kind whose side doesn't allow the success rail.</summary>
+	[Fact]
+	public void Success_WithFailureOnlyKind_Throws()
+	{
+		Assert.ThrowsAny<ArgumentException>(() => Suspicious.Success(OutcomeKind.Invalid));
+	}
+
+	/// <summary>Ensures that <c>Fail</c> creates a failure whose outcome is the kind of the error.</summary>
+	[Fact]
+	public void Fail_CreatesFailure_WithOutcomeOfError()
+	{
+		var error = Error.Conflict("Entity already exists");
+		var result = Suspicious.Fail(error);
+
+		Assert.True(result.IsFailure);
+		Assert.False(result.IsSuccess);
+		Assert.Same(error, result.Error);
+		Assert.Equal(OutcomeKind.Conflict, result.Outcome);
+	}
+
+	/// <summary>Ensures that <c>Fail</c> rejects a <c>null</c> error — a failure without an error is unrepresentable.</summary>
+	[Fact]
+	public void Fail_WithNull_Throws()
+	{
+		Assert.ThrowsAny<ArgumentException>(() => Suspicious.Fail(null!));
+	}
+
+	/// <summary>Ensures that a failed result takes its outcome from the error, for every preset failure kind.</summary>
+	[Fact]
+	public void Fail_TakesOutcomeFromError_ForEveryPresetFailureKind()
+	{
+		Assert.Equal(OutcomeKind.Invalid, Suspicious.Fail(Error.Invalid("Name is required")).Outcome);
+		Assert.Equal(OutcomeKind.Conflict, Suspicious.Fail(Error.Conflict("Entity already exists")).Outcome);
+		Assert.Equal(OutcomeKind.Failure, Suspicious.Fail(Error.Failure()).Outcome);
+		Assert.Equal(OutcomeKind.Unavailable, Suspicious.Fail(Error.Unavailable()).Outcome);
+		Assert.Equal(OutcomeKind.Unexpected, Suspicious.Fail(Error.Unexpected()).Outcome);
+		Assert.Equal(OutcomeKind.Unexpected, Suspicious.Fail(Error.Unexpected(new ApplicationException("App exception occurred"))).Outcome);
+	}
+
+	/// <summary>Ensures that an <see cref="Error" /> is implicitly converted to a failure.</summary>
+	[Fact]
+	public void ImplicitConversionFromError_CreatesFailure()
+	{
+		Suspicious result = Error.Failure(description: "Something failed");
+
+		Assert.True(result.IsFailure);
+		Assert.Equal(OutcomeKind.Failure, result.Outcome);
+	}
+
+	#endregion
+
+	#region Instance API
+
+	/// <summary>Ensures that <c>Is</c> compares the outcome.</summary>
+	[Fact]
+	public void Is_ComparesOutcome()
+	{
+		var result = Suspicious.Fail(Error.Invalid("Name is required"));
+
+		Assert.True(result.Is(OutcomeKind.Invalid));
+		Assert.False(result.Is(OutcomeKind.Failure));
+		Assert.ThrowsAny<ArgumentException>(() => result.Is(null!));
+	}
+
+	/// <summary>Ensures that <c>Match</c> invokes the proper handler.</summary>
+	[Fact]
+	public void Match_InvokesProperHandler()
+	{
+		var error = Error.Failure(description: "Something failed");
+
+		Assert.Equal("success", Suspicious.Ok().Match(onSuccess: static () => "success", onError: static _ => "error"));
+		Assert.Same(error, Suspicious.Fail(error).Match<object>(onSuccess: static () => "success", onError: static e => e));
+	}
+
+	/// <summary>Ensures that <c>Switch</c> invokes the proper handler.</summary>
+	[Fact]
+	public void Switch_InvokesProperHandler()
+	{
+		var successCount = 0;
+		var errorCount = 0;
+
+		Suspicious.Ok().Switch(onSuccess: () => successCount++, onError: _ => errorCount++);
+		Suspicious.Fail(Error.Failure()).Switch(onSuccess: () => successCount++, onError: _ => errorCount++);
+
+		Assert.Equal(1, successCount);
+		Assert.Equal(1, errorCount);
+	}
+
+	/// <summary>Ensures that <c>MapError</c> maps only a failure and returns a success unchanged.</summary>
+	[Fact]
+	public void MapError_MapsOnlyFailure()
+	{
+		var success = Suspicious.Ok();
+		var failure = Suspicious.Fail(Error.Failure(description: "Something failed"));
+
+		Assert.Same(success, success.MapError(static e => Error.Unexpected(cause: e)));
+
+		var mapped = failure.MapError(static e => Error.Unexpected(cause: e));
+
+		Assert.Equal(OutcomeKind.Unexpected, mapped.Outcome);
+		Assert.Same(failure.Error, mapped.Error!.Cause);
+	}
+
+	/// <summary>Ensures that <c>AsFailure</c> carries the error into a failed generic result, and throws on a success.</summary>
+	[Fact]
+	public void AsFailure_CarriesError_AndThrowsOnSuccess()
+	{
+		var failure = Suspicious.Fail(Error.Conflict("Entity already exists"));
+		var converted = failure.AsFailure<int>();
+
+		Assert.True(converted.IsFailure);
+		Assert.Same(failure.Error, converted.Error);
+		Assert.Equal(OutcomeKind.Conflict, converted.Outcome);
+
+		Assert.Throws<InvalidOperationException>(static () => Suspicious.Ok().AsFailure<int>());
+	}
+
+	/// <summary>Ensures that <c>Then</c> runs the binder on ANY success — rails gate execution, kinds never do — and short-circuits a failure.</summary>
+	[Fact]
+	public void Then_RunsBinderOnAnySuccess_AndShortCircuitsFailure()
+	{
+		Assert.Equal(42, Suspicious.Ok().Then(static () => Suspicious.Ok(42)).Value);
+		Assert.Same(Suspicious.Ok(), Suspicious.Ok().Then(Suspicious.Ok));
+
+		var partial = OutcomeKind.Custom("partial", 150, OutcomeSide.Any);
+
+		Assert.Equal(OutcomeKind.Ok, Suspicious.Success(partial).Then(Suspicious.Ok).Outcome);
+
+		var failure = Suspicious.Fail(Error.Conflict("Entity already exists"));
+
+		Assert.Same(failure, failure.Then(Suspicious.Ok));
+		Assert.Same(failure.Error, failure.Then(static () => Suspicious.Ok(42)).Error);
+	}
+
+	/// <summary>Ensures that <c>Tap</c> observes any success, lets a result-returning effect veto, and skips a failure by reference.</summary>
+	[Fact]
+	public void Tap_ObservesAnySuccess_VetoesOnEffectFailure_AndSkipsFailure()
+	{
+		var observed = 0;
+		var ok = Suspicious.Ok();
+
+		Assert.Same(ok, ok.Tap(() => observed++));
+		Assert.Equal(1, observed);
+
+		var vetoed = ok.Tap(static () => Suspicious.Fail(Error.Conflict("Entity already exists")));
+
+		Assert.Equal(OutcomeKind.Conflict, vetoed.Outcome);
+		Assert.Same(ok, ok.Tap(Suspicious.Ok));
+
+		var partial = OutcomeKind.Custom("partial", 150, OutcomeSide.Any);
+
+		Assert.Same(ok, ok.Tap(() => Suspicious.Success(partial)));
+		Assert.Throws<ArgumentNullException>(() => ok.Tap(static () => (Suspicious)null!));
+
+		var failure = Suspicious.Fail(Error.Invalid("Name is required"));
+
+		Assert.Same(failure, failure.Tap(() => observed++));
+		Assert.Same(failure, failure.Tap(Suspicious.Ok));
+		Assert.Equal(1, observed);
+	}
+
+	/// <summary>Ensures that <c>TapError</c> observes only a failure and flows the instance through.</summary>
+	[Fact]
+	public void TapError_ObservesOnlyFailure()
+	{
+		var observed = default(Error);
+		var failure = Suspicious.Fail(Error.Invalid("Name is required"));
+
+		Assert.Same(failure, failure.TapError(e => observed = e));
+		Assert.Same(failure.Error, observed);
+
+		Assert.Same(Suspicious.Ok(), Suspicious.Ok().TapError(e => observed = null));
+		Assert.NotNull(observed);
+	}
+
+	#endregion
+
+	#region Aggregation
+
+	/// <summary>Ensures that <c>Combine</c> of successes only is <c>Ok</c>; a no-value success counts as a success.</summary>
+	[Fact]
+	public void Combine_WithSuccessesOnly_IsOk()
+	{
+		var result = Suspicious.Combine
+		(
+			Suspicious.Ok(),
+			Suspicious.Success(OutcomeKind.NoValue)
+		);
+
+		Assert.True(result.IsSuccess);
+		Assert.Equal(OutcomeKind.Ok, result.Outcome);
+	}
+
+	/// <summary>Ensures that <c>Combine</c> with exactly one failure carries that error without an aggregate.</summary>
+	[Fact]
+	public void Combine_WithSingleFailure_CarriesThatError()
+	{
+		var error = Error.Invalid("Name is required");
+		var result = Suspicious.Combine
+		(
+			Suspicious.Ok(),
+			Suspicious.Fail(error)
+		);
+
+		Assert.True(result.IsFailure);
+		Assert.Same(error, result.Error);
+		Assert.Empty(result.Error!.Details);
+	}
+
+	/// <summary>Ensures that <c>Combine</c> with multiple failures aggregates them and escalates the kind.</summary>
+	[Fact]
+	public void Combine_WithMultipleFailures_Aggregates()
+	{
+		var result = Suspicious.Combine
+		(
+			Error.Invalid("Name is required"),
+			Error.Invalid("Email is malformed"),
+			Error.Unexpected()
+		);
+
+		Assert.True(result.IsFailure);
+		Assert.Equal(OutcomeKind.Unexpected, result.Outcome);
+		Assert.Equal(3, result.Error!.Details.Count);
+		Assert.Equal("3 error(s) occurred", result.Error.Description);
+	}
+
+	/// <summary>Ensures that <c>Combine</c> over <c>Suspicious&lt;TValue&gt;</c> discards values and answers whether all succeeded.</summary>
+	[Fact]
+	public void Combine_OverGenericResults_DiscardsValues()
+	{
+		var allOk = Suspicious.Combine
+		(
+			Suspicious.Ok(42),
+			Suspicious.NoValue<int>()
+		);
+
+		Assert.True(allOk.IsSuccess);
+
+		var failed = Suspicious.Combine
+		(
+			Suspicious.Ok(42),
+			Error.Invalid("Value is out of range")
+		);
+
+		Assert.True(failed.IsFailure);
+		Assert.Equal(OutcomeKind.Invalid, failed.Outcome);
+	}
+
+	/// <summary>Ensures that <c>Combine</c> rejects <c>null</c> and empty inputs.</summary>
+	[Fact]
+	public void Combine_WithoutResults_Throws()
+	{
+		Assert.ThrowsAny<ArgumentException>(() => Suspicious.Combine((IEnumerable<Suspicious>)null!));
+		Assert.ThrowsAny<ArgumentException>(() => Suspicious.Combine());
+	}
+
+	#endregion
+
+	#region Display
+
+	/// <summary>Ensures that <c>ToString</c> contains the outcome and the error.</summary>
+	[Fact]
+	public void ToString_ContainsOutcomeAndError()
+	{
+		Assert.Equal("Suspicious { Outcome = ok (0) }", Suspicious.Ok().ToString());
+
+		var text = Suspicious.Fail(Error.Invalid("Name is required")).ToString();
+
+		Assert.StartsWith("Suspicious { Outcome = invalid (1000), Error = {", text);
+		Assert.Contains("Name is required", text);
+	}
+
+	#endregion
+}
