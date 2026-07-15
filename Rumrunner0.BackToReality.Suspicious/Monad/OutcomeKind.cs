@@ -75,7 +75,13 @@ public sealed record class OutcomeKind : IEquatable<OutcomeKind>, IComparable<Ou
 	/// <inheritdoc />
 	public override int GetHashCode()
 	{
-		return HashCode.Combine(this.EqualityContract, this._name, this._code, this._side);
+		return HashCode.Combine
+		(
+			this.EqualityContract,
+			this._name,
+			this._code,
+			this._side
+		);
 	}
 
 	#endregion
@@ -152,7 +158,7 @@ public sealed record class OutcomeKind : IEquatable<OutcomeKind>, IComparable<Ou
 	public static OutcomeKind Ok { get; } = new ("ok", code: 0, OutcomeSide.Success);
 
 	/// <summary>No-value <see cref="OutcomeKind" />.</summary>
-	/// <remarks>Nothing to return (e.g. a repository miss). Can ride either rail: a success without a value, or an <see cref="Error" /> if the producer treats the absence as a failure.</remarks>
+	/// <remarks>Nothing to return. Can ride either rail: a success without a value, or an <see cref="Error" /> if the producer treats the absence as a failure.</remarks>
 	public static OutcomeKind NoValue { get; } = new ("no_value", code: 10, OutcomeSide.Any);
 
 	/// <summary>Invalid <see cref="OutcomeKind" />.</summary>
@@ -164,7 +170,7 @@ public sealed record class OutcomeKind : IEquatable<OutcomeKind>, IComparable<Ou
 	public static OutcomeKind Conflict { get; } = new ("conflict", code: 1010, OutcomeSide.Failure);
 
 	/// <summary>Failure <see cref="OutcomeKind" />.</summary>
-	/// <remarks>General expected failure — the fallback when no more specific kind fits; prefer a specific kind where one exists.</remarks>
+	/// <remarks>General expected failure (the fallback when no more specific kind fits). Prefer a specific kind where one exists.</remarks>
 	public static OutcomeKind Failure { get; } = new ("failure", code: 1020, OutcomeSide.Failure);
 
 	/// <summary>Unavailable <see cref="OutcomeKind" />.</summary>
@@ -172,26 +178,29 @@ public sealed record class OutcomeKind : IEquatable<OutcomeKind>, IComparable<Ou
 	public static OutcomeKind Unavailable { get; } = new ("unavailable", code: 1030, OutcomeSide.Failure);
 
 	/// <summary>Unexpected <see cref="OutcomeKind" />.</summary>
-	/// <remarks>Unhandled or exceptional failure — the severity cap; no custom kind can outrank it.</remarks>
+	/// <remarks>Unhandled or exceptional failure. The severity cap, no custom kind can outrank it.</remarks>
 	public static OutcomeKind Unexpected { get; } = new ("unexpected", code: 1999, OutcomeSide.Failure);
 
-	/// <summary>Factory for a custom <see cref="OutcomeKind" />.</summary>
+	/// <summary>Creates a custom <see cref="OutcomeKind" />.</summary>
 	/// <param name="name">The name.</param>
-	/// <param name="code">The code; must be in [100, 900) or [1100, 1900).</param>
+	/// <param name="code">The code that must be in [100, 900) or [1100, 1900).</param>
 	/// <param name="side">The side.</param>
 	/// <returns>A new custom <see cref="OutcomeKind" />.</returns>
 	/// <exception cref="ArgumentException">Thrown if the <paramref name="code" /> is outside the custom ranges.</exception>
 	public static OutcomeKind Custom(string name, int code, OutcomeSide side)
 	{
-		if (code is not ((>= _customLowerMinCode and < _customLowerMaxCode) or (>= _customUpperMinCode and < _customUpperMaxCode)))
+		if (code is not (
+			(>= _customLowerMinCode and < _customLowerMaxCode) or
+			(>= _customUpperMinCode and < _customUpperMaxCode)))
 		{
-			ArgumentExceptionExtensions.Throw($"Code must be in [{_customLowerMinCode}, {_customLowerMaxCode}) or [{_customUpperMinCode}, {_customUpperMaxCode}) for custom kinds", nameof(code));
+			throw new ArgumentException($"Code must be in [{_customLowerMinCode}, {_customLowerMaxCode}) or [{_customUpperMinCode}, {_customUpperMaxCode}) for custom kinds", nameof(code));
 		}
 
 		return new (name, code, side);
 	}
 
-	/// <summary>Preset <see cref="OutcomeKind" />s — used by deserialization to return singleton instances.</summary>
+	/// <summary>Preset <see cref="OutcomeKind" />s.</summary>
+	/// <remarks>Used by deserialization to return singleton instances.</remarks>
 	internal static IReadOnlyList<OutcomeKind> Presets { get; } =
 	[
 		Ok,

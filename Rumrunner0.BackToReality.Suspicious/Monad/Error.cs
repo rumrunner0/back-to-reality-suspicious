@@ -33,6 +33,7 @@ public sealed record class Error : IEquatable<Error>
 	private readonly Error? _cause;
 
 	/// <summary>Child <see cref="Error" />s of an aggregate.</summary>
+	/// <remarks>Empty unless this <see cref="Error" /> was created by <see cref="Aggregate" />.</remarks>
 	private readonly IReadOnlyList<Error> _details;
 
 	/// <inheritdoc cref="Error" />
@@ -97,7 +98,7 @@ public sealed record class Error : IEquatable<Error>
 	}
 
 	/// <summary>Searches for the first <see cref="Error" /> with the provided <paramref name="kind" /> among the <see cref="Details" /> (recursively), self and the <see cref="Cause" /> chain.</summary>
-	/// <param name="kind">The kind; its <see cref="OutcomeKind.Side" /> must allow the failure side.</param>
+	/// <param name="kind">The kind that must allow the failure <see cref="OutcomeKind.Side" />.</param>
 	/// <returns>An <see cref="Error" /> or <c>null</c>.</returns>
 	/// <remarks>The <see cref="Details" /> are searched BEFORE self: an <see cref="Aggregate" /> escalates its kind from a child, so a query for that kind resolves to the concrete child rather than the synthetic aggregate. Only aggregates carry <see cref="Details" />, so for every other <see cref="Error" /> self is still effectively checked first.</remarks>
 	/// <exception cref="ArgumentException">Thrown if the <paramref name="kind" /> can never appear in an <see cref="Error" />.</exception>
@@ -120,7 +121,7 @@ public sealed record class Error : IEquatable<Error>
 	}
 
 	/// <summary>Determines whether an <see cref="Error" /> with the provided <paramref name="kind" /> exists among the <see cref="Details" /> (recursively), self and the <see cref="Cause" /> chain.</summary>
-	/// <param name="kind">The kind; its <see cref="OutcomeKind.Side" /> must allow the failure side.</param>
+	/// <param name="kind">The kind that must allow the failure <see cref="OutcomeKind.Side" />.</param>
 	/// <returns><c>true</c>, if an <see cref="Error" /> exists; <c>false</c>, otherwise.</returns>
 	/// <exception cref="ArgumentException">Thrown if the <paramref name="kind" /> can never appear in an <see cref="Error" />.</exception>
 	public bool Contains(OutcomeKind kind)
@@ -200,7 +201,7 @@ public sealed record class Error : IEquatable<Error>
 
 	#region Creation
 
-	/// <summary>Creates an <see cref="OutcomeKind.NoValue" /> <see cref="Error" /> — a miss the producer treats as a failure.</summary>
+	/// <summary>Creates an <see cref="OutcomeKind.NoValue" /> <see cref="Error" /> (a miss the producer treats as a failure).</summary>
 	/// <param name="description">The description.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
 	/// <param name="callerMember">The caller member.</param>
@@ -286,7 +287,7 @@ public sealed record class Error : IEquatable<Error>
 		);
 	}
 
-	/// <summary>Creates an <see cref="OutcomeKind.Failure" /> <see cref="Error" /> — the general expected failure.</summary>
+	/// <summary>Creates an <see cref="OutcomeKind.Failure" /> <see cref="Error" /> (the general expected failure).</summary>
 	/// <param name="description">The description.</param>
 	/// <param name="exception">The exception.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
@@ -403,7 +404,7 @@ public sealed record class Error : IEquatable<Error>
 	}
 
 	/// <summary>Creates an <see cref="Error" /> of a custom <see cref="OutcomeKind" />.</summary>
-	/// <param name="kind">The kind; its <see cref="OutcomeKind.Side" /> must allow the failure side.</param>
+	/// <param name="kind">The kind that must allow the failure <see cref="OutcomeKind.Side" />.</param>
 	/// <param name="description">The description.</param>
 	/// <param name="exception">The exception.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
@@ -434,7 +435,7 @@ public sealed record class Error : IEquatable<Error>
 	}
 
 	/// <summary>Creates an aggregate <see cref="Error" /> from the provided <paramref name="details" />.</summary>
-	/// <param name="details">The child <see cref="Error" />s; must be non-empty.</param>
+	/// <param name="details">The child <see cref="Error" />s that must not be empty.</param>
 	/// <param name="description">The description; defaults to <c>"{N} error(s) occurred"</c>.</param>
 	/// <param name="callerMember">The caller member.</param>
 	/// <param name="callerFilePath">The caller file path.</param>
@@ -450,11 +451,11 @@ public sealed record class Error : IEquatable<Error>
 	)
 	{
 		ArgumentExceptionExtensions.ThrowIfNull(details);
-		if (details.Count == 0) ArgumentExceptionExtensions.Throw("At least one detail is required", nameof(details));
+		if (details.None()) ArgumentExceptionExtensions.Throw("At least one detail is required", nameof(details));
 
 		return new
 		(
-			details.MaxBy(static d => d.Kind)!.Kind,
+			details.MaxBy(static e => e.Kind)!.Kind,
 			description ?? $"{details.Count} error(s) occurred",
 			exception: null,
 			CallSite.From(callerMember, callerFilePath, callerLine),
@@ -463,13 +464,14 @@ public sealed record class Error : IEquatable<Error>
 		);
 	}
 
-	/// <summary>Creates an <see cref="Error" /> from already-materialized parts — used by deserialization.</summary>
+	/// <summary>Creates an <see cref="Error" /> from already-materialized parts.</summary>
 	/// <param name="kind">The kind.</param>
 	/// <param name="description">The description.</param>
 	/// <param name="site">The call site.</param>
 	/// <param name="cause">The inner <see cref="Error" />.</param>
 	/// <param name="details">The child <see cref="Error" />s.</param>
 	/// <returns>A new <see cref="Error" />.</returns>
+	/// <remarks>Used by deserialization.</remarks>
 	internal static Error From
 	(
 		OutcomeKind kind,

@@ -74,6 +74,19 @@ public sealed partial class Suspicious<TValue> where TValue : notnull
 	/// <summary>Outcome.</summary>
 	public OutcomeKind Outcome => this._outcome;
 
+	/// <summary>Value.</summary>
+	/// <remarks>Safe access paths are <c>TryGetValue</c>, <c>GetValueOr</c> and the three-way <c>Match</c>/<c>Switch</c> extensions.</remarks>
+	/// <exception cref="InvalidOperationException">Thrown if no value is present (accessing <see cref="Value" /> on a valueless result is a contract violation, not control flow).</exception>
+	public TValue Value => this._hasValue ? this._value : throw new InvalidOperationException($"The {nameof(Suspicious<TValue>)} has no value; the outcome is {this._outcome}");
+
+	/// <summary>Flag that indicates whether a value is present.</summary>
+	/// <remarks>A present value implies a success; the reverse doesn't hold (see <see cref="OutcomeKind.NoValue" />).</remarks>
+	public bool HasValue => this._hasValue;
+
+	/// <summary>Error.</summary>
+	/// <remarks>Non-<c>null</c> iff this <see cref="Suspicious{TValue}" /> is a failure.</remarks>
+	public Error? Error => this._error;
+
 	/// <summary>Flag that indicates whether this <see cref="Suspicious{TValue}" /> is a success (no <see cref="Error" /> is attached).</summary>
 	[MemberNotNullWhen(false, nameof(_error))]
 	[MemberNotNullWhen(false, nameof(Error))]
@@ -83,19 +96,6 @@ public sealed partial class Suspicious<TValue> where TValue : notnull
 	[MemberNotNullWhen(true, nameof(_error))]
 	[MemberNotNullWhen(true, nameof(Error))]
 	public bool IsFailure => this._error is not null;
-
-	/// <summary>Flag that indicates whether a value is present.</summary>
-	/// <remarks>A present value implies a success; the reverse doesn't hold (see <see cref="OutcomeKind.NoValue" />).</remarks>
-	public bool HasValue => this._hasValue;
-
-	/// <summary>Value.</summary>
-	/// <remarks>Safe access paths are <c>TryGetValue</c>, <c>GetValueOr</c> and the three-way <c>Match</c>/<c>Switch</c> extensions.</remarks>
-	/// <exception cref="InvalidOperationException">Thrown if no value is present — accessing <see cref="Value" /> on a valueless result is a contract violation, not control flow.</exception>
-	public TValue Value => this._hasValue ? this._value : throw new InvalidOperationException($"The {nameof(Suspicious<TValue>)} has no value; the outcome is {this._outcome}");
-
-	/// <summary>Error.</summary>
-	/// <remarks>Non-<c>null</c> if and only if this <see cref="Suspicious{TValue}" /> is a failure.</remarks>
-	public Error? Error => this._error;
 
 	#endregion
 
