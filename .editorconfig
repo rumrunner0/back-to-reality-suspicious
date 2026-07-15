@@ -50,3 +50,8 @@ dotnet_naming_symbols.private_fields.applicable_kinds = field
 dotnet_naming_symbols.private_fields.applicable_accessibilities = private
 dotnet_naming_style.underscore_camel_case.required_prefix = _
 dotnet_naming_style.underscore_camel_case.capitalization = camel_case
+
+# Folders group files for navigation; the extension surface stays in ONE namespace (single-using discoverability)
+dotnet_style_namespace_match_folder = false
+dotnet_diagnostic.IDE0130.severity = none
+resharper_check_namespace_highlighting = none
