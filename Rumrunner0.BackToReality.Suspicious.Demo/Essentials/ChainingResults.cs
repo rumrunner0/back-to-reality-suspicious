@@ -34,7 +34,7 @@ internal static class ChainingResults
 		Console.WriteLine(Suspicious.Ok().Then(static () => ParseAge("30")));
 
 		// ...and a value chains into a void-like step.
-		Console.WriteLine(ParseAge("30").Then(static age => age >= 21 ? Suspicious.Ok() : Suspicious.Invalid("Must be at least 21")));
+		Console.WriteLine(ParseAge("30").Then(static age => age >= 21 ? Suspicious.Ok() : Error.Invalid("Must be at least 21")));
 	}
 
 	/// <summary>Parses an age.</summary>
@@ -42,7 +42,7 @@ internal static class ChainingResults
 	/// <returns>The age, or an <see cref="OutcomeKind.Invalid" /> failure.</returns>
 	private static Suspicious<int> ParseAge(string text)
 	{
-		return int.TryParse(text, out var age) ? Suspicious.Ok(age) : Suspicious.Invalid<int>($"'{text}' is not a number");
+		return int.TryParse(text, out var age) ? Suspicious.Ok(age) : Error.Invalid($"'{text}' is not a number");
 	}
 
 	/// <summary>Checks that an age is adult.</summary>
@@ -51,6 +51,6 @@ internal static class ChainingResults
 	private static Suspicious<int> CheckAdult(int age)
 	{
 		Console.WriteLine($"(CheckAdult runs for {age})");
-		return age >= 18 ? Suspicious.Ok(age) : Suspicious.Invalid<int>("Must be at least 18");
+		return age >= 18 ? Suspicious.Ok(age) : Error.Invalid("Must be at least 18");
 	}
 }

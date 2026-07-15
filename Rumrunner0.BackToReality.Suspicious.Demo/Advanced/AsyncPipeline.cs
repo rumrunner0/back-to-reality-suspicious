@@ -82,7 +82,7 @@ internal static class AsyncPipeline
 	private static async Task<Suspicious> CheckQuota()
 	{
 		await Task.Delay(1);
-		if (_quota <= 0) return Suspicious.Conflict("Request quota exhausted");
+		if (_quota <= 0) return Error.Conflict("Request quota exhausted");
 
 		_quota--;
 		return Suspicious.Ok();

@@ -31,8 +31,8 @@ internal static class OutcomeKinds
 		// Severity comparisons make policies one-liners.
 		Console.WriteLine($"unexpected outranks invalid: {OutcomeKind.Unexpected > OutcomeKind.Invalid}");
 
-		// Failure kinds have shorthands on both result types.
-		Console.WriteLine(Suspicious.Conflict("Entity already exists"));
-		Console.WriteLine(Suspicious.Unavailable<string>("Dependency timed out"));
+		// Failures print their kind too — `Error.*` mints them for either result type.
+		Console.WriteLine(Suspicious.Fail(Error.Conflict("Entity already exists")));
+		Console.WriteLine(Suspicious.Fail<string>(Error.Unavailable("Dependency timed out")));
 	}
 }

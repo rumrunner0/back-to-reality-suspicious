@@ -13,8 +13,8 @@ internal static class ErrorTriage
 		var run = Suspicious.Combine
 		(
 			Suspicious.Ok(),
-			Suspicious.Unavailable("Reporting warehouse timed out", exception: new TimeoutException("No response in 30 s")),
-			Suspicious.Invalid("Currency table has 3 malformed rows")
+			Error.Unavailable("Reporting warehouse timed out", exception: new TimeoutException("No response in 30 s")),
+			Error.Invalid("Currency table has 3 malformed rows")
 		);
 
 		if (run.IsSuccess)

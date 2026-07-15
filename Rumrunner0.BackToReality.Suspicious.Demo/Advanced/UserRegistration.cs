@@ -31,15 +31,15 @@ internal static class UserRegistration
 		// Independent field checks aggregate — the caller gets ALL violations at once.
 		var validation = Suspicious.Combine
 		(
-			string.IsNullOrWhiteSpace(name) ? Suspicious.Invalid("Name is required") : Suspicious.Ok(),
-			email.Contains('@') ? Suspicious.Ok() : Suspicious.Invalid($"Email '{email}' is malformed"),
-			int.TryParse(ageText, out var age) && age is >= 0 and <= 150 ? Suspicious.Ok() : Suspicious.Invalid($"Age '{ageText}' is out of range")
+			string.IsNullOrWhiteSpace(name) ? Error.Invalid("Name is required") : Suspicious.Ok(),
+			email.Contains('@') ? Suspicious.Ok() : Error.Invalid($"Email '{email}' is malformed"),
+			int.TryParse(ageText, out var age) && age is >= 0 and <= 150 ? Suspicious.Ok() : Error.Invalid($"Age '{ageText}' is out of range")
 		);
 
 		if (validation.IsFailure) return validation.AsFailure<User>();
 
 		// Dependent checks run sequentially and fail fast.
-		if (_emails.Contains(email)) return Suspicious.Conflict<User>($"Email '{email}' is already registered");
+		if (_emails.Contains(email)) return Error.Conflict($"Email '{email}' is already registered");
 
 		return Persist(new User(Guid.NewGuid(), name, email, age));
 	}

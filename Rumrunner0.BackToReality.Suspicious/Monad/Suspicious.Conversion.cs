@@ -17,5 +17,9 @@ public sealed partial class Suspicious
 		return Suspicious<TValue>.CreateFailure(this._error);
 	}
 
+	/// <summary>Implicitly converts an <see cref="Error" /> to a failed <see cref="Suspicious" />.</summary>
+	/// <param name="error">The error.</param>
+	public static implicit operator Suspicious(Error error) => Fail(error);
+
 	#endregion
 }

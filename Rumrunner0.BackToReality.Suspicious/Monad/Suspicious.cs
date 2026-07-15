@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -117,173 +115,6 @@ public sealed partial class Suspicious
 	/// <returns>A new failed <see cref="Suspicious" /> whose <see cref="Outcome" /> is taken from <paramref name="error" />.</returns>
 	public static Suspicious Fail(Error error) => new (error);
 
-	// TODO: Do we even need these Invalid, Conflict, Failure, Unavailable, Unexpected shorthands? We already have this implicit conversion from Error to Suspicious.
-
-	/// <summary>Creates a failed <see cref="Suspicious" /> with an <see cref="OutcomeKind.Invalid" /> <see cref="Error" />.</summary>
-	/// <param name="description">The description.</param>
-	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <param name="callerMember">The caller member.</param>
-	/// <param name="callerFilePath">The caller file path.</param>
-	/// <param name="callerLine">The caller line.</param>
-	/// <returns>A new failed <see cref="Suspicious" />.</returns>
-	public static Suspicious Invalid
-	(
-		string description,
-		Error? cause = null,
-		[CallerMemberName] string callerMember = "",
-		[CallerFilePath] string callerFilePath = "",
-		[CallerLineNumber] int callerLine = 0
-	)
-	{
-		return Fail(Error.Invalid
-		(
-			description,
-			cause,
-			callerMember,
-			callerFilePath,
-			callerLine
-		));
-	}
-
-	/// <summary>Creates a failed <see cref="Suspicious" /> with an <see cref="OutcomeKind.Conflict" /> <see cref="Error" />.</summary>
-	/// <param name="description">The description.</param>
-	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <param name="callerMember">The caller member.</param>
-	/// <param name="callerFilePath">The caller file path.</param>
-	/// <param name="callerLine">The caller line.</param>
-	/// <returns>A new failed <see cref="Suspicious" />.</returns>
-	public static Suspicious Conflict
-	(
-		string description,
-		Error? cause = null,
-		[CallerMemberName] string callerMember = "",
-		[CallerFilePath] string callerFilePath = "",
-		[CallerLineNumber] int callerLine = 0
-	)
-	{
-		return Fail(Error.Conflict
-		(
-			description,
-			cause,
-			callerMember,
-			callerFilePath,
-			callerLine
-		));
-	}
-
-	/// <summary>Creates a failed <see cref="Suspicious" /> with an <see cref="OutcomeKind.Failure" /> <see cref="Error" />.</summary>
-	/// <param name="description">The description.</param>
-	/// <param name="exception">The exception.</param>
-	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <param name="callerMember">The caller member.</param>
-	/// <param name="callerFilePath">The caller file path.</param>
-	/// <param name="callerLine">The caller line.</param>
-	/// <returns>A new failed <see cref="Suspicious" />.</returns>
-	public static Suspicious Failure
-	(
-		string? description = null,
-		Exception? exception = null,
-		Error? cause = null,
-		[CallerMemberName] string callerMember = "",
-		[CallerFilePath] string callerFilePath = "",
-		[CallerLineNumber] int callerLine = 0
-	)
-	{
-		return Fail(Error.Failure
-		(
-			description,
-			exception,
-			cause,
-			callerMember,
-			callerFilePath,
-			callerLine
-		));
-	}
-
-	/// <summary>Creates a failed <see cref="Suspicious" /> with an <see cref="OutcomeKind.Unavailable" /> <see cref="Error" />.</summary>
-	/// <param name="description">The description.</param>
-	/// <param name="exception">The exception.</param>
-	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <param name="callerMember">The caller member.</param>
-	/// <param name="callerFilePath">The caller file path.</param>
-	/// <param name="callerLine">The caller line.</param>
-	/// <returns>A new failed <see cref="Suspicious" />.</returns>
-	public static Suspicious Unavailable
-	(
-		string? description = null,
-		Exception? exception = null,
-		Error? cause = null,
-		[CallerMemberName] string callerMember = "",
-		[CallerFilePath] string callerFilePath = "",
-		[CallerLineNumber] int callerLine = 0
-	)
-	{
-		return Fail(Error.Unavailable
-		(
-			description,
-			exception,
-			cause,
-			callerMember,
-			callerFilePath,
-			callerLine
-		));
-	}
-
-	/// <summary>Creates a failed <see cref="Suspicious" /> with an <see cref="OutcomeKind.Unexpected" /> <see cref="Error" />.</summary>
-	/// <param name="exception">The exception.</param>
-	/// <param name="description">The description.</param>
-	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <param name="callerMember">The caller member.</param>
-	/// <param name="callerFilePath">The caller file path.</param>
-	/// <param name="callerLine">The caller line.</param>
-	/// <returns>A new failed <see cref="Suspicious" />.</returns>
-	public static Suspicious Unexpected
-	(
-		Exception exception,
-		string? description = null,
-		Error? cause = null,
-		[CallerMemberName] string callerMember = "",
-		[CallerFilePath] string callerFilePath = "",
-		[CallerLineNumber] int callerLine = 0
-	)
-	{
-		return Fail(Error.Unexpected
-		(
-			exception,
-			description,
-			cause,
-			callerMember,
-			callerFilePath,
-			callerLine
-		));
-	}
-
-	/// <summary>Creates a failed <see cref="Suspicious" /> with an <see cref="OutcomeKind.Unexpected" /> <see cref="Error" />.</summary>
-	/// <param name="description">The description.</param>
-	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <param name="callerMember">The caller member.</param>
-	/// <param name="callerFilePath">The caller file path.</param>
-	/// <param name="callerLine">The caller line.</param>
-	/// <returns>A new failed <see cref="Suspicious" />.</returns>
-	public static Suspicious Unexpected
-	(
-		string? description = null,
-		Error? cause = null,
-		[CallerMemberName] string callerMember = "",
-		[CallerFilePath] string callerFilePath = "",
-		[CallerLineNumber] int callerLine = 0
-	)
-	{
-		return Fail(Error.Unexpected
-		(
-			description,
-			cause,
-			callerMember,
-			callerFilePath,
-			callerLine
-		));
-	}
-
 	#endregion
 
 	#region Creation (Generic)
@@ -301,7 +132,7 @@ public sealed partial class Suspicious
 	/// <summary>Creates a successful miss <see cref="OutcomeKind.NoValue" /> <see cref="Suspicious{TValue}" />.</summary>
 	/// <typeparam name="TValue">The value type.</typeparam>
 	/// <returns>The cached <see cref="OutcomeKind.NoValue" /> <see cref="Suspicious{TValue}" />.</returns>
-	/// <remarks>A kind-named factory constructs on the home rail of its kind, and the home rail of <see cref="OutcomeKind.NoValue" /> is success (a plain miss). For a miss the producer treats as a failure, use <c>Fail&lt;TValue&gt;(Error.NoValue(…))</c> (the failure rail is the explicit opt-in).</remarks>
+	/// <remarks>The home rail of <see cref="OutcomeKind.NoValue" /> is success (a plain miss). For a miss the producer treats as a failure, use <c>Fail&lt;TValue&gt;(Error.NoValue(…))</c> (the failure rail is the explicit opt-in).</remarks>
 	public static Suspicious<TValue> NoValue<TValue>()
 	where TValue : notnull
 	{
@@ -332,182 +163,11 @@ public sealed partial class Suspicious
 	/// <summary>Creates a failed <see cref="Suspicious{TValue}" /> from an <paramref name="error" />.</summary>
 	/// <param name="error">The error.</param>
 	/// <typeparam name="TValue">The value type.</typeparam>
-	/// <returns>A new failed <see cref="Suspicious" /> whose <see cref="Outcome" /> is taken from <paramref name="error" />.</returns>
+	/// <returns>A new failed <see cref="Suspicious{TValue}" /> whose <see cref="Outcome" /> is taken from <paramref name="error" />.</returns>
 	public static Suspicious<TValue> Fail<TValue>(Error error)
 	where TValue : notnull
 	{
 		return Suspicious<TValue>.CreateFailure(error);
-	}
-
-	/// <summary>Creates a failed <see cref="Suspicious{TValue}" /> with an <see cref="OutcomeKind.Invalid" /> <see cref="Error" />.</summary>
-	/// <param name="description">The description.</param>
-	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <param name="callerMember">The caller member.</param>
-	/// <param name="callerFilePath">The caller file path.</param>
-	/// <param name="callerLine">The caller line.</param>
-	/// <typeparam name="TValue">The value type.</typeparam>
-	/// <returns>A new failed <see cref="Suspicious{TValue}" />.</returns>
-	public static Suspicious<TValue> Invalid<TValue>
-	(
-		string description,
-		Error? cause = null,
-		[CallerMemberName] string callerMember = "",
-		[CallerFilePath] string callerFilePath = "",
-		[CallerLineNumber] int callerLine = 0
-	) where TValue : notnull
-	{
-		return Fail<TValue>(Error.Invalid
-		(
-			description,
-			cause,
-			callerMember,
-			callerFilePath,
-			callerLine
-		));
-	}
-
-	/// <summary>Creates a failed <see cref="Suspicious{TValue}" /> with an <see cref="OutcomeKind.Conflict" /> <see cref="Error" />.</summary>
-	/// <param name="description">The description.</param>
-	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <param name="callerMember">The caller member.</param>
-	/// <param name="callerFilePath">The caller file path.</param>
-	/// <param name="callerLine">The caller line.</param>
-	/// <typeparam name="TValue">The value type.</typeparam>
-	/// <returns>A new failed <see cref="Suspicious{TValue}" />.</returns>
-	public static Suspicious<TValue> Conflict<TValue>
-	(
-		string description,
-		Error? cause = null,
-		[CallerMemberName] string callerMember = "",
-		[CallerFilePath] string callerFilePath = "",
-		[CallerLineNumber] int callerLine = 0
-	) where TValue : notnull
-	{
-		return Fail<TValue>(Error.Conflict
-		(
-			description,
-			cause,
-			callerMember,
-			callerFilePath,
-			callerLine
-		));
-	}
-
-	/// <summary>Creates a failed <see cref="Suspicious{TValue}" /> with an <see cref="OutcomeKind.Failure" /> <see cref="Error" />.</summary>
-	/// <param name="description">The description.</param>
-	/// <param name="exception">The exception.</param>
-	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <param name="callerMember">The caller member.</param>
-	/// <param name="callerFilePath">The caller file path.</param>
-	/// <param name="callerLine">The caller line.</param>
-	/// <typeparam name="TValue">The value type.</typeparam>
-	/// <returns>A new failed <see cref="Suspicious{TValue}" />.</returns>
-	public static Suspicious<TValue> Failure<TValue>
-	(
-		string? description = null,
-		Exception? exception = null,
-		Error? cause = null,
-		[CallerMemberName] string callerMember = "",
-		[CallerFilePath] string callerFilePath = "",
-		[CallerLineNumber] int callerLine = 0
-	) where TValue : notnull
-	{
-		return Fail<TValue>(Error.Failure
-		(
-			description,
-			exception,
-			cause,
-			callerMember,
-			callerFilePath,
-			callerLine
-		));
-	}
-
-	/// <summary>Creates a failed <see cref="Suspicious{TValue}" /> with an <see cref="OutcomeKind.Unavailable" /> <see cref="Error" />.</summary>
-	/// <param name="description">The description.</param>
-	/// <param name="exception">The exception.</param>
-	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <param name="callerMember">The caller member.</param>
-	/// <param name="callerFilePath">The caller file path.</param>
-	/// <param name="callerLine">The caller line.</param>
-	/// <typeparam name="TValue">The value type.</typeparam>
-	/// <returns>A new failed <see cref="Suspicious{TValue}" />.</returns>
-	public static Suspicious<TValue> Unavailable<TValue>
-	(
-		string? description = null,
-		Exception? exception = null,
-		Error? cause = null,
-		[CallerMemberName] string callerMember = "",
-		[CallerFilePath] string callerFilePath = "",
-		[CallerLineNumber] int callerLine = 0
-	) where TValue : notnull
-	{
-		return Fail<TValue>(Error.Unavailable
-		(
-			description,
-			exception,
-			cause,
-			callerMember,
-			callerFilePath,
-			callerLine
-		));
-	}
-
-	/// <summary>Creates a failed <see cref="Suspicious{TValue}" /> with an <see cref="OutcomeKind.Unexpected" /> <see cref="Error" />.</summary>
-	/// <param name="exception">The exception.</param>
-	/// <param name="description">The description.</param>
-	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <param name="callerMember">The caller member.</param>
-	/// <param name="callerFilePath">The caller file path.</param>
-	/// <param name="callerLine">The caller line.</param>
-	/// <typeparam name="TValue">The value type.</typeparam>
-	/// <returns>A new failed <see cref="Suspicious{TValue}" />.</returns>
-	public static Suspicious<TValue> Unexpected<TValue>
-	(
-		Exception exception,
-		string? description = null,
-		Error? cause = null,
-		[CallerMemberName] string callerMember = "",
-		[CallerFilePath] string callerFilePath = "",
-		[CallerLineNumber] int callerLine = 0
-	) where TValue : notnull
-	{
-		return Fail<TValue>(Error.Unexpected
-		(
-			exception,
-			description,
-			cause,
-			callerMember,
-			callerFilePath,
-			callerLine
-		));
-	}
-
-	/// <summary>Creates a failed <see cref="Suspicious{TValue}" /> with an <see cref="OutcomeKind.Unexpected" /> <see cref="Error" />.</summary>
-	/// <param name="description">The description.</param>
-	/// <param name="cause">The inner <see cref="Error" />.</param>
-	/// <param name="callerMember">The caller member.</param>
-	/// <param name="callerFilePath">The caller file path.</param>
-	/// <param name="callerLine">The caller line.</param>
-	/// <typeparam name="TValue">The value type.</typeparam>
-	/// <returns>A new failed <see cref="Suspicious{TValue}" />.</returns>
-	public static Suspicious<TValue> Unexpected<TValue>
-	(
-		string? description = null,
-		Error? cause = null,
-		[CallerMemberName] string callerMember = "",
-		[CallerFilePath] string callerFilePath = "",
-		[CallerLineNumber] int callerLine = 0
-	) where TValue : notnull
-	{
-		return Fail<TValue>(Error.Unexpected
-		(
-			description,
-			cause,
-			callerMember,
-			callerFilePath,
-			callerLine
-		));
 	}
 
 	#endregion
@@ -614,14 +274,6 @@ public sealed partial class Suspicious
 			return Combine(results);
 		}
 	}
-
-	#endregion
-
-	#region Conversion
-
-	/// <summary>Implicitly converts an <see cref="Error" /> to a failed <see cref="Suspicious" />.</summary>
-	/// <param name="error">The error.</param>
-	public static implicit operator Suspicious(Error error) => Fail(error);
 
 	#endregion
 }

@@ -86,15 +86,15 @@ public sealed class SuspiciousOfTValueTests
 		Assert.True(successRail.Is(OutcomeKind.NoValue));
 	}
 
-	/// <summary>Ensures that the per-kind shorthands create failures of the expected kinds.</summary>
+	/// <summary>Ensures that a failed result takes its outcome from the error, for every preset failure kind.</summary>
 	[Fact]
-	public void Shorthands_CreateFailuresOfExpectedKinds()
+	public void Fail_TakesOutcomeFromError_ForEveryPresetFailureKind()
 	{
-		Assert.Equal(OutcomeKind.Invalid, Suspicious.Invalid<int>("Value is out of range").Outcome);
-		Assert.Equal(OutcomeKind.Conflict, Suspicious.Conflict<int>("Entity already exists").Outcome);
-		Assert.Equal(OutcomeKind.Failure, Suspicious.Failure<int>().Outcome);
-		Assert.Equal(OutcomeKind.Unavailable, Suspicious.Unavailable<int>().Outcome);
-		Assert.Equal(OutcomeKind.Unexpected, Suspicious.Unexpected<int>().Outcome);
+		Assert.Equal(OutcomeKind.Invalid, Suspicious.Fail<int>(Error.Invalid("Value is out of range")).Outcome);
+		Assert.Equal(OutcomeKind.Conflict, Suspicious.Fail<int>(Error.Conflict("Entity already exists")).Outcome);
+		Assert.Equal(OutcomeKind.Failure, Suspicious.Fail<int>(Error.Failure()).Outcome);
+		Assert.Equal(OutcomeKind.Unavailable, Suspicious.Fail<int>(Error.Unavailable()).Outcome);
+		Assert.Equal(OutcomeKind.Unexpected, Suspicious.Fail<int>(Error.Unexpected()).Outcome);
 	}
 
 	#endregion
@@ -131,7 +131,7 @@ public sealed class SuspiciousOfTValueTests
 	public void Value_OnValuelessResult_Throws()
 	{
 		Assert.Throws<InvalidOperationException>(() => _ = Suspicious.NoValue<int>().Value);
-		Assert.Throws<InvalidOperationException>(() => _ = Suspicious.Failure<int>().Value);
+		Assert.Throws<InvalidOperationException>(() => _ = Suspicious.Fail<int>(Error.Failure()).Value);
 	}
 
 	/// <summary>Ensures that <c>TryGetValue</c> reports the value presence.</summary>
@@ -141,7 +141,7 @@ public sealed class SuspiciousOfTValueTests
 		Assert.True(Suspicious.Ok(42).TryGetValue(out var value));
 		Assert.Equal(42, value);
 		Assert.False(Suspicious.NoValue<int>().TryGetValue(out _));
-		Assert.False(Suspicious.Failure<int>().TryGetValue(out _));
+		Assert.False(Suspicious.Fail<int>(Error.Failure()).TryGetValue(out _));
 	}
 
 	/// <summary>Ensures that <c>GetValueOr</c> falls back only on valueless results, and rejects a null fallback — eager or produced by the factory.</summary>
@@ -150,7 +150,7 @@ public sealed class SuspiciousOfTValueTests
 	{
 		Assert.Equal(42, Suspicious.Ok(42).GetValueOr(0));
 		Assert.Equal(7, Suspicious.NoValue<int>().GetValueOr(7));
-		Assert.Equal(7, Suspicious.Failure<int>().GetValueOr(static () => 7));
+		Assert.Equal(7, Suspicious.Fail<int>(Error.Failure()).GetValueOr(static () => 7));
 		Assert.Equal("value", Suspicious.Ok("value").GetValueOr(static () => null!));
 		Assert.Throws<ArgumentNullException>(() => Suspicious.NoValue<string>().GetValueOr(fallback: null!));
 		Assert.Throws<ArgumentNullException>(() => Suspicious.NoValue<string>().GetValueOr(static () => null!));
@@ -187,7 +187,7 @@ public sealed class SuspiciousOfTValueTests
 
 		Assert.Equal("value: 42", Render(Suspicious.Ok(42)));
 		Assert.Equal("no value", Render(Suspicious.NoValue<int>()));
-		Assert.Equal("error: invalid", Render(Suspicious.Invalid<int>("Value is out of range")));
+		Assert.Equal("error: invalid", Render(Error.Invalid("Value is out of range")));
 	}
 
 	/// <summary>Ensures that <c>Switch</c> invokes the proper handler and its two-way form throws on an undeclared no-value success.</summary>
@@ -200,7 +200,7 @@ public sealed class SuspiciousOfTValueTests
 
 		Suspicious.Ok(42).Switch(onValue: _ => valueCount++, onNoValue: () => noValueCount++, onError: _ => errorCount++);
 		Suspicious.NoValue<int>().Switch(onValue: _ => valueCount++, onNoValue: () => noValueCount++, onError: _ => errorCount++);
-		Suspicious.Failure<int>().Switch(onValue: _ => valueCount++, onNoValue: () => noValueCount++, onError: _ => errorCount++);
+		Suspicious.Fail<int>(Error.Failure()).Switch(onValue: _ => valueCount++, onNoValue: () => noValueCount++, onError: _ => errorCount++);
 
 		Assert.Equal(1, valueCount);
 		Assert.Equal(1, noValueCount);
@@ -303,7 +303,7 @@ public sealed class SuspiciousOfTValueTests
 		Assert.Same(ok, ok.Tap(_ => observed++));
 		Assert.Equal(1, observed);
 
-		var vetoed = ok.Tap(static _ => Suspicious.Unavailable("Storage is down"));
+		var vetoed = ok.Tap(static _ => Suspicious.Fail(Error.Unavailable("Storage is down")));
 
 		Assert.Equal(OutcomeKind.Unavailable, vetoed.Outcome);
 		Assert.Same(ok, ok.Tap(static _ => Suspicious.Ok()));
@@ -315,10 +315,10 @@ public sealed class SuspiciousOfTValueTests
 		Assert.Equal(partial, kept.Outcome);
 
 		var miss = Suspicious.NoValue<int>();
-		var failure = Suspicious.Invalid<int>("Value is out of range");
+		var failure = Suspicious.Fail<int>(Error.Invalid("Value is out of range"));
 
 		Assert.Same(miss, miss.Tap(_ => observed++));
-		Assert.Same(miss, miss.Tap(static _ => Suspicious.Invalid("Never runs")));
+		Assert.Same(miss, miss.Tap(static _ => Suspicious.Fail(Error.Invalid("Never runs"))));
 		Assert.Same(failure, failure.Tap(_ => observed++));
 		Assert.Equal(1, observed);
 	}
@@ -328,7 +328,7 @@ public sealed class SuspiciousOfTValueTests
 	public void TapError_ObservesOnlyFailure()
 	{
 		var observed = default(Error);
-		var failure = Suspicious.Invalid<int>("Value is out of range");
+		var failure = Suspicious.Fail<int>(Error.Invalid("Value is out of range"));
 
 		Assert.Same(failure, failure.TapError(e => observed = e));
 		Assert.Same(failure.Error, observed);
@@ -347,7 +347,7 @@ public sealed class SuspiciousOfTValueTests
 
 		Assert.Same(success, success.MapError(static e => Error.Unexpected(cause: e)));
 
-		var failure = Suspicious.Invalid<int>("Value is out of range");
+		var failure = Suspicious.Fail<int>(Error.Invalid("Value is out of range"));
 		var mapped = failure.MapError(static e => Error.Unexpected(cause: e));
 
 		Assert.Equal(OutcomeKind.Unexpected, mapped.Outcome);
@@ -379,7 +379,7 @@ public sealed class SuspiciousOfTValueTests
 	[Fact]
 	public void AsFailure_RetypesFailure_AndThrowsOnSuccess()
 	{
-		var failure = Suspicious.Invalid<int>("Value is out of range");
+		var failure = Suspicious.Fail<int>(Error.Invalid("Value is out of range"));
 		var converted = failure.AsFailure<string>();
 
 		Assert.True(converted.IsFailure);
@@ -411,7 +411,7 @@ public sealed class SuspiciousOfTValueTests
 
 		var fromValue = Suspicious.Ok(42);
 		var fromNoValue = Suspicious.NoValue<int>();
-		var fromError = Suspicious.Invalid<int>("Value is out of range");
+		var fromError = Suspicious.Fail<int>(Error.Invalid("Value is out of range"));
 
 		AssertEquivalent(fromValue, fromValue.Then(Lift));
 		AssertEquivalent(fromNoValue, fromNoValue.Then(Lift));
@@ -422,10 +422,10 @@ public sealed class SuspiciousOfTValueTests
 	[Fact]
 	public void MonadLaw_Associativity_Holds()
 	{
-		static Suspicious<int> F(int value) => value > 0 ? Suspicious.Ok(value + 1) : Suspicious.Invalid<int>("Value must be positive");
+		static Suspicious<int> F(int value) => value > 0 ? Suspicious.Ok(value + 1) : Error.Invalid("Value must be positive");
 		static Suspicious<string> G(int value) => Suspicious.Ok($"value: {value}");
 
-		foreach (var source in new[] { Suspicious.Ok(42), Suspicious.Ok(-1), Suspicious.NoValue<int>(), Suspicious.Unavailable<int>("Storage is down") })
+		foreach (var source in new[] { Suspicious.Ok(42), Suspicious.Ok(-1), Suspicious.NoValue<int>(), Error.Unavailable("Storage is down") })
 		{
 			AssertEquivalent
 			(
@@ -445,7 +445,7 @@ public sealed class SuspiciousOfTValueTests
 	{
 		Assert.Equal("Suspicious { Outcome = ok (0), Value = 42 }", Suspicious.Ok(42).ToString());
 		Assert.Equal("Suspicious { Outcome = no_value (10) }", Suspicious.NoValue<int>().ToString());
-		Assert.StartsWith("Suspicious { Outcome = invalid (1000), Error = {", Suspicious.Invalid<int>("Value is out of range").ToString());
+		Assert.StartsWith("Suspicious { Outcome = invalid (1000), Error = {", Suspicious.Fail<int>(Error.Invalid("Value is out of range")).ToString());
 	}
 
 	#endregion

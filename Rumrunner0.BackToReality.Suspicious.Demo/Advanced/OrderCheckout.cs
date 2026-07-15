@@ -69,8 +69,8 @@ internal static class OrderCheckout
 	/// <returns>An <c>ok</c> result, or a failure.</returns>
 	private static Suspicious CheckInventory(string sku, int quantity)
 	{
-		if (!_stock.TryGetValue(sku, out var available)) return Suspicious.Invalid($"Unknown SKU '{sku}'");
-		if (available < quantity) return Suspicious.Conflict($"Only {available} unit(s) of '{sku}' left");
+		if (!_stock.TryGetValue(sku, out var available)) return Error.Invalid($"Unknown SKU '{sku}'");
+		if (available < quantity) return Error.Conflict($"Only {available} unit(s) of '{sku}' left");
 
 		return Suspicious.Ok();
 	}
@@ -101,7 +101,7 @@ internal static class OrderCheckout
 	/// <returns>An <c>ok</c> result, or a failure.</returns>
 	private static Suspicious Charge(Invoice invoice, decimal balance)
 	{
-		if (balance < invoice.Total) return Suspicious.Failure($"Balance {balance:F2} can't cover {invoice.Total:F2}");
+		if (balance < invoice.Total) return Error.Failure($"Balance {balance:F2} can't cover {invoice.Total:F2}");
 
 		return Suspicious.Ok();
 	}

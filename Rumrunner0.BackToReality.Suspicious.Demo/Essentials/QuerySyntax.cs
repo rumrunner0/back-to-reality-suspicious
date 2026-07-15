@@ -39,6 +39,6 @@ internal static class QuerySyntax
 	/// <returns>The order count.</returns>
 	private static Suspicious<int> CountOrders(string name)
 	{
-		return name.Length > 0 ? Suspicious.Ok(3) : Suspicious.Invalid<int>("Name is empty");
+		return name.Length > 0 ? Suspicious.Ok(3) : Error.Invalid("Name is empty");
 	}
 }

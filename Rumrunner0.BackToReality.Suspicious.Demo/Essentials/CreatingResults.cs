@@ -19,11 +19,8 @@ internal static class CreatingResults
 		Suspicious<int> converted = 42;
 		Console.WriteLine(converted);
 
-		// A failure carries exactly one error; every built-in failure kind has a shorthand.
-		Console.WriteLine(Suspicious.Invalid<int>("Age must be positive"));
-
-		// The general form takes any error explicitly...
-		Console.WriteLine(Suspicious.Fail<int>(Error.Failure("Downstream hiccup")));
+		// A failure carries exactly one error: `Error.*` mints the error, `Fail` lifts it into a result...
+		Console.WriteLine(Suspicious.Fail<int>(Error.Invalid("Age must be positive")));
 
 		// ...and the implicit conversion from an error mirrors the value one.
 		Suspicious<int> fromError = Error.Conflict("Age is already locked");

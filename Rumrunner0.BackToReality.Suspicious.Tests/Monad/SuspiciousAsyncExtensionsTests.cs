@@ -26,7 +26,7 @@ public sealed class SuspiciousAsyncExtensionsTests
 
 		Assert.Equal(OutcomeKind.Ok, consumed.Outcome);
 
-		var failure = Suspicious.Conflict("Entity already exists");
+		var failure = Suspicious.Fail(Error.Conflict("Entity already exists"));
 
 		Assert.Same(failure, await failure.Then(static () => Task.FromResult(Suspicious.Ok())));
 		Assert.Same(failure.Error, (await failure.Then(static () => Task.FromResult(Suspicious.Ok(42)))).Error);
@@ -50,7 +50,7 @@ public sealed class SuspiciousAsyncExtensionsTests
 
 		Assert.Same(success, await success.MapError(static e => Task.FromResult(Error.Failure("Wrapped", cause: e))));
 
-		var mapped = await Task.FromResult(Suspicious.Conflict("Entity already exists"))
+		var mapped = await Task.FromResult<Suspicious>(Error.Conflict("Entity already exists"))
 			.MapError(static e => Error.Failure("Wrapped", cause: e));
 
 		Assert.Equal(OutcomeKind.Failure, mapped.Outcome);
@@ -67,12 +67,12 @@ public sealed class SuspiciousAsyncExtensionsTests
 		Assert.Same(ok, await ok.Tap(() => { observed++; return Task.CompletedTask; }));
 		Assert.Equal(1, observed);
 
-		var vetoed = await ok.Tap(static () => Task.FromResult(Suspicious.Conflict("Entity already exists")));
+		var vetoed = await ok.Tap(static () => Task.FromResult<Suspicious>(Error.Conflict("Entity already exists")));
 
 		Assert.Equal(OutcomeKind.Conflict, vetoed.Outcome);
 		Assert.Same(ok, await ok.Tap(static () => Task.FromResult(Suspicious.Ok())));
 
-		var failure = Suspicious.Invalid("Name is required");
+		var failure = Suspicious.Fail(Error.Invalid("Name is required"));
 
 		Assert.Same(failure, await failure.Tap(() => { observed++; return Task.CompletedTask; }));
 		Assert.Equal(1, observed);
@@ -86,7 +86,7 @@ public sealed class SuspiciousAsyncExtensionsTests
 	public async Task TapError_Async_ObservesOnlyFailure()
 	{
 		var observed = default(Error);
-		var failure = Suspicious.Invalid("Name is required");
+		var failure = Suspicious.Fail(Error.Invalid("Name is required"));
 
 		Assert.Same(failure, await failure.TapError(e => { observed = e; return Task.CompletedTask; }));
 		Assert.Same(failure.Error, observed);
@@ -109,7 +109,7 @@ public sealed class SuspiciousAsyncExtensionsTests
 
 		Assert.Equal("success", matched);
 
-		var taskMatched = await Task.FromResult(Suspicious.Conflict("Entity already exists")).Match(
+		var taskMatched = await Task.FromResult<Suspicious>(Error.Conflict("Entity already exists")).Match(
 			onSuccess: static () => "success",
 			onError: static e => $"error: {e.Description}");
 
@@ -135,14 +135,14 @@ public sealed class SuspiciousAsyncExtensionsTests
 
 		Assert.True(allOk.IsSuccess);
 
-		var single = await Suspicious.Combine([Task.FromResult(Suspicious.Ok()), Task.FromResult(Suspicious.Conflict("Entity already exists"))]);
+		var single = await Suspicious.Combine([Task.FromResult(Suspicious.Ok()), Task.FromResult<Suspicious>(Error.Conflict("Entity already exists"))]);
 
 		Assert.Equal(OutcomeKind.Conflict, single.Outcome);
 
 		var escalated = await Suspicious.Combine(
 		[
-			Task.FromResult(Suspicious.Invalid("Name is required")),
-			Task.FromResult(Suspicious.Unexpected("Validator crashed"))
+			Task.FromResult<Suspicious>(Error.Invalid("Name is required")),
+			Task.FromResult<Suspicious>(Error.Unexpected("Validator crashed"))
 		]);
 
 		Assert.Equal(OutcomeKind.Unexpected, escalated.Outcome);
@@ -191,7 +191,7 @@ public sealed class SuspiciousAsyncExtensionsTests
 		await Assert.ThrowsAnyAsync<OperationCanceledException>(() => Suspicious.Ok().Then(Step, canceled));
 		Assert.Equal(0, invocations);
 
-		var failure = await Suspicious.Conflict("Entity already exists").Then(Step, canceled);
+		var failure = await Suspicious.Fail(Error.Conflict("Entity already exists")).Then(Step, canceled);
 
 		Assert.True(failure.IsFailure);
 		Assert.Equal(0, invocations);

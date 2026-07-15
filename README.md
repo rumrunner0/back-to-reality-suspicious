@@ -24,7 +24,7 @@ result.Is(OutcomeKind.NoValue); // was it a miss?
 result.IsSuccess;               // which rail?
 ```
 
-The rail rule: `Error.*` always builds the failure rail — you're constructing an `Error`. A kind-named factory on `Suspicious` constructs on the kind's *home rail*: `Ok` → success, `Invalid`/`Conflict`/`Failure`/`Unavailable`/`Unexpected` → failure, `NoValue` → success (a plain miss). Putting a miss on the failure rail is the explicit opt-in: `Fail<T>(Error.NoValue(…))`.
+The rail rule: `Suspicious.*` mints successes — `Ok`, `Success(kind)`, `NoValue` — plus the single explicit bridge to the failure rail, `Fail(error)`; `Error.*` mints failures, always. Wherever the result type is known (returns, arguments, ternary branches) a failure flows in directly through the implicit `Error → Suspicious` conversion; without a target type, wrap it: `Fail<T>(Error.Invalid(…))`. Putting a miss on the failure rail is the explicit opt-in: `Fail<T>(Error.NoValue(…))`.
 
 ## Pipelines
 

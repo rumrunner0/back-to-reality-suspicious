@@ -20,7 +20,7 @@ internal static class CombiningResults
 		(
 			ValidateName(null),
 			ValidateAge(-5),
-			Suspicious.Unexpected("Validator crashed")
+			Error.Unexpected("Validator crashed")
 		);
 
 		Console.WriteLine($"Escalated to: {validation.Outcome}");
@@ -41,7 +41,7 @@ internal static class CombiningResults
 	/// <returns>An <c>ok</c> result, or an <see cref="OutcomeKind.Invalid" /> failure.</returns>
 	private static Suspicious ValidateName(string? name)
 	{
-		if (string.IsNullOrWhiteSpace(name)) return Suspicious.Invalid("Name is required");
+		if (string.IsNullOrWhiteSpace(name)) return Error.Invalid("Name is required");
 		return Suspicious.Ok();
 	}
 
@@ -50,7 +50,7 @@ internal static class CombiningResults
 	/// <returns>An <c>ok</c> result, or an <see cref="OutcomeKind.Invalid" /> failure.</returns>
 	private static Suspicious ValidateAge(int age)
 	{
-		if (age is < 0 or > 150) return Suspicious.Invalid($"Age {age} is out of range");
+		if (age is < 0 or > 150) return Error.Invalid($"Age {age} is out of range");
 		return Suspicious.Ok();
 	}
 }

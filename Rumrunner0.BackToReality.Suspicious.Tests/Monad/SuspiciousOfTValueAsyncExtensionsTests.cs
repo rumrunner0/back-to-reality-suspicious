@@ -56,7 +56,7 @@ public sealed class SuspiciousOfTValueAsyncExtensionsTests
 
 		Assert.Equal("total: 42", result.Value);
 
-		var failure = await Task.FromResult(Suspicious.Invalid<int>("Value is out of range"))
+		var failure = await Task.FromResult<Suspicious<int>>(Error.Invalid("Value is out of range"))
 			.Then(static value => Suspicious.Ok(value + 1))
 			.Then(static value => Task.FromResult(Suspicious.Ok(value + 1)));
 
@@ -95,7 +95,7 @@ public sealed class SuspiciousOfTValueAsyncExtensionsTests
 
 		Assert.Same(success, await success.MapError(static e => Task.FromResult(Error.Failure("Wrapped", cause: e))));
 
-		var failure = await Task.FromResult(Suspicious.Invalid<int>("Value is out of range"))
+		var failure = await Task.FromResult<Suspicious<int>>(Error.Invalid("Value is out of range"))
 			.MapError(static e => Error.Failure("Wrapped", cause: e));
 
 		Assert.Equal(OutcomeKind.Failure, failure.Outcome);
@@ -116,7 +116,7 @@ public sealed class SuspiciousOfTValueAsyncExtensionsTests
 		Assert.Same(ok, await ok.Tap(_ => { observed++; return Task.CompletedTask; }));
 		Assert.Equal(1, observed);
 
-		var vetoed = await ok.Tap(static _ => Task.FromResult(Suspicious.Unavailable("Storage is down")));
+		var vetoed = await ok.Tap(static _ => Task.FromResult<Suspicious>(Error.Unavailable("Storage is down")));
 
 		Assert.Equal(OutcomeKind.Unavailable, vetoed.Outcome);
 		Assert.Same(ok, await ok.Tap(static _ => Task.FromResult(Suspicious.Ok())));
@@ -142,7 +142,7 @@ public sealed class SuspiciousOfTValueAsyncExtensionsTests
 	public async Task TapError_Async_ObservesOnlyFailure()
 	{
 		var observed = default(Error);
-		var failure = Suspicious.Invalid<int>("Value is out of range");
+		var failure = Suspicious.Fail<int>(Error.Invalid("Value is out of range"));
 
 		Assert.Same(failure, await failure.TapError(e => { observed = e; return Task.CompletedTask; }));
 		Assert.Same(failure.Error, observed);
@@ -169,7 +169,7 @@ public sealed class SuspiciousOfTValueAsyncExtensionsTests
 
 		Assert.Equal("value: 42", fromValue);
 
-		var fromError = await Task.FromResult(Suspicious.Invalid<int>("Value is out of range")).Match(
+		var fromError = await Task.FromResult<Suspicious<int>>(Error.Invalid("Value is out of range")).Match(
 			onValue: static value => $"value: {value}",
 			onError: static e => $"error: {e.Description}");
 
@@ -245,7 +245,7 @@ public sealed class SuspiciousOfTValueAsyncExtensionsTests
 		Assert.Equal(0, invocations);
 
 		// A short-circuiting result never reaches the continuation — the canceled token is irrelevant there.
-		var failure = await Suspicious.Invalid<int>("Value is out of range").Then(Describe, canceled);
+		var failure = await Suspicious.Fail<int>(Error.Invalid("Value is out of range")).Then(Describe, canceled);
 
 		Assert.True(failure.IsFailure);
 		Assert.Equal(0, invocations);

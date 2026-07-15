@@ -39,7 +39,7 @@ internal static class PartialImport
 		var imported = records.Count(static r => !string.IsNullOrWhiteSpace(r));
 		var rejected = records.Count - imported;
 
-		if (imported == 0) return Suspicious.Failure<ImportSummary>("All records were rejected");
+		if (imported == 0) return Error.Failure("All records were rejected");
 		if (rejected == 0) return new ImportSummary(imported, rejected);
 
 		return Suspicious.Success(_partial, new ImportSummary(imported, rejected));

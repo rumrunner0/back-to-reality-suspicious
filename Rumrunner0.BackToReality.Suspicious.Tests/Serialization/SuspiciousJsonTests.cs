@@ -31,7 +31,7 @@ public sealed class SuspiciousJsonTests
 	[Fact]
 	public void Serialize_Failure_ContainsSelfContainedError()
 	{
-		var json = JsonSerializer.Serialize(Suspicious.Invalid<int>("Value is out of range"));
+		var json = JsonSerializer.Serialize(Suspicious.Fail<int>(Error.Invalid("Value is out of range")));
 
 		Assert.StartsWith("""{"outcome":{"name":"invalid","code":1000,"side":"failure"},"error":{"kind":{"name":"invalid","code":1000,"side":"failure"}""", json);
 		Assert.Contains("\"description\":\"Value is out of range\"", json);
@@ -103,7 +103,7 @@ public sealed class SuspiciousJsonTests
 	[Fact]
 	public void RoundTrip_Exception_IsLossy()
 	{
-		var original = Suspicious.Unexpected<int>(new ApplicationException("App exception occurred"));
+		var original = Suspicious.Fail<int>(Error.Unexpected(new ApplicationException("App exception occurred")));
 		var json = JsonSerializer.Serialize(original);
 
 		Assert.Contains("\"exception\":{\"type\":\"System.ApplicationException\",\"message\":\"App exception occurred\"}", json);

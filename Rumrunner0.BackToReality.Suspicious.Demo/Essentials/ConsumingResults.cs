@@ -10,7 +10,7 @@ internal static class ConsumingResults
 	internal static void Run()
 	{
 		var found = Suspicious.Ok("Roman");
-		var failed = Suspicious.Invalid<string>("Name is required");
+		var failed = Suspicious.Fail<string>(Error.Invalid("Name is required"));
 
 		// Match folds both rails into one value — the boundary tool.
 		Console.WriteLine(Describe(found));

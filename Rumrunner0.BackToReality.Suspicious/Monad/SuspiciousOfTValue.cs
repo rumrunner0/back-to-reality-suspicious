@@ -152,13 +152,5 @@ public sealed partial class Suspicious<TValue> where TValue : notnull
 	/// <returns>A new failed <see cref="Suspicious{TValue}" />.</returns>
 	internal static Suspicious<TValue> CreateFailure(Error error) => new (error);
 
-	/// <summary>Implicitly converts a <typeparamref name="TValue" /> to an <see cref="OutcomeKind.Ok" /> <see cref="Suspicious{TValue}" />.</summary>
-	/// <param name="value">The value.</param>
-	public static implicit operator Suspicious<TValue>(TValue value) => CreateSuccess(OutcomeKind.Ok, value);
-
-	/// <summary>Implicitly converts an <see cref="Error" /> to a failed <see cref="Suspicious{TValue}" />.</summary>
-	/// <param name="error">The error.</param>
-	public static implicit operator Suspicious<TValue>(Error error) => CreateFailure(error);
-
 	#endregion
 }

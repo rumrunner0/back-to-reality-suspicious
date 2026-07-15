@@ -58,7 +58,7 @@ public sealed class SuspiciousAsyncLinqExtensionsTests
 
 		var fromFailure = await
 		(
-			from name in Task.FromResult(Suspicious.Invalid<string>("Name is required"))
+			from name in Task.FromResult<Suspicious<string>>(Error.Invalid("Name is required"))
 			from count in Count()
 			select $"{name}: {count}"
 		);

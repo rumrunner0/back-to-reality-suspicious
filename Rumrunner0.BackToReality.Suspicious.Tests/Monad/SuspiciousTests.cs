@@ -68,16 +68,16 @@ public sealed class SuspiciousTests
 		Assert.ThrowsAny<ArgumentException>(() => Suspicious.Fail(null!));
 	}
 
-	/// <summary>Ensures that the per-kind shorthands create failures of the expected kinds.</summary>
+	/// <summary>Ensures that a failed result takes its outcome from the error, for every preset failure kind.</summary>
 	[Fact]
-	public void Shorthands_CreateFailuresOfExpectedKinds()
+	public void Fail_TakesOutcomeFromError_ForEveryPresetFailureKind()
 	{
-		Assert.Equal(OutcomeKind.Invalid, Suspicious.Invalid("Name is required").Outcome);
-		Assert.Equal(OutcomeKind.Conflict, Suspicious.Conflict("Entity already exists").Outcome);
-		Assert.Equal(OutcomeKind.Failure, Suspicious.Failure().Outcome);
-		Assert.Equal(OutcomeKind.Unavailable, Suspicious.Unavailable().Outcome);
-		Assert.Equal(OutcomeKind.Unexpected, Suspicious.Unexpected().Outcome);
-		Assert.Equal(OutcomeKind.Unexpected, Suspicious.Unexpected(new ApplicationException("App exception occurred")).Outcome);
+		Assert.Equal(OutcomeKind.Invalid, Suspicious.Fail(Error.Invalid("Name is required")).Outcome);
+		Assert.Equal(OutcomeKind.Conflict, Suspicious.Fail(Error.Conflict("Entity already exists")).Outcome);
+		Assert.Equal(OutcomeKind.Failure, Suspicious.Fail(Error.Failure()).Outcome);
+		Assert.Equal(OutcomeKind.Unavailable, Suspicious.Fail(Error.Unavailable()).Outcome);
+		Assert.Equal(OutcomeKind.Unexpected, Suspicious.Fail(Error.Unexpected()).Outcome);
+		Assert.Equal(OutcomeKind.Unexpected, Suspicious.Fail(Error.Unexpected(new ApplicationException("App exception occurred"))).Outcome);
 	}
 
 	/// <summary>Ensures that an <see cref="Error" /> is implicitly converted to a failure.</summary>
@@ -98,7 +98,7 @@ public sealed class SuspiciousTests
 	[Fact]
 	public void Is_ComparesOutcome()
 	{
-		var result = Suspicious.Invalid("Name is required");
+		var result = Suspicious.Fail(Error.Invalid("Name is required"));
 
 		Assert.True(result.Is(OutcomeKind.Invalid));
 		Assert.False(result.Is(OutcomeKind.Failure));
@@ -123,7 +123,7 @@ public sealed class SuspiciousTests
 		var errorCount = 0;
 
 		Suspicious.Ok().Switch(onSuccess: () => successCount++, onError: _ => errorCount++);
-		Suspicious.Failure().Switch(onSuccess: () => successCount++, onError: _ => errorCount++);
+		Suspicious.Fail(Error.Failure()).Switch(onSuccess: () => successCount++, onError: _ => errorCount++);
 
 		Assert.Equal(1, successCount);
 		Assert.Equal(1, errorCount);
@@ -134,7 +134,7 @@ public sealed class SuspiciousTests
 	public void MapError_MapsOnlyFailure()
 	{
 		var success = Suspicious.Ok();
-		var failure = Suspicious.Failure(description: "Something failed");
+		var failure = Suspicious.Fail(Error.Failure(description: "Something failed"));
 
 		Assert.Same(success, success.MapError(static e => Error.Unexpected(cause: e)));
 
@@ -148,7 +148,7 @@ public sealed class SuspiciousTests
 	[Fact]
 	public void AsFailure_CarriesError_AndThrowsOnSuccess()
 	{
-		var failure = Suspicious.Conflict("Entity already exists");
+		var failure = Suspicious.Fail(Error.Conflict("Entity already exists"));
 		var converted = failure.AsFailure<int>();
 
 		Assert.True(converted.IsFailure);
@@ -169,7 +169,7 @@ public sealed class SuspiciousTests
 
 		Assert.Equal(OutcomeKind.Ok, Suspicious.Success(partial).Then(Suspicious.Ok).Outcome);
 
-		var failure = Suspicious.Conflict("Entity already exists");
+		var failure = Suspicious.Fail(Error.Conflict("Entity already exists"));
 
 		Assert.Same(failure, failure.Then(Suspicious.Ok));
 		Assert.Same(failure.Error, failure.Then(static () => Suspicious.Ok(42)).Error);
@@ -185,7 +185,7 @@ public sealed class SuspiciousTests
 		Assert.Same(ok, ok.Tap(() => observed++));
 		Assert.Equal(1, observed);
 
-		var vetoed = ok.Tap(static () => Suspicious.Conflict("Entity already exists"));
+		var vetoed = ok.Tap(static () => Suspicious.Fail(Error.Conflict("Entity already exists")));
 
 		Assert.Equal(OutcomeKind.Conflict, vetoed.Outcome);
 		Assert.Same(ok, ok.Tap(Suspicious.Ok));
@@ -195,7 +195,7 @@ public sealed class SuspiciousTests
 		Assert.Same(ok, ok.Tap(() => Suspicious.Success(partial)));
 		Assert.Throws<ArgumentNullException>(() => ok.Tap(static () => (Suspicious)null!));
 
-		var failure = Suspicious.Invalid("Name is required");
+		var failure = Suspicious.Fail(Error.Invalid("Name is required"));
 
 		Assert.Same(failure, failure.Tap(() => observed++));
 		Assert.Same(failure, failure.Tap(Suspicious.Ok));
@@ -207,7 +207,7 @@ public sealed class SuspiciousTests
 	public void TapError_ObservesOnlyFailure()
 	{
 		var observed = default(Error);
-		var failure = Suspicious.Invalid("Name is required");
+		var failure = Suspicious.Fail(Error.Invalid("Name is required"));
 
 		Assert.Same(failure, failure.TapError(e => observed = e));
 		Assert.Same(failure.Error, observed);
@@ -256,9 +256,9 @@ public sealed class SuspiciousTests
 	{
 		var result = Suspicious.Combine
 		(
-			Suspicious.Invalid("Name is required"),
-			Suspicious.Invalid("Email is malformed"),
-			Suspicious.Unexpected()
+			Error.Invalid("Name is required"),
+			Error.Invalid("Email is malformed"),
+			Error.Unexpected()
 		);
 
 		Assert.True(result.IsFailure);
@@ -282,7 +282,7 @@ public sealed class SuspiciousTests
 		var failed = Suspicious.Combine
 		(
 			Suspicious.Ok(42),
-			Suspicious.Invalid<int>("Value is out of range")
+			Error.Invalid("Value is out of range")
 		);
 
 		Assert.True(failed.IsFailure);
@@ -307,7 +307,7 @@ public sealed class SuspiciousTests
 	{
 		Assert.Equal("Suspicious { Outcome = ok (0) }", Suspicious.Ok().ToString());
 
-		var text = Suspicious.Invalid("Name is required").ToString();
+		var text = Suspicious.Fail(Error.Invalid("Name is required")).ToString();
 
 		Assert.StartsWith("Suspicious { Outcome = invalid (1000), Error = {", text);
 		Assert.Contains("Name is required", text);
