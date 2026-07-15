@@ -52,6 +52,8 @@ var summary =
 
 Picking a consumption path: `Match`/`Switch` at boundaries where every rail must be handled; `GetValueOr` when a genuine fallback exists and the error can be discarded; `TryGetValue` for imperative glue (loops, early returns). All are first-class — they answer different questions.
 
+Architecturally, the types create and hold (factories, state, `Combine`, conversions) while every combinator — sync and async — is an extension method grouped in per-family classes; call syntax is unaffected.
+
 Two more axes: `MapError` rewrites or enriches the failure side (wrap with a `cause:` at a layer boundary) while successes pass through untouched; `AsUnit()` drops the value axis when only the outcome matters. The reverse re-typing exists for failures only — `AsFailure<T>()` carries the `Error` into a differently-typed result (`if (validation.IsFailure) return validation.AsFailure<User>();`); a success has no value to lift, so there it throws.
 
 `Tap`/`TapError` observe without touching — the instance flows through by reference (logging, metrics, audit mid-chain). The result-returning `Tap` overload is the veto flavor: the effect's failure replaces the result, its success is discarded, and the original — success kind included — flows on (`.Tap(invoice => Charge(invoice, balance))` runs a void-like step without losing the invoice). Overload resolution sends result-returning effects to the veto flavor deliberately: a result you'd ignore is a result that should count.
