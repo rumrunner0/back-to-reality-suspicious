@@ -1,29 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<!-- Target -->
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 	</PropertyGroup>
 
-	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-		<IncludeSource>true</IncludeSource>
-		<IncludeSymbols>true</IncludeSymbols>
-		<DebugSymbols>true</DebugSymbols>
-		<DebugType>portable</DebugType>
-		<Optimize>false</Optimize>
-		<DefineConstants>TRACE</DefineConstants>
+	<!-- Packaging -->
+	<PropertyGroup>
+		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
-	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-		<IncludeSource>true</IncludeSource>
-		<IncludeSymbols>true</IncludeSymbols>
-		<DebugSymbols>true</DebugSymbols>
-		<DebugType>portable</DebugType>
-		<Optimize>true</Optimize>
-		<DefineConstants />
+	<!-- Strong naming -->
+	<PropertyGroup>
+		<SignAssembly>false</SignAssembly>
 	</PropertyGroup>
 
+	<!-- XML documentation -->
+	<PropertyGroup>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<!-- Project references -->
 	<ItemGroup>
-		<ProjectReference Include="..\Rumrunner0.BackToReality.Suspicious\Rumrunner0.BackToReality.Suspicious.csproj" />
+		<ProjectReference Include="../Rumrunner0.BackToReality.Suspicious/Rumrunner0.BackToReality.Suspicious.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -1,55 +1,66 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<!-- Target -->
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
 	</PropertyGroup>
 
+	<!-- Packaging -->
 	<PropertyGroup>
 		<IsPackable>true</IsPackable>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+	</PropertyGroup>
+
+	<!-- Package identity -->
+	<PropertyGroup>
 		<PackageId>Rumrunner0.BackToReality.Suspicious</PackageId>
-		<Title>Rumrunner0.BackToReality.Suspicious</Title>
-		<Description>Result monad with rich error semantics and traceable context.</Description>
-		<VersionPrefix>0.14.0</VersionPrefix>
+		<VersionPrefix>0.14.1</VersionPrefix>
 		<VersionSuffix></VersionSuffix>
+	</PropertyGroup>
+
+	<!-- Package metadata -->
+	<PropertyGroup>
+		<Title>Rumrunner0.BackToReality.Suspicious</Title>
 		<Authors>Roman Malyi</Authors>
+		<Description>Result monad with rich error semantics and traceable context.</Description>
 		<Copyright>Copyright (C) 2026 Roman Malyi</Copyright>
 		<PackageProjectUrl>https://github.com/rumrunner0/back-to-reality-suspicious</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/rumrunner0/back-to-reality-suspicious</RepositoryUrl>
-		<RepositoryType>git</RepositoryType>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageReleaseNotes></PackageReleaseNotes>
 	</PropertyGroup>
 
+	<!-- Repository -->
 	<PropertyGroup>
-		<Company>Roman Malyi</Company>
-		<Product>Rumrunner0.BackToReality.Suspicious</Product>
-		<NeutralLanguage>en-US</NeutralLanguage>
+		<RepositoryUrl>https://github.com/rumrunner0/back-to-reality-suspicious</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+	</PropertyGroup>
+
+	<!-- Package content -->
+	<ItemGroup>
+		<None Include="../README.md" Pack="true" PackagePath="/" />
+		<None Include="../LICENSE" Pack="true" PackagePath="/" />
+	</ItemGroup>
+
+	<!-- Symbol package -->
+	<PropertyGroup>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+	</PropertyGroup>
+
+	<!-- Strong naming -->
+	<PropertyGroup>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>../../documents/rumrunner0_backtoreality_suspicious.snk</AssemblyOriginatorKeyFile>
 	</PropertyGroup>
 
-	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-		<IncludeSource>true</IncludeSource>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<DebugSymbols>true</DebugSymbols>
-		<DebugType>portable</DebugType>
-		<Optimize>false</Optimize>
-		<DefineConstants>TRACE</DefineConstants>
+	<!-- XML documentation -->
+	<PropertyGroup>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
-	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-		<IncludeSource>true</IncludeSource>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<DebugSymbols>true</DebugSymbols>
-		<DebugType>portable</DebugType>
-		<Optimize>true</Optimize>
-		<DefineConstants />
-	</PropertyGroup>
-
+	<!-- Package references -->
 	<ItemGroup>
 		<PackageReference Include="Ardalis.SmartEnum" />
 		<PackageReference Include="Ardalis.SmartEnum.SystemTextJson" />
