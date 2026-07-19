@@ -21,8 +21,8 @@ Work from the repository root. Follow the steps in order. If any step fails, sto
 
 1. On `main` and the working tree is clean (`git status` shows no modified or staged files). Unrelated uncommitted changes → stop and ask.
 2. Verify the API key is available without printing it: `[[ -n "$NUGET_ORG_API_KEY" ]] && echo ok || echo MISSING`. If missing, tell the user to export it (it lives in their shell profile) and stop.
-3. Confirm the new version is higher than the current one in `Rumrunner0.BackToReality.Suspicious/Rumrunner0.BackToReality.Suspicious.csproj` (for `dev`, the prefix stays the same by construction — just confirm the computed suffix doesn't already exist as a `Release …` commit).
-4. The strong-name key exists at `../../documents/rumrunner0_backtoreality_suspicious.snk` relative to the library csproj (i.e. two levels above the repo root, in `documents/`).
+3. Confirm the version hasn't already been released: `git log --oneline` must contain no `Release <full version>` commit. That's the only version-ordering check — the new version does NOT need to be higher than the current csproj value (the csproj may have been pre-bumped by hand, and servicing an older line — e.g. releasing `2.5.1` while `3.x` exists — is legitimate). nuget.org rejecting duplicate versions at push time is the final backstop.
+4. The strong-name key exists at `../../documents/rumrunner0_backtoreality_suspicious.snk` relative to the library csproj — i.e. one level above the repo root, in the `documents/` sibling of the repo directory (`<repo>/../documents/`).
 
 ## Steps
 
