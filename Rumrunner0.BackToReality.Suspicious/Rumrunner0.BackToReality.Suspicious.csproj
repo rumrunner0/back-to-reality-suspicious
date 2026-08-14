@@ -14,7 +14,7 @@
 	<!-- Package identity -->
 	<PropertyGroup>
 		<PackageId>Rumrunner0.BackToReality.Suspicious</PackageId>
-		<VersionPrefix>0.14.1</VersionPrefix>
+		<VersionPrefix>0.14.2</VersionPrefix>
 		<VersionSuffix></VersionSuffix>
 	</PropertyGroup>
 
