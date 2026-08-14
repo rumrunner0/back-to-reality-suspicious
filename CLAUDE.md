@@ -11,8 +11,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Build: `dotnet build`
 - Test: `dotnet test` (single test: `dotnet test --filter "FullyQualifiedName~SuspiciousOfTValueTests.Ok_CreatesSuccessWithValue"`)
 - Demo gallery (doubles as a smoke test): `dotnet run --project Rumrunner0.BackToReality.Suspicious.Demo`
-- Pack: `Nuget/pack.zsh` (runs `dotnet pack --configuration Release`)
-- Publish to nuget.org: `Nuget/push.zsh` (requires the `NUGET_ORG_API_KEY` env var)
+- Pack: `zsh Nuget/pack.zsh` (runs `dotnet pack --configuration Release`)
+- Publish to nuget.org: `zsh Nuget/push.zsh` (requires the `NUGET_ORG_API_KEY` env var)
+
+The `Nuget/*.zsh` scripts intentionally lack the executable bit — always invoke them via `zsh`, never `chmod +x`.
 
 Building requires the strong-name key at `../../documents/rumrunner0_backtoreality_suspicious.snk` — outside the repo, never committed (`*.snk` is gitignored). On a machine without it, the library does not build.
 
