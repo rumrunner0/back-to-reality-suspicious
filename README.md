@@ -7,7 +7,7 @@ This repository contains the `Rumrunner0.BackToReality.Suspicious` class library
 [![Nuget](https://img.shields.io/nuget/v/Rumrunner0.BackToReality.Suspicious?logo=nuget&label=nuget)](https://www.nuget.org/packages/Rumrunner0.BackToReality.Suspicious)
 
 ## Description
-The `Rumrunner0.BackToReality.Suspicious` is a class library implementing an outcome-first result monad, a replacement for exception-driven control flow, `Try*` methods, and union-type workarounds. The unit `Suspicious` represents the outcome of a void-like operation; `Suspicious<TValue>` additionally carries a value. Every result holds an `OutcomeKind`, a domain identity that works like an HTTP status code for your domain, while success stays a per-instance fact: a result is a success if and only if no `Error` is attached, so an outcome such as `no_value` can be a plain success or a failure, depending on what the producer means. A failure carries exactly one immutable `Error` with a kind, a description, an automatically captured call site, an optional exception, and a single cause chain. The whole consumption surface (binding, mapping, matching, side effects, LINQ query syntax) has a `Task`-based async mirror under the same names, with cancellation plumbed through every step. The library targets .NET 9, depends on `Ardalis.SmartEnum` (with its `System.Text.Json` bindings) and `Rumrunner0.BackToReality.SharedExtensions`, enables nullable reference types (values are constrained to `notnull`, and the rail flags narrow the nullability of `Error`), and ships strong-named with XML documentation and a symbol package. The result types compare by reference and are consumed through the combinators; `Error`, `OutcomeKind`, and `CallSite` are records with value equality.
+The `Rumrunner0.BackToReality.Suspicious` is a class library implementing an outcome-first result monad, a replacement for exception-driven control flow, `Try*` methods, and union-type workarounds. The unit `Suspicious` represents the outcome of a void-like operation; `Suspicious<TValue>` additionally carries a value. Every result holds an `OutcomeKind`, a domain identity that works like an HTTP status code for your domain, while success stays a per-instance fact: a result is a success if and only if no `Error` is attached, so an outcome such as `no_value` can be a plain success or a failure, depending on what the producer means. A failure carries exactly one immutable `Error` with a kind, a description, an automatically captured call site, an optional exception, and a single cause chain. The whole consumption surface (binding, mapping, matching, side effects, LINQ query syntax) has a `Task`-based async mirror under the same names, with cancellation plumbed through every step.
 
 The `Rumrunner0.BackToReality.Suspicious.Demo` is a console application with a guided example gallery, runnable with `dotnet run --project Rumrunner0.BackToReality.Suspicious.Demo`: the `Essentials` examples walk the fundamentals in reading order (creating and consuming results, outcome kinds, the miss on either rail, chaining, query syntax, combining, errors and custom kinds), and the `Advanced` examples show real-world flows (a layered registration boundary, a partial import, error triage, JSON transport, an order checkout, and an async pipeline with cancellation).
 
@@ -210,7 +210,8 @@ var restored = JsonSerializer.Deserialize<Suspicious<User>>(json);
 ```json
 {
 	"outcome": { "name": "invalid", "code": 1000, "side": "failure" },
-	"error": {
+	"error": 
+	{
 		"kind": { "name": "invalid", "code": 1000, "side": "failure" },
 		"description": "Name is required",
 		"site": { "member": "CreateUser", "filePath": "/src/UserService.cs", "line": 42 }
