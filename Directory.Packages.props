@@ -4,12 +4,18 @@
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 	</PropertyGroup>
 
+	<!-- Internal -->
 	<ItemGroup>
-		<PackageVersion Include="Ardalis.SmartEnum" Version="8.2.0" />
-		<PackageVersion Include="Ardalis.SmartEnum.SystemTextJson" Version="8.1.0" />
 		<PackageVersion Include="Rumrunner0.BackToReality.SharedExtensions" Version="0.10.2" />
 	</ItemGroup>
 
+	<!-- Smart enums -->
+	<ItemGroup>
+		<PackageVersion Include="Ardalis.SmartEnum" Version="8.2.0" />
+		<PackageVersion Include="Ardalis.SmartEnum.SystemTextJson" Version="8.1.0" />
+	</ItemGroup>
+
+	<!-- Tests -->
 	<ItemGroup>
 		<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
 		<PackageVersion Include="xunit" Version="2.9.3" />
