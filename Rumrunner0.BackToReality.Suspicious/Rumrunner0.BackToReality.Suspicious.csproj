@@ -54,6 +54,8 @@
 	<PropertyGroup>
 		<SignAssembly>true</SignAssembly>
 		<AssemblyOriginatorKeyFile>../../documents/rumrunner0_backtoreality_suspicious.snk</AssemblyOriginatorKeyFile>
+		<!-- Ardalis.SmartEnum ships unsigned, so consuming its types from this strong-named assembly raises CS8002. Suppressed for exactly that warning; the build stays at 0 warnings otherwise. -->
+		<NoWarn>$(NoWarn);CS8002</NoWarn>
 	</PropertyGroup>
 
 	<!-- XML documentation -->
