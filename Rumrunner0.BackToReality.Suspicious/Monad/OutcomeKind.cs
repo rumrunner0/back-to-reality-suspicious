@@ -27,7 +27,7 @@ public sealed record class OutcomeKind : IEquatable<OutcomeKind>, IComparable<Ou
 	{
 		ArgumentExceptionExtensions.ThrowIfNullOrEmptyOrWhiteSpace(name);
 		ArgumentExceptionExtensions.ThrowIfNull(side);
-		if (code is < _minCode or >= _maxCode) ArgumentExceptionExtensions.Throw($"Code must be in [{_minCode}, {_maxCode})", nameof(code));
+		if (code is < _MIN_CODE or >= _MAX_CODE) ArgumentExceptionExtensions.Throw($"Code must be in [{_MIN_CODE}, {_MAX_CODE})", nameof(code));
 
 		this._name = name;
 		this._code = code;
@@ -136,22 +136,22 @@ public sealed record class OutcomeKind : IEquatable<OutcomeKind>, IComparable<Ou
 	#region Creation
 
 	/// <summary>Minimum code (inclusive).</summary>
-	private const int _minCode = 0;
+	private const int _MIN_CODE = 0;
 
 	/// <summary>Maximum code (exclusive).</summary>
-	private const int _maxCode = 2000;
+	private const int _MAX_CODE = 2000;
 
 	/// <summary>Minimum custom code of the lower range (inclusive).</summary>
-	private const int _customLowerMinCode = 100;
+	private const int _CUSTOM_LOWER_MIN_CODE = 100;
 
 	/// <summary>Maximum custom code of the lower range (exclusive).</summary>
-	private const int _customLowerMaxCode = 900;
+	private const int _CUSTOM_LOWER_MAX_CODE = 900;
 
 	/// <summary>Minimum custom code of the upper range (inclusive).</summary>
-	private const int _customUpperMinCode = 1100;
+	private const int _CUSTOM_UPPER_MIN_CODE = 1100;
 
 	/// <summary>Maximum custom code of the upper range (exclusive).</summary>
-	private const int _customUpperMaxCode = 1900;
+	private const int _CUSTOM_UPPER_MAX_CODE = 1900;
 
 	/// <summary>Ok <see cref="OutcomeKind" />.</summary>
 	/// <remarks>The operation succeeded.</remarks>
@@ -190,10 +190,10 @@ public sealed record class OutcomeKind : IEquatable<OutcomeKind>, IComparable<Ou
 	public static OutcomeKind Custom(string name, int code, OutcomeSide side)
 	{
 		if (code is not (
-			(>= _customLowerMinCode and < _customLowerMaxCode) or
-			(>= _customUpperMinCode and < _customUpperMaxCode)))
+			(>= _CUSTOM_LOWER_MIN_CODE and < _CUSTOM_LOWER_MAX_CODE) or
+			(>= _CUSTOM_UPPER_MIN_CODE and < _CUSTOM_UPPER_MAX_CODE)))
 		{
-			throw new ArgumentException($"Code must be in [{_customLowerMinCode}, {_customLowerMaxCode}) or [{_customUpperMinCode}, {_customUpperMaxCode}) for custom kinds", nameof(code));
+			throw new ArgumentException($"Code must be in [{_CUSTOM_LOWER_MIN_CODE}, {_CUSTOM_LOWER_MAX_CODE}) or [{_CUSTOM_UPPER_MIN_CODE}, {_CUSTOM_UPPER_MAX_CODE}) for custom kinds", nameof(code));
 		}
 
 		return new (name, code, side);

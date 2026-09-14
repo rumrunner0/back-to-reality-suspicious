@@ -10,13 +10,13 @@ using Rumrunner0.BackToReality.Suspicious.Monad;
 public sealed class OutcomeKindJsonConverter : JsonConverter<OutcomeKind>
 {
 	/// <summary>JSON property name of the name.</summary>
-	private const string _namePropertyName = "name";
+	private const string _NAME_PROPERTY_NAME = "name";
 
 	/// <summary>JSON property name of the code.</summary>
-	private const string _codePropertyName = "code";
+	private const string _CODE_PROPERTY_NAME = "code";
 
 	/// <summary>JSON property name of the side.</summary>
-	private const string _sidePropertyName = "side";
+	private const string _SIDE_PROPERTY_NAME = "side";
 
 	/// <inheritdoc />
 	public override OutcomeKind Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -26,13 +26,13 @@ public sealed class OutcomeKindJsonConverter : JsonConverter<OutcomeKind>
 
 		if (root.ValueKind != JsonValueKind.Object) throw new JsonException($"An {nameof(OutcomeKind)} must be a JSON object");
 
-		var name = root.TryGetProperty(_namePropertyName, out var nameElement) && nameElement.ValueKind == JsonValueKind.String ? nameElement.GetString() : null;
-		if (name is null) throw new JsonException($"An {nameof(OutcomeKind)} requires a string '{_namePropertyName}'");
+		var name = root.TryGetProperty(_NAME_PROPERTY_NAME, out var nameElement) && nameElement.ValueKind == JsonValueKind.String ? nameElement.GetString() : null;
+		if (name is null) throw new JsonException($"An {nameof(OutcomeKind)} requires a string '{_NAME_PROPERTY_NAME}'");
 
-		if (!root.TryGetProperty(_codePropertyName, out var codeElement) || !codeElement.TryGetInt32(out var code)) throw new JsonException($"An {nameof(OutcomeKind)} requires an integer '{_codePropertyName}'");
+		if (!root.TryGetProperty(_CODE_PROPERTY_NAME, out var codeElement) || !codeElement.TryGetInt32(out var code)) throw new JsonException($"An {nameof(OutcomeKind)} requires an integer '{_CODE_PROPERTY_NAME}'");
 
-		var sideValue = root.TryGetProperty(_sidePropertyName, out var sideElement) && sideElement.ValueKind == JsonValueKind.String ? sideElement.GetString() : null;
-		if (sideValue is null || !OutcomeSide.TryFromValue(sideValue, out var side)) throw new JsonException($"An {nameof(OutcomeKind)} requires a valid '{_sidePropertyName}'");
+		var sideValue = root.TryGetProperty(_SIDE_PROPERTY_NAME, out var sideElement) && sideElement.ValueKind == JsonValueKind.String ? sideElement.GetString() : null;
+		if (sideValue is null || !OutcomeSide.TryFromValue(sideValue, out var side)) throw new JsonException($"An {nameof(OutcomeKind)} requires a valid '{_SIDE_PROPERTY_NAME}'");
 
 		foreach (var preset in OutcomeKind.Presets)
 		{
@@ -53,9 +53,9 @@ public sealed class OutcomeKindJsonConverter : JsonConverter<OutcomeKind>
 	public override void Write(Utf8JsonWriter writer, OutcomeKind value, JsonSerializerOptions options)
 	{
 		writer.WriteStartObject();
-		writer.WriteString(_namePropertyName, value.Name);
-		writer.WriteNumber(_codePropertyName, value.Code);
-		writer.WriteString(_sidePropertyName, value.Side.Value);
+		writer.WriteString(_NAME_PROPERTY_NAME, value.Name);
+		writer.WriteNumber(_CODE_PROPERTY_NAME, value.Code);
+		writer.WriteString(_SIDE_PROPERTY_NAME, value.Side.Value);
 		writer.WriteEndObject();
 	}
 }

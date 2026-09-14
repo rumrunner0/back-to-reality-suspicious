@@ -10,10 +10,10 @@ using Rumrunner0.BackToReality.Suspicious.Monad;
 public sealed class SuspiciousJsonConverter : JsonConverter<Suspicious>
 {
 	/// <summary>JSON property name of the outcome.</summary>
-	private const string _outcomePropertyName = "outcome";
+	private const string _OUTCOME_PROPERTY_NAME = "outcome";
 
 	/// <summary>JSON property name of the error.</summary>
-	private const string _errorPropertyName = "error";
+	private const string _ERROR_PROPERTY_NAME = "error";
 
 	/// <inheritdoc />
 	public override Suspicious Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -23,15 +23,15 @@ public sealed class SuspiciousJsonConverter : JsonConverter<Suspicious>
 
 		if (root.ValueKind != JsonValueKind.Object) throw new JsonException($"A {nameof(Suspicious)} must be a JSON object");
 
-		if (!root.TryGetProperty(_outcomePropertyName, out var outcomeElement)) throw new JsonException($"A {nameof(Suspicious)} requires an '{_outcomePropertyName}'");
+		if (!root.TryGetProperty(_OUTCOME_PROPERTY_NAME, out var outcomeElement)) throw new JsonException($"A {nameof(Suspicious)} requires an '{_OUTCOME_PROPERTY_NAME}'");
 		var outcome = outcomeElement.Deserialize<OutcomeKind>(options);
-		if (outcome is null) throw new JsonException($"A {nameof(Suspicious)} requires a non-null '{_outcomePropertyName}'");
+		if (outcome is null) throw new JsonException($"A {nameof(Suspicious)} requires a non-null '{_OUTCOME_PROPERTY_NAME}'");
 
-		var error = root.TryGetProperty(_errorPropertyName, out var errorElement) && errorElement.ValueKind == JsonValueKind.Object ? errorElement.Deserialize<Error>(options) : null;
+		var error = root.TryGetProperty(_ERROR_PROPERTY_NAME, out var errorElement) && errorElement.ValueKind == JsonValueKind.Object ? errorElement.Deserialize<Error>(options) : null;
 
 		if (error is not null)
 		{
-			if (error.Kind != outcome) throw new JsonException($"The '{_outcomePropertyName}' ({outcome}) doesn't match the '{_errorPropertyName}' kind ({error.Kind})");
+			if (error.Kind != outcome) throw new JsonException($"The '{_OUTCOME_PROPERTY_NAME}' ({outcome}) doesn't match the '{_ERROR_PROPERTY_NAME}' kind ({error.Kind})");
 			return Suspicious.Fail(error);
 		}
 
@@ -41,7 +41,7 @@ public sealed class SuspiciousJsonConverter : JsonConverter<Suspicious>
 		}
 		catch (ArgumentException exception)
 		{
-			throw new JsonException($"The outcome '{outcome}' requires an '{_errorPropertyName}'", exception);
+			throw new JsonException($"The outcome '{outcome}' requires an '{_ERROR_PROPERTY_NAME}'", exception);
 		}
 	}
 
@@ -50,12 +50,12 @@ public sealed class SuspiciousJsonConverter : JsonConverter<Suspicious>
 	{
 		writer.WriteStartObject();
 
-		writer.WritePropertyName(_outcomePropertyName);
+		writer.WritePropertyName(_OUTCOME_PROPERTY_NAME);
 		JsonSerializer.Serialize(writer, value.Outcome, options);
 
 		if (value.Error is not null)
 		{
-			writer.WritePropertyName(_errorPropertyName);
+			writer.WritePropertyName(_ERROR_PROPERTY_NAME);
 			JsonSerializer.Serialize(writer, value.Error, options);
 		}
 

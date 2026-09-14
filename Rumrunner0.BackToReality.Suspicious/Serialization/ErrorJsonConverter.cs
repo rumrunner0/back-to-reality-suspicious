@@ -11,28 +11,28 @@ using Rumrunner0.BackToReality.Suspicious.Monad;
 public sealed class ErrorJsonConverter : JsonConverter<Error>
 {
 	/// <summary>JSON property name of the kind.</summary>
-	private const string _kindPropertyName = "kind";
+	private const string _KIND_PROPERTY_NAME = "kind";
 
 	/// <summary>JSON property name of the description.</summary>
-	private const string _descriptionPropertyName = "description";
+	private const string _DESCRIPTION_PROPERTY_NAME = "description";
 
 	/// <summary>JSON property name of the exception.</summary>
-	private const string _exceptionPropertyName = "exception";
+	private const string _EXCEPTION_PROPERTY_NAME = "exception";
 
 	/// <summary>JSON property name of the exception type.</summary>
-	private const string _exceptionTypePropertyName = "type";
+	private const string _EXCEPTION_TYPE_PROPERTY_NAME = "type";
 
 	/// <summary>JSON property name of the exception message.</summary>
-	private const string _exceptionMessagePropertyName = "message";
+	private const string _EXCEPTION_MESSAGE_PROPERTY_NAME = "message";
 
 	/// <summary>JSON property name of the site.</summary>
-	private const string _sitePropertyName = "site";
+	private const string _SITE_PROPERTY_NAME = "site";
 
 	/// <summary>JSON property name of the cause.</summary>
-	private const string _causePropertyName = "cause";
+	private const string _CAUSE_PROPERTY_NAME = "cause";
 
 	/// <summary>JSON property name of the details.</summary>
-	private const string _detailsPropertyName = "details";
+	private const string _DETAILS_PROPERTY_NAME = "details";
 
 	/// <inheritdoc />
 	public override Error Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -42,16 +42,16 @@ public sealed class ErrorJsonConverter : JsonConverter<Error>
 
 		if (root.ValueKind != JsonValueKind.Object) throw new JsonException($"An {nameof(Error)} must be a JSON object");
 
-		if (!root.TryGetProperty(_kindPropertyName, out var kindElement)) throw new JsonException($"An {nameof(Error)} requires a '{_kindPropertyName}'");
+		if (!root.TryGetProperty(_KIND_PROPERTY_NAME, out var kindElement)) throw new JsonException($"An {nameof(Error)} requires a '{_KIND_PROPERTY_NAME}'");
 		var kind = kindElement.Deserialize<OutcomeKind>(options);
-		if (kind is null) throw new JsonException($"An {nameof(Error)} requires a non-null '{_kindPropertyName}'");
+		if (kind is null) throw new JsonException($"An {nameof(Error)} requires a non-null '{_KIND_PROPERTY_NAME}'");
 
-		var description = root.TryGetProperty(_descriptionPropertyName, out var descriptionElement) && descriptionElement.ValueKind == JsonValueKind.String ? descriptionElement.GetString() : null;
-		var site = root.TryGetProperty(_sitePropertyName, out var siteElement) && siteElement.ValueKind == JsonValueKind.Object ? siteElement.Deserialize<CallSite>(options) : null;
-		var cause = root.TryGetProperty(_causePropertyName, out var causeElement) && causeElement.ValueKind == JsonValueKind.Object ? causeElement.Deserialize<Error>(options) : null;
+		var description = root.TryGetProperty(_DESCRIPTION_PROPERTY_NAME, out var descriptionElement) && descriptionElement.ValueKind == JsonValueKind.String ? descriptionElement.GetString() : null;
+		var site = root.TryGetProperty(_SITE_PROPERTY_NAME, out var siteElement) && siteElement.ValueKind == JsonValueKind.Object ? siteElement.Deserialize<CallSite>(options) : null;
+		var cause = root.TryGetProperty(_CAUSE_PROPERTY_NAME, out var causeElement) && causeElement.ValueKind == JsonValueKind.Object ? causeElement.Deserialize<Error>(options) : null;
 
 		var details = default(List<Error>);
-		if (root.TryGetProperty(_detailsPropertyName, out var detailsElement) && detailsElement.ValueKind == JsonValueKind.Array)
+		if (root.TryGetProperty(_DETAILS_PROPERTY_NAME, out var detailsElement) && detailsElement.ValueKind == JsonValueKind.Array)
 		{
 			details = [];
 
@@ -83,34 +83,34 @@ public sealed class ErrorJsonConverter : JsonConverter<Error>
 	{
 		writer.WriteStartObject();
 
-		writer.WritePropertyName(_kindPropertyName);
+		writer.WritePropertyName(_KIND_PROPERTY_NAME);
 		JsonSerializer.Serialize(writer, value.Kind, options);
 
-		if (value.Description is not null) writer.WriteString(_descriptionPropertyName, value.Description);
+		if (value.Description is not null) writer.WriteString(_DESCRIPTION_PROPERTY_NAME, value.Description);
 
 		if (value.Exception is not null)
 		{
-			writer.WriteStartObject(_exceptionPropertyName);
-			writer.WriteString(_exceptionTypePropertyName, value.Exception.GetType().FullName);
-			writer.WriteString(_exceptionMessagePropertyName, value.Exception.Message);
+			writer.WriteStartObject(_EXCEPTION_PROPERTY_NAME);
+			writer.WriteString(_EXCEPTION_TYPE_PROPERTY_NAME, value.Exception.GetType().FullName);
+			writer.WriteString(_EXCEPTION_MESSAGE_PROPERTY_NAME, value.Exception.Message);
 			writer.WriteEndObject();
 		}
 
 		if (value.Site is not null)
 		{
-			writer.WritePropertyName(_sitePropertyName);
+			writer.WritePropertyName(_SITE_PROPERTY_NAME);
 			JsonSerializer.Serialize(writer, value.Site, options);
 		}
 
 		if (value.Cause is not null)
 		{
-			writer.WritePropertyName(_causePropertyName);
+			writer.WritePropertyName(_CAUSE_PROPERTY_NAME);
 			JsonSerializer.Serialize(writer, value.Cause, options);
 		}
 
 		if (value.Details.Count > 0)
 		{
-			writer.WriteStartArray(_detailsPropertyName);
+			writer.WriteStartArray(_DETAILS_PROPERTY_NAME);
 			foreach (var detail in value.Details) JsonSerializer.Serialize(writer, detail, options);
 			writer.WriteEndArray();
 		}

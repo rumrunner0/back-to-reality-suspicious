@@ -34,7 +34,7 @@ Match the existing source exactly; it deliberately differs from common C# defaul
 - File-scoped namespaces; files organized with `#region` blocks (`Instance State`, `Common API`, `Creation`, `Display`, …).
 - The extension files are grouped by FAMILY in subdirectories under `Monad/` — `Then/`, `Map/`, `Tap/`, `Match/` (all four shapes of a family side by side), `Access/` (sync-only by design — no async siblings exist), `Linq/`, and `Conversion/` (the WHOLE family: the `*.Conversion.cs` partial slices of the types plus the one task-source adapter — type cores stay at the root, family slices live with their family) — but EVERY file keeps the flat `Rumrunner0.BackToReality.Suspicious.Monad` namespace: one `using` must light up the whole surface (extension discoverability is namespace-based). IDE0130/CheckNamespace are silenced in `.editorconfig`; don't "fix" the namespaces to match the folders.
 - Allman braces, except single-statement `if` bodies stay inline without braces: `if (cause is null) return;`
-- Private fields `_camelCase`; `var` for initialized locals; digit separators in large numeric literals (`25_000`).
+- Private fields `_camelCase`; constants `SCREAMING_CASE`, with the `_` prefix when private (`_SCREAMING_CASE`); `var` for initialized locals; digit separators in large numeric literals (`25_000`).
 - Long signatures/calls: one parameter per line with the parens on their own lines; named arguments for optional parameters.
 - Argument validation via `ArgumentExceptionExtensions` from `Rumrunner0.BackToReality.SharedExtensions`, not raw `throw`.
 - Central package management: package versions belong in `Directory.Packages.props`; `PackageReference` entries in csproj files carry no `Version` attribute.

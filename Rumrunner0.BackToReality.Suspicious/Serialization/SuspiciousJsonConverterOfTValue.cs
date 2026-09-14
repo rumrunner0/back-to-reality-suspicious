@@ -11,13 +11,13 @@ using Rumrunner0.BackToReality.Suspicious.Monad;
 public sealed class SuspiciousJsonConverterOfTValue<TValue> : JsonConverter<Suspicious<TValue>> where TValue : notnull
 {
 	/// <summary>JSON property name of the outcome.</summary>
-	private const string _outcomePropertyName = "outcome";
+	private const string _OUTCOME_PROPERTY_NAME = "outcome";
 
 	/// <summary>JSON property name of the value.</summary>
-	private const string _valuePropertyName = "value";
+	private const string _VALUE_PROPERTY_NAME = "value";
 
 	/// <summary>JSON property name of the error.</summary>
-	private const string _errorPropertyName = "error";
+	private const string _ERROR_PROPERTY_NAME = "error";
 
 	/// <inheritdoc />
 	public override Suspicious<TValue> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -27,18 +27,18 @@ public sealed class SuspiciousJsonConverterOfTValue<TValue> : JsonConverter<Susp
 
 		if (root.ValueKind != JsonValueKind.Object) throw new JsonException($"A {nameof(Suspicious<TValue>)} must be a JSON object");
 
-		if (!root.TryGetProperty(_outcomePropertyName, out var outcomeElement)) throw new JsonException($"A {nameof(Suspicious<TValue>)} requires an '{_outcomePropertyName}'");
+		if (!root.TryGetProperty(_OUTCOME_PROPERTY_NAME, out var outcomeElement)) throw new JsonException($"A {nameof(Suspicious<TValue>)} requires an '{_OUTCOME_PROPERTY_NAME}'");
 		var outcome = outcomeElement.Deserialize<OutcomeKind>(options);
-		if (outcome is null) throw new JsonException($"A {nameof(Suspicious<TValue>)} requires a non-null '{_outcomePropertyName}'");
+		if (outcome is null) throw new JsonException($"A {nameof(Suspicious<TValue>)} requires a non-null '{_OUTCOME_PROPERTY_NAME}'");
 
-		var hasValue = root.TryGetProperty(_valuePropertyName, out var valueElement);
-		var error = root.TryGetProperty(_errorPropertyName, out var errorElement) && errorElement.ValueKind == JsonValueKind.Object ? errorElement.Deserialize<Error>(options) : null;
+		var hasValue = root.TryGetProperty(_VALUE_PROPERTY_NAME, out var valueElement);
+		var error = root.TryGetProperty(_ERROR_PROPERTY_NAME, out var errorElement) && errorElement.ValueKind == JsonValueKind.Object ? errorElement.Deserialize<Error>(options) : null;
 
-		if (hasValue && error is not null) throw new JsonException($"A {nameof(Suspicious<TValue>)} can't have both a '{_valuePropertyName}' and an '{_errorPropertyName}'");
+		if (hasValue && error is not null) throw new JsonException($"A {nameof(Suspicious<TValue>)} can't have both a '{_VALUE_PROPERTY_NAME}' and an '{_ERROR_PROPERTY_NAME}'");
 
 		if (error is not null)
 		{
-			if (error.Kind != outcome) throw new JsonException($"The '{_outcomePropertyName}' ({outcome}) doesn't match the '{_errorPropertyName}' kind ({error.Kind})");
+			if (error.Kind != outcome) throw new JsonException($"The '{_OUTCOME_PROPERTY_NAME}' ({outcome}) doesn't match the '{_ERROR_PROPERTY_NAME}' kind ({error.Kind})");
 			return Suspicious.Fail<TValue>(error);
 		}
 
@@ -47,7 +47,7 @@ public sealed class SuspiciousJsonConverterOfTValue<TValue> : JsonConverter<Susp
 			if (hasValue)
 			{
 				var value = valueElement.Deserialize<TValue>(options);
-				if (value is null) throw new JsonException($"The '{_valuePropertyName}' of a {nameof(Suspicious<TValue>)} can't be null");
+				if (value is null) throw new JsonException($"The '{_VALUE_PROPERTY_NAME}' of a {nameof(Suspicious<TValue>)} can't be null");
 				return Suspicious.Success(outcome, value);
 			}
 
@@ -64,18 +64,18 @@ public sealed class SuspiciousJsonConverterOfTValue<TValue> : JsonConverter<Susp
 	{
 		writer.WriteStartObject();
 
-		writer.WritePropertyName(_outcomePropertyName);
+		writer.WritePropertyName(_OUTCOME_PROPERTY_NAME);
 		JsonSerializer.Serialize(writer, value.Outcome, options);
 
 		if (value.HasValue)
 		{
-			writer.WritePropertyName(_valuePropertyName);
+			writer.WritePropertyName(_VALUE_PROPERTY_NAME);
 			JsonSerializer.Serialize(writer, value.Value, options);
 		}
 
 		if (value.Error is not null)
 		{
-			writer.WritePropertyName(_errorPropertyName);
+			writer.WritePropertyName(_ERROR_PROPERTY_NAME);
 			JsonSerializer.Serialize(writer, value.Error, options);
 		}
 
