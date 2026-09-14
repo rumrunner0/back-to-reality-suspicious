@@ -46,6 +46,26 @@ csharp_style_expression_bodied_accessors = when_on_single_line:suggestion
 # Usings: System first; placement varies deliberately (inside the namespace where the Suspicious type must win over the namespace)
 dotnet_sort_system_directives_first = true
 
+# Constants: SCREAMING_CASE; private constants add the underscore prefix: _SCREAMING_CASE
+dotnet_naming_rule.private_constants_underscore_screaming_case.severity = warning
+dotnet_naming_rule.private_constants_underscore_screaming_case.symbols = private_constants
+dotnet_naming_rule.private_constants_underscore_screaming_case.style = underscore_screaming_case
+dotnet_naming_symbols.private_constants.applicable_kinds = field
+dotnet_naming_symbols.private_constants.applicable_accessibilities = private
+dotnet_naming_symbols.private_constants.required_modifiers = const
+dotnet_naming_style.underscore_screaming_case.required_prefix = _
+dotnet_naming_style.underscore_screaming_case.capitalization = all_upper
+dotnet_naming_style.underscore_screaming_case.word_separator = _
+
+dotnet_naming_rule.constants_screaming_case.severity = warning
+dotnet_naming_rule.constants_screaming_case.symbols = constants
+dotnet_naming_rule.constants_screaming_case.style = screaming_case
+dotnet_naming_symbols.constants.applicable_kinds = field
+dotnet_naming_symbols.constants.applicable_accessibilities = public, internal, protected, protected_internal, private_protected
+dotnet_naming_symbols.constants.required_modifiers = const
+dotnet_naming_style.screaming_case.capitalization = all_upper
+dotnet_naming_style.screaming_case.word_separator = _
+
 # Private fields: _camelCase
 dotnet_naming_rule.private_fields_underscore_camel_case.severity = warning
 dotnet_naming_rule.private_fields_underscore_camel_case.symbols = private_fields
@@ -59,3 +79,10 @@ dotnet_naming_style.underscore_camel_case.capitalization = camel_case
 dotnet_style_namespace_match_folder = true
 dotnet_diagnostic.IDE0130.severity = none
 resharper_check_namespace_highlighting = true
+
+# Space before parentheses of target-typed new: `return new (args);`.
+# Rider enforces this via the ReSharper option below. Roslyn has NO equivalent
+# option (it ties this spacing to method-call parens), so never run
+# `dotnet format` or `dotnet format whitespace` — they collapse the space.
+# Use `dotnet format style --verify-no-changes` instead.
+resharper_csharp_space_before_new_parentheses = true
